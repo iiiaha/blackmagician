@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import PreviewPanel from '@/components/PreviewPanel'
 import {
   Search, ChevronRight, ChevronDown, ChevronLeft,
-  Download, Info, ImageIcon, Lock, X,
+  ImageIcon,
 } from 'lucide-react'
 import type { Vendor, FolderNode, Product, ProductImage } from '@/types/database'
 
@@ -46,9 +46,7 @@ export default function LibraryHome() {
   const [previewVendor, setPreviewVendor] = useState('')
   const [previewSizeStr, setPreviewSizeStr] = useState('')
 
-  // Detail popup
-  const [detailProduct, setDetailProduct] = useState<Product | null>(null)
-  const [detailPos, setDetailPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
+  // (detail popup removed - info shown in preview panel)
 
   useEffect(() => {
     supabase.from('vendors').select('*').eq('approved', true).order('company_name')
@@ -151,12 +149,6 @@ export default function LibraryHome() {
     }
   }
 
-  const handleShowDetail = (product: Product, e: React.MouseEvent) => {
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-    setDetailProduct(product)
-    setDetailPos({ x: rect.right + 8, y: rect.top })
-  }
-
   const renderNode = (node: TreeNode, level: number) => {
     const isExpanded = expandedIds.has(node.id)
     const isSelected = selectedFolder?.id === node.id
@@ -244,6 +236,7 @@ export default function LibraryHome() {
             sizeStr={previewSizeStr}
             vendorName={previewVendor}
             tileName={previewProduct?.name || ''}
+            product={previewProduct}
             onInsertRequest={handleInsert}
           />
         </div>
@@ -294,9 +287,7 @@ export default function LibraryHome() {
               <div className="grid grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-4">
                 {searchResults.map(p => (
                   <MaterialItem key={p.id} product={p} images={[]}
-                    onDownload={() => handleDownload(p, p.vendor_name)}
-                    onDetail={(e) => handleShowDetail(p, e)}
-                    loggedIn={!!user}
+                    onClick={() => handleDownload(p, p.vendor_name)}
                     selected={previewProduct?.id === p.id} />
                 ))}
               </div>
@@ -308,9 +299,7 @@ export default function LibraryHome() {
               <div className="grid grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-4">
                 {products.map((p, i) => (
                   <MaterialItem key={p.id} product={p} images={productImages[p.id] || []}
-                    onDownload={() => handleDownload(p)}
-                    onDetail={(e) => handleShowDetail(p, e)}
-                    loggedIn={!!user}
+                    onClick={() => handleDownload(p)}
                     selected={previewProduct?.id === p.id}
                     animationDelay={i * 0.03} />
                 ))}
@@ -324,59 +313,7 @@ export default function LibraryHome() {
         </div>
       </div>
 
-      {/* ── Detail Popup ── */}
-      {detailProduct && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setDetailProduct(null)} />
-          <div
-            className="fixed z-50 bg-white rounded-lg shadow-[0_4px_24px_rgba(0,0,0,0.12)] border border-border w-[220px] overflow-hidden"
-            style={{
-              left: Math.min(detailPos.x, window.innerWidth - 240),
-              top: Math.min(detailPos.y, window.innerHeight - 300),
-            }}
-          >
-            <div className="flex items-center justify-between px-4 pt-3 pb-2">
-              <span className="text-[9px] font-semibold uppercase tracking-[0.5px] text-text-secondary">Details</span>
-              <button onClick={() => setDetailProduct(null)}
-                className="text-text-tertiary hover:text-foreground cursor-pointer">
-                <X className="w-3 h-3" />
-              </button>
-            </div>
-            <div className="px-4 pb-4">
-              <h3 className="text-[12px] font-bold mb-3 leading-snug">{detailProduct.name}</h3>
-              <div className="space-y-2.5">
-                {detailProduct.unit_price !== null && (
-                  <DetailRow label="단가" value={`${Number(detailProduct.unit_price).toLocaleString()}원`} />
-                )}
-                {detailProduct.stock !== null && (
-                  <DetailRow label="재고" value={`${detailProduct.stock}개`} />
-                )}
-                {detailProduct.moq !== null && (
-                  <DetailRow label="MOQ" value={`${detailProduct.moq}개`} />
-                )}
-                {detailProduct.lead_time && (
-                  <DetailRow label="리드타임" value={detailProduct.lead_time} />
-                )}
-                {detailProduct.notes && (
-                  <div className="pt-1">
-                    <span className="text-[9px] font-semibold text-text-secondary uppercase tracking-[0.3px]">비고</span>
-                    <p className="mt-1 text-[11px] text-text-secondary leading-[1.6]">{detailProduct.notes}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
-
-function DetailRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between items-baseline">
-      <span className="text-[10px] text-text-secondary">{label}</span>
-      <span className="text-[11px] font-semibold">{value}</span>
+      {/* detail popup removed */}
     </div>
   )
 }
@@ -389,18 +326,17 @@ function EmptyState() {
   )
 }
 
-function MaterialItem({ product, images, onDownload, onDetail, loggedIn, selected, animationDelay }: {
+function MaterialItem({ product, images, onClick, selected, animationDelay }: {
   product: Product
   images: ProductImage[]
-  onDownload: () => void
-  onDetail: (e: React.MouseEvent) => void
-  loggedIn: boolean
+  onClick: () => void
   selected: boolean
   animationDelay?: number
 }) {
   return (
     <div
-      className="group relative"
+      className="group cursor-pointer"
+      onClick={onClick}
       style={animationDelay !== undefined ? {
         animation: `fadeInUp 0.25s ease-out ${animationDelay}s both`,
       } : undefined}
@@ -410,36 +346,13 @@ function MaterialItem({ product, images, onDownload, onDetail, loggedIn, selecte
       }`}>
         {product.thumbnail_url ? (
           <img src={product.thumbnail_url} alt={product.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.04]"
             loading="lazy" />
         ) : (
           <div className="w-full h-full bg-[rgba(0,0,0,0.03)] flex items-center justify-center">
             <ImageIcon className="w-5 h-5 text-text-tertiary opacity-30" />
           </div>
         )}
-
-        {/* Hover overlay */}
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-          <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/40 to-transparent" />
-          <div className="absolute bottom-1.5 right-1.5 flex gap-1">
-            {loggedIn ? (
-              <button onClick={(e) => { e.stopPropagation(); onDownload() }}
-                className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-sm cursor-pointer"
-                title="프리뷰에 로드">
-                <Download className="w-3 h-3 text-foreground" />
-              </button>
-            ) : (
-              <div className="w-6 h-6 bg-white/50 rounded-full flex items-center justify-center" title="로그인 필요">
-                <Lock className="w-3 h-3 text-text-tertiary" />
-              </div>
-            )}
-            <button onClick={(e) => { e.stopPropagation(); onDetail(e) }}
-              className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-sm cursor-pointer"
-              title="상세 정보">
-              <Info className="w-3 h-3 text-foreground" />
-            </button>
-          </div>
-        </div>
 
         {images.length > 1 && (
           <span className="absolute top-1 right-1 text-[8px] font-semibold text-white bg-black/50 px-[5px] py-[1px] rounded-sm">

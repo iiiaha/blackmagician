@@ -4,17 +4,18 @@ import {
   type EditState, defaultEditState, drawCanvas, calcFinalSizeMM,
   loadImage, getMixTileCount,
 } from '@/lib/canvas'
-import type { ProductImage } from '@/types/database'
+import type { ProductImage, Product } from '@/types/database'
 
 interface Props {
   images: ProductImage[]
   sizeStr: string
   vendorName: string
   tileName: string
+  product?: Product | null
   onInsertRequest?: (dataUrl: string, vendor: string, tileName: string, sizeStr: string) => void
 }
 
-export default function PreviewPanel({ images, sizeStr, vendorName, tileName, onInsertRequest }: Props) {
+export default function PreviewPanel({ images, sizeStr, vendorName, tileName, product, onInsertRequest }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [edit, setEdit] = useState<EditState>({ ...defaultEditState })
   const [mainImg, setMainImg] = useState<HTMLImageElement | null>(null)
@@ -138,6 +139,44 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, on
             className="w-[24px] h-[24px] border border-border rounded-[3px] cursor-pointer p-0" />
         </div>
       </div>
+
+      {/* Product Info Table */}
+      {product && (product.unit_price !== null || product.stock !== null || product.moq !== null || product.lead_time || product.notes) && (
+        <table className="w-full text-[9px] border border-border rounded-[3px] overflow-hidden">
+          <tbody>
+            {product.unit_price !== null && (
+              <tr className="border-b border-border">
+                <td className="px-2 py-[3px] text-text-secondary font-semibold bg-[rgba(0,0,0,0.02)] w-[50px]">단가</td>
+                <td className="px-2 py-[3px]">{Number(product.unit_price).toLocaleString()}원</td>
+              </tr>
+            )}
+            {product.stock !== null && (
+              <tr className="border-b border-border">
+                <td className="px-2 py-[3px] text-text-secondary font-semibold bg-[rgba(0,0,0,0.02)]">재고</td>
+                <td className="px-2 py-[3px]">{product.stock}개</td>
+              </tr>
+            )}
+            {product.moq !== null && (
+              <tr className="border-b border-border">
+                <td className="px-2 py-[3px] text-text-secondary font-semibold bg-[rgba(0,0,0,0.02)]">MOQ</td>
+                <td className="px-2 py-[3px]">{product.moq}개</td>
+              </tr>
+            )}
+            {product.lead_time && (
+              <tr className="border-b border-border">
+                <td className="px-2 py-[3px] text-text-secondary font-semibold bg-[rgba(0,0,0,0.02)]">LT</td>
+                <td className="px-2 py-[3px]">{product.lead_time}</td>
+              </tr>
+            )}
+            {product.notes && (
+              <tr>
+                <td className="px-2 py-[3px] text-text-secondary font-semibold bg-[rgba(0,0,0,0.02)]">비고</td>
+                <td className="px-2 py-[3px]">{product.notes}</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      )}
 
       {/* Apply */}
       <button
