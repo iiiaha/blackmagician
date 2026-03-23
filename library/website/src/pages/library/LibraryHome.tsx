@@ -310,42 +310,56 @@ export default function LibraryHome() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-1 pb-2">
-          {/* Favorites */}
-          {user && (
-            <button onClick={handleShowFavorites}
-              className={`flex items-center gap-1.5 w-full text-left px-2.5 py-[5px] text-[10px] cursor-pointer rounded-sm mb-1 ${
-                showFavorites ? 'font-semibold text-foreground bg-muted' : 'text-text-secondary hover:text-foreground'
-              }`}>
-              <Heart className={`w-3 h-3 ${showFavorites ? 'fill-current' : ''}`} />
-              <span>Favorites</span>
-              {favoriteIds.size > 0 && (
-                <span className="text-[8px] text-text-tertiary ml-auto">{favoriteIds.size}</span>
-              )}
-            </button>
-          )}
+        <div className="flex-1 overflow-y-auto px-1 pb-1 flex flex-col">
+          {selectedVendor ? (
+            /* Vendor drill-down: folder tree + back at bottom */
+            <>
+              <div className="px-2.5 pt-1 pb-2">
+                <span className="text-[11px] font-bold">{selectedVendor.company_name}</span>
+              </div>
 
-          {/* Vendors (inline expand) */}
-          {filteredVendors.map(v => (
-            <div key={v.id}>
-              <button onClick={() => handleToggleVendor(v)}
-                className={`flex items-center gap-1 w-full text-left px-2.5 py-[5px] text-[10px] cursor-pointer rounded-sm ${
-                  expandedVendorId === v.id ? 'font-semibold text-foreground' : 'text-text-secondary hover:text-foreground'
-                }`}>
-                {expandedVendorId === v.id
-                  ? <ChevronDown className="w-2.5 h-2.5 shrink-0 opacity-40" />
-                  : <ChevronRight className="w-2.5 h-2.5 shrink-0 opacity-40" />}
-                <span className="truncate">{v.company_name}</span>
-              </button>
-              {expandedVendorId === v.id && vendorTrees[v.id] && (
-                <div className="pb-1">
-                  {vendorTrees[v.id].map(n => renderNode(n, 0, v))}
-                </div>
+              {/* Favorites */}
+              {user && (
+                <button onClick={handleShowFavorites}
+                  className={`flex items-center gap-1.5 w-full text-left px-2.5 py-[5px] text-[10px] cursor-pointer rounded-sm mb-1 ${
+                    showFavorites ? 'font-semibold text-foreground bg-muted' : 'text-text-secondary hover:text-foreground'
+                  }`}>
+                  <Heart className={`w-3 h-3 ${showFavorites ? 'fill-current' : ''}`} />
+                  <span>Favorites</span>
+                  {favoriteIds.size > 0 && (
+                    <span className="text-[8px] text-text-tertiary ml-auto">{favoriteIds.size}</span>
+                  )}
+                </button>
               )}
-            </div>
-          ))}
-          {filteredVendors.length === 0 && (
-            <p className="text-[10px] text-text-tertiary px-2 py-4 text-center">No vendors</p>
+
+              <div className="flex-1 overflow-y-auto">
+                {vendorTrees[selectedVendor.id] && vendorTrees[selectedVendor.id].length > 0
+                  ? vendorTrees[selectedVendor.id].map(n => renderNode(n, 0, selectedVendor!))
+                  : <p className="text-[10px] text-text-tertiary px-2 py-4 text-center">No folders</p>
+                }
+              </div>
+
+              {/* Back button at bottom-right */}
+              <div className="flex justify-end px-2 py-1.5 border-t border-border">
+                <button onClick={() => { setSelectedVendor(null); setExpandedVendorId(null); setSelectedFolder(null); setProducts([]); setShowFavorites(false) }}
+                  className="text-[9px] text-text-tertiary hover:text-foreground cursor-pointer">
+                  ← Back
+                </button>
+              </div>
+            </>
+          ) : (
+            /* Vendor list */
+            <>
+              {filteredVendors.map(v => (
+                <button key={v.id} onClick={() => handleToggleVendor(v)}
+                  className="flex items-center w-full text-left px-2.5 py-[6px] text-[10px] text-text-secondary hover:text-foreground cursor-pointer rounded-sm">
+                  <span className="truncate">{v.company_name}</span>
+                </button>
+              ))}
+              {filteredVendors.length === 0 && (
+                <p className="text-[10px] text-text-tertiary px-2 py-4 text-center">No vendors</p>
+              )}
+            </>
           )}
         </div>
 
@@ -404,6 +418,11 @@ export default function LibraryHome() {
         )}
 
         <div className="flex-1 overflow-y-auto p-5">
+          {/* Vendor Banner */}
+          {selectedVendor && !searchResults && (
+            <VendorBanner vendor={selectedVendor} />
+          )}
+
           {(searchResults !== null || showFavorites || selectedFolder) ? (
             (searchResults || displayProducts).length === 0 ? (
               <div className="flex items-center justify-center py-16">
@@ -474,6 +493,38 @@ function LoginPopup({ onClose }: { onClose: () => void }) {
         {error && <p className="text-[10px] text-destructive mt-2">{error}</p>}
       </div>
     </>
+  )
+}
+
+function VendorBanner({ vendor }: { vendor: Vendor }) {
+  // TODO: replace with real data from DB when vendor profile page is built
+  const desc = vendor.description || `${vendor.company_name}은(는) 고품질 마감재를 공급하는 전문 업체입니다.`
+  const website = vendor.website_url
+  const phone = vendor.contact_phone
+  const insta = vendor.instagram
+
+  return (
+    <div className="mb-5 pb-4 border-b border-border">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <h2 className="text-[14px] font-bold tracking-[0.2px] mb-1.5">{vendor.company_name}</h2>
+          <p className="text-[10px] text-muted-foreground leading-[1.6]">{desc}</p>
+        </div>
+        <div className="shrink-0 flex flex-col items-end gap-1 text-[9px] text-muted-foreground">
+          {phone && (
+            <span>{vendor.contact_name} {phone}</span>
+          )}
+          {website && (
+            <a href={website} target="_blank" rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors underline underline-offset-2">{website.replace(/https?:\/\//, '')}</a>
+          )}
+          {insta && (
+            <a href={`https://instagram.com/${insta.replace('@', '')}`} target="_blank" rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors">@{insta.replace('@', '')}</a>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }
 

@@ -12,6 +12,10 @@ export interface Database {
           contact_phone: string
           approved: boolean
           rejected: boolean
+          description: string | null
+          address: string | null
+          website_url: string | null
+          instagram: string | null
           created_at: string
         }
         Insert: {
@@ -22,6 +26,10 @@ export interface Database {
           contact_phone: string
           approved?: boolean
           rejected?: boolean
+          description?: string | null
+          address?: string | null
+          website_url?: string | null
+          instagram?: string | null
           created_at?: string
         }
         Update: {
@@ -32,6 +40,10 @@ export interface Database {
           contact_phone?: string
           approved?: boolean
           rejected?: boolean
+          description?: string | null
+          address?: string | null
+          website_url?: string | null
+          instagram?: string | null
           created_at?: string
         }
         Relationships: []
