@@ -6,19 +6,35 @@ import { LogOut, LogIn } from 'lucide-react'
 export default function LibraryLayout() {
   const { user, userProfile, signOut } = useAuth()
 
+  // TODO: 구독 서비스 시 실제 제한 적용
+  const maxDownloads = 5
+  const usedDownloads = 0 // 무제한 상태
+  const remaining = maxDownloads - usedDownloads
+
   return (
     <div className="h-screen flex flex-col">
-      {/* Header */}
-      <header className="h-[48px] bg-white border-b flex items-center px-8 justify-between shrink-0">
-        <Link to="/" className="flex items-center gap-3 hover:opacity-70 transition-opacity">
+      <header className="h-[48px] bg-white border-b flex items-center px-6 justify-between shrink-0">
+        <Link to="/" className="hover:opacity-70 transition-opacity">
           <span className="text-[14px] font-bold tracking-[0.5px]">BLACK MAGICIAN</span>
-          <span className="text-[10px] text-text-tertiary font-medium tracking-[0.3px]">LIBRARY</span>
         </Link>
 
         <div className="flex items-center gap-4">
           {user ? (
             <>
-              <span className="text-[11px] text-text-secondary">
+              {/* Download gauge */}
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-[60px] h-[4px] bg-[rgba(0,0,0,0.06)] rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-foreground rounded-full transition-all duration-300"
+                      style={{ width: `${(remaining / maxDownloads) * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-[9px] text-text-tertiary tabular-nums">{remaining}/{maxDownloads}</span>
+                </div>
+              </div>
+
+              <span className="text-[10px] text-text-secondary">
                 {userProfile?.display_name || user.email}
               </span>
               <button

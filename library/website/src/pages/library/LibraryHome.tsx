@@ -286,8 +286,7 @@ export default function LibraryHome() {
             ) : (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-4">
                 {searchResults.map(p => (
-                  <MaterialItem key={p.id} product={p} images={[]}
-                    onClick={() => handleDownload(p, p.vendor_name)}
+                  <MaterialItem key={p.id} product={p}                     onClick={() => handleDownload(p, p.vendor_name)}
                     selected={previewProduct?.id === p.id} />
                 ))}
               </div>
@@ -298,8 +297,7 @@ export default function LibraryHome() {
             ) : (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-4">
                 {products.map((p, i) => (
-                  <MaterialItem key={p.id} product={p} images={productImages[p.id] || []}
-                    onClick={() => handleDownload(p)}
+                  <MaterialItem key={p.id} product={p}                     onClick={() => handleDownload(p)}
                     selected={previewProduct?.id === p.id}
                     animationDelay={i * 0.03} />
                 ))}
@@ -326,9 +324,8 @@ function EmptyState() {
   )
 }
 
-function MaterialItem({ product, images, onClick, selected, animationDelay }: {
+function MaterialItem({ product, onClick, selected, animationDelay }: {
   product: Product
-  images: ProductImage[]
   onClick: () => void
   selected: boolean
   animationDelay?: number
@@ -341,8 +338,10 @@ function MaterialItem({ product, images, onClick, selected, animationDelay }: {
         animation: `fadeInUp 0.25s ease-out ${animationDelay}s both`,
       } : undefined}
     >
-      <div className={`aspect-square rounded-[3px] overflow-hidden relative ${
-        selected ? 'ring-[2px] ring-foreground' : ''
+      <div className={`aspect-square rounded-[3px] overflow-hidden relative transition-shadow duration-200 ${
+        selected
+          ? 'shadow-[0_0_0_2px_rgba(0,0,0,0.08),0_0_0_4px_rgba(0,102,255,0.4)]'
+          : 'hover:shadow-[0_2px_8px_rgba(0,0,0,0.1)]'
       }`}>
         {product.thumbnail_url ? (
           <img src={product.thumbnail_url} alt={product.name}
@@ -353,16 +352,12 @@ function MaterialItem({ product, images, onClick, selected, animationDelay }: {
             <ImageIcon className="w-5 h-5 text-text-tertiary opacity-30" />
           </div>
         )}
-
-        {images.length > 1 && (
-          <span className="absolute top-1 right-1 text-[8px] font-semibold text-white bg-black/50 px-[5px] py-[1px] rounded-sm">
-            {images.length}
-          </span>
-        )}
       </div>
 
       <div className="text-center mt-1.5">
-        <p className="text-[10px] font-medium leading-[1.3] truncate">{product.name}</p>
+        <p className={`text-[10px] leading-[1.3] truncate ${selected ? 'font-bold' : 'font-medium'}`}>
+          {product.name}
+        </p>
       </div>
     </div>
   )

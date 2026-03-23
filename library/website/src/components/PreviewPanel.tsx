@@ -1,10 +1,67 @@
 import { useRef, useEffect, useCallback, useState } from 'react'
-import { Eye } from 'lucide-react'
+import { RotateCw, Palette, Eye } from 'lucide-react'
 import {
   type EditState, defaultEditState, drawCanvas, calcFinalSizeMM,
   loadImage, getMixTileCount,
 } from '@/lib/canvas'
 import type { ProductImage, Product } from '@/types/database'
+
+// Custom SVG icons
+function GroutIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="1" y="1" width="6" height="6" rx="0.5" />
+      <rect x="9" y="1" width="6" height="6" rx="0.5" />
+      <rect x="1" y="9" width="6" height="6" rx="0.5" />
+      <rect x="9" y="9" width="6" height="6" rx="0.5" />
+    </svg>
+  )
+}
+
+function MixIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3">
+      <rect x="1" y="1" width="4" height="4" rx="0.3" />
+      <rect x="6" y="1" width="4" height="4" rx="0.3" />
+      <rect x="11" y="1" width="4" height="4" rx="0.3" />
+      <rect x="1" y="6" width="4" height="4" rx="0.3" />
+      <rect x="6" y="6" width="4" height="4" rx="0.3" />
+      <rect x="11" y="6" width="4" height="4" rx="0.3" />
+      <rect x="1" y="11" width="4" height="4" rx="0.3" />
+      <rect x="6" y="11" width="4" height="4" rx="0.3" />
+      <rect x="11" y="11" width="4" height="4" rx="0.3" />
+    </svg>
+  )
+}
+
+function HalfStaggerIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3">
+      <rect x="0.5" y="1" width="7" height="4" rx="0.3" />
+      <rect x="8.5" y="1" width="7" height="4" rx="0.3" />
+      <rect x="4" y="6" width="7" height="4" rx="0.3" />
+      <rect x="12" y="6" width="3.5" height="4" rx="0.3" />
+      <rect x="0.5" y="6" width="2.5" height="4" rx="0.3" />
+      <rect x="0.5" y="11" width="7" height="4" rx="0.3" />
+      <rect x="8.5" y="11" width="7" height="4" rx="0.3" />
+    </svg>
+  )
+}
+
+function ThirdStaggerIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3">
+      <rect x="0.5" y="0.5" width="7" height="4" rx="0.3" />
+      <rect x="8.5" y="0.5" width="7" height="4" rx="0.3" />
+      <rect x="3" y="5.5" width="7" height="4" rx="0.3" />
+      <rect x="11" y="5.5" width="4.5" height="4" rx="0.3" />
+      <rect x="0.5" y="5.5" width="1.5" height="4" rx="0.3" />
+      <rect x="5.5" y="10.5" width="7" height="4" rx="0.3" />
+      <rect x="13.5" y="10.5" width="2" height="4" rx="0.3" />
+      <rect x="0.5" y="10.5" width="4" height="4" rx="0.3" />
+    </svg>
+  )
+}
 
 interface Props {
   images: ProductImage[]
@@ -23,10 +80,12 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
   const [showColor, setShowColor] = useState(false)
   const [inserting, setInserting] = useState(false)
 
+  const hasMix = allImgs.length > 1
+
   useEffect(() => {
     setEdit({ ...defaultEditState })
     setShowColor(false)
-    if (images.length === 0) return
+    if (images.length === 0) { setMainImg(null); setAllImgs([]); return }
     loadImage(images[0].url).then(img => setMainImg(img))
     Promise.all(images.map(i => loadImage(i.url))).then(imgs => setAllImgs(imgs))
   }, [images])
@@ -66,7 +125,6 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
   }
 
   const finalMM = calcFinalSizeMM(sizeStr, edit)
-  const hasMix = allImgs.length > 1
 
   if (images.length === 0) {
     return (
@@ -80,7 +138,7 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
   }
 
   return (
-    <div className="h-full flex flex-col p-3 gap-2.5 overflow-y-auto">
+    <div className="h-full flex flex-col p-3 gap-2 overflow-y-auto">
       {/* Canvas */}
       <div className="flex-1 min-h-0 flex items-center justify-center bg-[rgba(0,0,0,0.025)] border border-border rounded-[4px] overflow-hidden">
         <canvas ref={canvasRef} className="max-w-full max-h-full object-contain" />
@@ -88,31 +146,28 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
 
       {/* Info */}
       <div className="flex items-center justify-between text-[9px] text-text-secondary">
-        <span className="font-medium truncate max-w-[60%]">{tileName}</span>
+        <span className="font-semibold truncate max-w-[60%]">{tileName}</span>
         {finalMM && <span className="text-text-tertiary">{Math.round(finalMM.w)}×{Math.round(finalMM.h)}mm</span>}
       </div>
 
-      {/* Tools - with text labels */}
+      {/* Toolbar */}
       <div className="flex gap-[3px]">
-        <ToolBtn label="Rotate" active={edit.rotation > 0}
-          onClick={() => updateEdit({ rotation: (edit.rotation + 90) % 360 })} />
-        <ToolBtn label="Color" active={showColor}
-          onClick={() => setShowColor(!showColor)} />
-        <ToolBtn label="Grout" active={edit.groutEnabled}
-          onClick={() => updateEdit({ groutEnabled: !edit.groutEnabled })} />
-        {hasMix && (
-          <>
-            <ToolBtn label="Mix" active={edit.mixMode === 'grid'}
-              onClick={() => handleMix('grid')} />
-            <ToolBtn label="½" active={edit.mixMode === 'half'}
-              onClick={() => handleMix('half')} />
-            <ToolBtn label="⅓" active={edit.mixMode === 'third'}
-              onClick={() => handleMix('third')} />
-          </>
-        )}
+        <ToolBtn icon={<RotateCw className="w-3.5 h-3.5" />} active={edit.rotation > 0}
+          onClick={() => updateEdit({ rotation: (edit.rotation + 90) % 360 })} title="Rotate" />
+        <ToolBtn icon={<Palette className="w-3.5 h-3.5" />} active={showColor}
+          onClick={() => setShowColor(!showColor)} title="Color" />
+        <ToolBtn icon={<GroutIcon className="w-3.5 h-3.5" />} active={edit.groutEnabled}
+          onClick={() => updateEdit({ groutEnabled: !edit.groutEnabled })} title="Grout" />
+        <div className="w-px bg-border mx-[1px]" />
+        <ToolBtn icon={<MixIcon className="w-3.5 h-3.5" />} active={edit.mixMode === 'grid'}
+          onClick={() => handleMix('grid')} title="Mix 3×3" disabled={!hasMix} />
+        <ToolBtn icon={<HalfStaggerIcon className="w-3.5 h-3.5" />} active={edit.mixMode === 'half'}
+          onClick={() => handleMix('half')} title="1/2 Stagger" disabled={!hasMix} />
+        <ToolBtn icon={<ThirdStaggerIcon className="w-3.5 h-3.5" />} active={edit.mixMode === 'third'}
+          onClick={() => handleMix('third')} title="1/3 Stagger" disabled={!hasMix} />
       </div>
 
-      {/* Color Panel - toggled */}
+      {/* Color Panel */}
       {showColor && (
         <div className="space-y-1 p-2 bg-[rgba(0,0,0,0.02)] border border-border rounded-[4px]">
           <SliderRow label="Hue" value={edit.hue} min={-180} max={180} unit="°"
@@ -124,9 +179,9 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
         </div>
       )}
 
-      {/* Grout Panel - always visible, enabled/disabled by grout toggle */}
+      {/* Grout Panel — always visible, enabled/disabled */}
       <div className={`p-2 bg-[rgba(0,0,0,0.02)] border border-border rounded-[4px] ${
-        edit.groutEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'
+        edit.groutEnabled ? 'opacity-100' : 'opacity-30 pointer-events-none'
       }`}>
         <div className="flex items-center gap-2">
           <span className="text-[9px] font-semibold text-text-secondary w-[36px] shrink-0">Thick</span>
@@ -140,43 +195,31 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
         </div>
       </div>
 
-      {/* Product Info Table */}
-      {product && (product.unit_price !== null || product.stock !== null || product.moq !== null || product.lead_time || product.notes) && (
-        <table className="w-full text-[9px] border border-border rounded-[3px] overflow-hidden">
-          <tbody>
-            {product.unit_price !== null && (
-              <tr className="border-b border-border">
-                <td className="px-2 py-[3px] text-text-secondary font-semibold bg-[rgba(0,0,0,0.02)] w-[50px]">단가</td>
-                <td className="px-2 py-[3px]">{Number(product.unit_price).toLocaleString()}원</td>
-              </tr>
-            )}
-            {product.stock !== null && (
-              <tr className="border-b border-border">
-                <td className="px-2 py-[3px] text-text-secondary font-semibold bg-[rgba(0,0,0,0.02)]">재고</td>
-                <td className="px-2 py-[3px]">{product.stock}개</td>
-              </tr>
-            )}
-            {product.moq !== null && (
-              <tr className="border-b border-border">
-                <td className="px-2 py-[3px] text-text-secondary font-semibold bg-[rgba(0,0,0,0.02)]">MOQ</td>
-                <td className="px-2 py-[3px]">{product.moq}개</td>
-              </tr>
-            )}
-            {product.lead_time && (
-              <tr className="border-b border-border">
-                <td className="px-2 py-[3px] text-text-secondary font-semibold bg-[rgba(0,0,0,0.02)]">LT</td>
-                <td className="px-2 py-[3px]">{product.lead_time}</td>
-              </tr>
-            )}
-            {product.notes && (
-              <tr>
-                <td className="px-2 py-[3px] text-text-secondary font-semibold bg-[rgba(0,0,0,0.02)]">비고</td>
-                <td className="px-2 py-[3px]">{product.notes}</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      )}
+      {/* Product Info Table — always present */}
+      <table className="w-full text-[9px] border border-border rounded-[3px] overflow-hidden">
+        <tbody>
+          <tr className="border-b border-border">
+            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-[rgba(0,0,0,0.02)] w-[44px]">단가</td>
+            <td className="px-2 py-[3px]">{product?.unit_price !== null && product?.unit_price !== undefined ? `${Number(product.unit_price).toLocaleString()}원` : '-'}</td>
+          </tr>
+          <tr className="border-b border-border">
+            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-[rgba(0,0,0,0.02)]">재고</td>
+            <td className="px-2 py-[3px]">{product?.stock !== null && product?.stock !== undefined ? `${product.stock}개` : '-'}</td>
+          </tr>
+          <tr className="border-b border-border">
+            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-[rgba(0,0,0,0.02)]">MOQ</td>
+            <td className="px-2 py-[3px]">{product?.moq !== null && product?.moq !== undefined ? `${product.moq}개` : '-'}</td>
+          </tr>
+          <tr className="border-b border-border">
+            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-[rgba(0,0,0,0.02)]">LT</td>
+            <td className="px-2 py-[3px]">{product?.lead_time || '-'}</td>
+          </tr>
+          <tr>
+            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-[rgba(0,0,0,0.02)]">비고</td>
+            <td className="px-2 py-[3px]">{product?.notes || '-'}</td>
+          </tr>
+        </tbody>
+      </table>
 
       {/* Apply */}
       <button
@@ -190,21 +233,25 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
   )
 }
 
-function ToolBtn({ label, active, onClick }: {
-  label: string
+function ToolBtn({ icon, active, onClick, title, disabled }: {
+  icon: React.ReactNode
   active: boolean
   onClick: () => void
+  title: string
+  disabled?: boolean
 }) {
   return (
     <button
       onClick={onClick}
-      className={`flex-1 h-[26px] flex items-center justify-center rounded-[3px] text-[9px] font-semibold cursor-pointer ${
+      title={title}
+      disabled={disabled}
+      className={`flex-1 h-[28px] flex items-center justify-center rounded-[3px] cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed ${
         active
           ? 'bg-foreground text-white'
           : 'bg-[rgba(0,0,0,0.04)] text-text-secondary hover:bg-[rgba(0,0,0,0.07)]'
       }`}
     >
-      {label}
+      {icon}
     </button>
   )
 }
