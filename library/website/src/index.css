@@ -44,7 +44,7 @@
   --color-border: rgba(255, 255, 255, 0.1);
   --color-input: rgba(255, 255, 255, 0.1);
   --color-ring: #ebebeb;
-  --color-surface: #383838;
+  --color-surface: #242424;
   --color-text-secondary: #aaaaaa;
   --color-text-tertiary: #707070;
 }
@@ -53,6 +53,14 @@
   *, *::before, *::after {
     box-sizing: border-box;
     border-color: var(--color-border);
+  }
+
+  html {
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  body, header, footer, .bg-surface, .bg-background {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
   }
 }
 
