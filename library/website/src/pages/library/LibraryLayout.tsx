@@ -88,11 +88,7 @@ export default function LibraryLayout() {
                   <button
                     onClick={async () => {
                       if (!confirm('정말 탈퇴하시겠습니까? 모든 데이터가 삭제됩니다.')) return
-                      // Delete user profile and favorites
-                      if (userProfile) {
-                        await supabase.from('favorites').delete().eq('user_id', userProfile.id)
-                        await supabase.from('user_profiles').delete().eq('id', userProfile.id)
-                      }
+                      await supabase.rpc('delete_own_account')
                       await signOut()
                       setShowUserMenu(false)
                     }}
