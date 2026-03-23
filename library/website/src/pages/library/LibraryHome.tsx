@@ -386,6 +386,11 @@ export default function LibraryHome() {
 
       {/* ── Main ── */}
       <div className="flex-1 flex flex-col overflow-hidden bg-background">
+        {/* Vendor Banner — full width, outside scroll */}
+        {selectedVendor && !searchResults && !showFavorites && (
+          <VendorBanner vendor={selectedVendor} />
+        )}
+
         {(selectedFolder || searchResults !== null || showFavorites) && (
           <div className="px-5 py-2 border-b bg-surface flex items-center justify-between shrink-0">
             {showFavorites ? (
@@ -420,11 +425,6 @@ export default function LibraryHome() {
         )}
 
         <div className="flex-1 overflow-y-auto p-5">
-          {/* Vendor Banner */}
-          {selectedVendor && !searchResults && (
-            <VendorBanner vendor={selectedVendor} />
-          )}
-
           {(searchResults !== null || showFavorites || selectedFolder) ? (
             (searchResults || displayProducts).length === 0 ? (
               <div className="flex items-center justify-center py-16">
@@ -506,7 +506,7 @@ function VendorBanner({ vendor }: { vendor: Vendor }) {
   const insta = vendor.instagram || 'blackmagician'
 
   return (
-    <div className="mb-5 rounded-[6px] overflow-hidden bg-gradient-to-br from-[#2a2a2a] via-[#3a3a3a] to-[#4a4a4a] text-white">
+    <div className="shrink-0 bg-gradient-to-br from-[#2a2a2a] via-[#3a3a3a] to-[#4a4a4a] text-white">
       <div className="flex items-center justify-between px-5 py-4">
         <div className="flex-1 min-w-0">
           <h2 className="text-[15px] font-bold tracking-[0.3px] mb-1">{vendor.company_name}</h2>
