@@ -43,7 +43,7 @@ export default function LibraryLogin() {
 
     try {
       if (mode === 'signup') {
-        const { error: authError } = await supabase.auth.signUp({
+        const { data: authData, error: authError } = await supabase.auth.signUp({
           email,
           password,
           options: { data: { display_name: displayName || email.split('@')[0] } },
@@ -52,6 +52,11 @@ export default function LibraryLogin() {
           if (authError.message.includes('already registered')) setError('이미 등록된 이메일입니다.')
           else if (authError.message.includes('rate limit') || authError.message.includes('after')) setError('잠시 후 다시 시도해주세요.')
           else setError('가입 중 오류가 발생했습니다.')
+          return
+        }
+        // Supabase returns user with empty identities if email already exists (security measure)
+        if (authData.user && authData.user.identities && authData.user.identities.length === 0) {
+          setError('이미 등록된 이메일입니다.')
           return
         }
         setMode('done')
