@@ -89,8 +89,8 @@ export default function LibraryLayout() {
                     onClick={async () => {
                       if (!confirm('정말 탈퇴하시겠습니까? 모든 데이터가 삭제됩니다.')) return
                       await supabase.rpc('delete_own_account')
-                      await signOut()
-                      setShowUserMenu(false)
+                      await supabase.auth.signOut({ scope: 'global' })
+                      window.location.href = '/'
                     }}
                     className="w-full text-left px-3 py-2 text-[10px] text-destructive hover:bg-muted cursor-pointer"
                   >
