@@ -1,7 +1,7 @@
 import { Outlet, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
-import { LogOut, LogIn, Sun, Moon, ChevronDown } from 'lucide-react'
+import { LogIn, Sun, Moon, ChevronDown } from 'lucide-react'
 import { CATEGORIES, type CategoryId } from '@/lib/categories'
 import { useState, useEffect, useRef } from 'react'
 
