@@ -1,24 +1,30 @@
 import { Outlet, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
-import { LogOut, LogIn } from 'lucide-react'
+import { LogOut, LogIn, Sun, Moon } from 'lucide-react'
 import { CATEGORIES, type CategoryId } from '@/lib/categories'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export default function LibraryLayout() {
   const { user, userProfile, signOut } = useAuth()
   const [activeCategory, setActiveCategory] = useState<CategoryId>('tile')
+  const [dark, setDark] = useState(() => localStorage.getItem('bm-theme') === 'dark')
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', dark)
+    localStorage.setItem('bm-theme', dark ? 'dark' : 'light')
+  }, [dark])
 
   return (
-    <div className="h-screen flex flex-col">
-      <header className="h-[42px] bg-white border-b flex items-center px-5 justify-between shrink-0">
-        <div className="flex items-center gap-5">
-          <Link to="/" className="hover:opacity-80 transition-opacity shrink-0 flex items-center gap-1.5">
-            <img src="/logopic.png" alt="" className="h-[22px] w-auto" />
-            <img src="/logotext.png" alt="Black Magician" className="h-[14px] w-auto" />
+    <div className="h-screen flex flex-col bg-background text-foreground">
+      <header className="h-[44px] bg-surface border-b border-border flex items-center px-5 justify-between shrink-0">
+        <div className="flex items-center gap-8">
+          <Link to="/" className="hover:opacity-80 transition-opacity shrink-0 flex items-center gap-2">
+            <img src="/logopic.png" alt="" className="h-[28px] w-auto dark:invert" />
+            <img src="/logotext.png" alt="Black Magician" className="h-[16px] w-auto dark:invert" />
           </Link>
 
-          <nav className="flex items-center">
+          <nav className="flex items-center gap-0.5">
             {CATEGORIES.map(cat => (
               <button
                 key={cat.id}
@@ -26,7 +32,7 @@ export default function LibraryLayout() {
                 className={`px-2.5 py-1 text-[10px] tracking-[0.5px] font-semibold cursor-pointer transition-colors ${
                   activeCategory === cat.id
                     ? 'text-foreground underline underline-offset-[3px] decoration-[1.5px]'
-                    : 'text-text-tertiary hover:text-text-secondary'
+                    : 'text-muted-foreground hover:text-foreground/70'
                 }`}
               >
                 {cat.label}
@@ -36,18 +42,27 @@ export default function LibraryLayout() {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Theme toggle */}
+          <button
+            onClick={() => setDark(!dark)}
+            className="w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+            title={dark ? 'Light mode' : 'Dark mode'}
+          >
+            {dark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+          </button>
+
           {user ? (
             <>
-              <span className="text-[10px] text-text-secondary">
+              <span className="text-[10px] text-muted-foreground">
                 {userProfile?.display_name || user.email}
               </span>
-              <button onClick={signOut} className="text-text-tertiary hover:text-foreground cursor-pointer" title="로그아웃">
+              <button onClick={signOut} className="text-muted-foreground hover:text-foreground cursor-pointer" title="로그아웃">
                 <LogOut className="w-3 h-3" />
               </button>
             </>
           ) : (
             <Link to="/library/login">
-              <Button variant="ghost" size="sm" className="h-6 text-[10px] font-semibold gap-1 text-text-secondary hover:text-foreground px-2">
+              <Button variant="ghost" size="sm" className="h-6 text-[10px] font-semibold gap-1 text-muted-foreground hover:text-foreground px-2">
                 <LogIn className="w-3 h-3" />
                 LOGIN
               </Button>
@@ -60,7 +75,7 @@ export default function LibraryLayout() {
         <Outlet context={{ activeCategory }} />
       </main>
 
-      <footer className="h-[24px] bg-white border-t flex items-center justify-between px-5 shrink-0 text-[9px] text-text-tertiary">
+      <footer className="h-[24px] bg-surface border-t border-border flex items-center justify-between px-5 shrink-0 text-[9px] text-muted-foreground">
         <span>&copy; 2026 Black Magician. All rights reserved.</span>
         <div className="flex items-center gap-3">
           <a href="https://instagram.com/iiiaha.lab" target="_blank" rel="noopener noreferrer"

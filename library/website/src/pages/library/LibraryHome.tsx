@@ -296,14 +296,14 @@ export default function LibraryHome() {
   return (
     <div className="flex" style={{ height: 'calc(100vh - 42px - 24px)' }}>
       {/* ── Sidebar ── */}
-      <div className="w-[190px] bg-white border-r flex flex-col shrink-0">
+      <div className="w-[190px] bg-surface border-r flex flex-col shrink-0">
         <div className="p-2.5">
           <div className="relative">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-text-tertiary" />
             <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSearch()}
               placeholder="Search"
-              className="w-full h-[26px] text-[10px] pl-6 pr-2 bg-[rgba(0,0,0,0.025)] border border-border rounded-[4px] outline-none placeholder:text-text-tertiary focus:border-foreground" />
+              className="w-full h-[26px] text-[10px] pl-6 pr-2 bg-muted border border-border rounded-[4px] outline-none placeholder:text-text-tertiary focus:border-foreground" />
           </div>
         </div>
 
@@ -312,7 +312,7 @@ export default function LibraryHome() {
           {user && (
             <button onClick={handleShowFavorites}
               className={`flex items-center gap-1.5 w-full text-left px-2.5 py-[5px] text-[10px] cursor-pointer rounded-sm mb-1 ${
-                showFavorites ? 'font-semibold text-foreground bg-[rgba(0,0,0,0.03)]' : 'text-text-secondary hover:text-foreground'
+                showFavorites ? 'font-semibold text-foreground bg-muted' : 'text-text-secondary hover:text-foreground'
               }`}>
               <Heart className={`w-3 h-3 ${showFavorites ? 'fill-current' : ''}`} />
               <span>Favorites</span>
@@ -366,7 +366,7 @@ export default function LibraryHome() {
       {/* ── Main ── */}
       <div className="flex-1 flex flex-col overflow-hidden bg-background">
         {(selectedFolder || searchResults !== null || showFavorites) && (
-          <div className="px-5 py-2 border-b bg-white flex items-center justify-between shrink-0">
+          <div className="px-5 py-2 border-b bg-surface flex items-center justify-between shrink-0">
             {showFavorites ? (
               <span className="text-[10px] text-text-secondary flex items-center gap-1">
                 <Heart className="w-3 h-3 fill-current" /> Favorites — {favoriteProducts.length} items
@@ -450,7 +450,7 @@ function MaterialItem({ product, onClick, selected, isFavorite, onToggleFavorite
             className="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]"
             loading="lazy" />
         ) : (
-          <div className="w-full h-full bg-[rgba(0,0,0,0.03)] flex items-center justify-center">
+          <div className="w-full h-full bg-muted flex items-center justify-center">
             <ImageIcon className="w-5 h-5 text-text-tertiary opacity-30" />
           </div>
         )}

@@ -112,7 +112,7 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
   return (
     <div className="h-full flex flex-col p-3 gap-2 overflow-y-auto">
       {/* Canvas */}
-      <div className="flex-1 min-h-0 flex items-center justify-center bg-[rgba(0,0,0,0.025)] border border-border rounded-[4px] overflow-hidden">
+      <div className="flex-1 min-h-0 flex items-center justify-center bg-muted border border-border rounded-[4px] overflow-hidden">
         {isEmpty ? (
           <p className="text-[10px] text-text-tertiary">Select a material</p>
         ) : (
@@ -145,7 +145,7 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
 
       {/* Color */}
       {showColor && !isEmpty && (
-        <div className="space-y-1 p-2 bg-[rgba(0,0,0,0.02)] border border-border rounded-[4px]">
+        <div className="space-y-1 p-2 bg-muted border border-border rounded-[4px]">
           <SliderRow label="Hue" value={edit.hue} min={-180} max={180} unit="°" onChange={v => updateEdit({ hue: v })} />
           <SliderRow label="Sat" value={edit.saturation} min={0} max={200} unit="%" onChange={v => updateEdit({ saturation: v })} />
           <SliderRow label="Bri" value={edit.brightness} min={0} max={200} unit="%" onChange={v => updateEdit({ brightness: v })} />
@@ -153,12 +153,12 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
       )}
 
       {/* Grout — always visible */}
-      <div className={`p-2 bg-[rgba(0,0,0,0.02)] border border-border rounded-[4px] ${(isEmpty || !edit.groutEnabled) ? 'opacity-30 pointer-events-none' : ''}`}>
+      <div className={`p-2 bg-muted border border-border rounded-[4px] ${(isEmpty || !edit.groutEnabled) ? 'opacity-30 pointer-events-none' : ''}`}>
         <div className="flex items-center gap-2">
           <span className="text-[9px] font-semibold text-text-secondary w-[36px] shrink-0">Thick</span>
           <input type="number" value={edit.groutThickness} min={0.5} max={10} step={0.5}
             onChange={e => updateEdit({ groutThickness: +e.target.value })}
-            className="flex-1 h-[22px] text-center text-[10px] font-semibold bg-white border border-border rounded-[3px] outline-none focus:border-foreground" />
+            className="flex-1 h-[22px] text-center text-[10px] font-semibold bg-surface border border-border rounded-[3px] outline-none focus:border-foreground" />
           <span className="text-[9px] text-text-tertiary">mm</span>
           <input type="color" value={edit.groutColor} onChange={e => updateEdit({ groutColor: e.target.value })}
             className="w-[22px] h-[22px] border border-border rounded-[3px] cursor-pointer p-0" />
@@ -169,19 +169,19 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
       <table className={`w-full text-[9px] border border-border rounded-[3px] overflow-hidden ${isEmpty ? 'opacity-30' : ''}`}>
         <tbody>
           <tr className="border-b border-border">
-            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-[rgba(0,0,0,0.02)] w-[40px]">단가</td>
+            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted w-[40px]">단가</td>
             <td className="px-2 py-[3px]">{product?.unit_price != null ? `${Number(product.unit_price).toLocaleString()}원` : '-'}</td>
           </tr>
           <tr className="border-b border-border">
-            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-[rgba(0,0,0,0.02)]">재고</td>
+            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted">재고</td>
             <td className="px-2 py-[3px]">{product?.stock != null ? `${product.stock}개` : '-'}</td>
           </tr>
           <tr className="border-b border-border">
-            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-[rgba(0,0,0,0.02)]">담당자</td>
+            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted">담당자</td>
             <td className="px-2 py-[3px]">{vendor?.contact_name ? `${vendor.contact_name} ${vendor.contact_phone || ''}`.trim() : '-'}</td>
           </tr>
           <tr>
-            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-[rgba(0,0,0,0.02)]">비고</td>
+            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted">비고</td>
             <td className="px-2 py-[3px]">{product?.notes || '-'}</td>
           </tr>
         </tbody>
@@ -189,7 +189,7 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
 
       {/* Apply */}
       <button
-        className="w-full h-[30px] bg-foreground hover:bg-foreground/85 text-white text-[10px] font-semibold tracking-[0.3px] rounded-[4px] cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed transition-colors relative flex items-center justify-center"
+        className="w-full h-[30px] bg-foreground hover:bg-foreground/85 text-primary-foreground text-[10px] font-semibold tracking-[0.3px] rounded-[4px] cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed transition-colors relative flex items-center justify-center"
         onClick={handleInsert}
         disabled={inserting || !mainImg || isEmpty}
       >
@@ -206,7 +206,7 @@ function ToolBtn({ icon, active, onClick, title, disabled }: {
   return (
     <button onClick={onClick} title={title} disabled={disabled}
       className={`flex-1 h-[26px] flex items-center justify-center rounded-[3px] cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed ${
-        active ? 'bg-foreground text-white' : 'bg-[rgba(0,0,0,0.04)] text-text-secondary hover:bg-[rgba(0,0,0,0.07)]'
+        active ? 'bg-foreground text-primary-foreground' : 'bg-muted text-text-secondary hover:bg-accent'
       }`}>
       {icon}
     </button>
