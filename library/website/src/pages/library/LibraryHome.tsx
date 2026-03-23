@@ -294,7 +294,7 @@ export default function LibraryHome() {
   const displayProducts = showFavorites ? favoriteProducts : products
 
   return (
-    <div className="flex" style={{ height: 'calc(100vh - 42px - 24px)' }}>
+    <div className="flex" style={{ height: 'calc(100vh - 52px - 24px)' }}>
       {/* ── Sidebar ── */}
       <div className="w-[190px] bg-surface border-r flex flex-col shrink-0">
         <div className="p-2.5">

@@ -17,11 +17,11 @@ export default function LibraryLayout() {
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
-      <header className="h-[44px] bg-surface border-b border-border flex items-center px-5 justify-between shrink-0">
+      <header className="h-[52px] bg-surface border-b border-border flex items-center px-5 justify-between shrink-0">
         <div className="flex items-center gap-8">
           <Link to="/" className="hover:opacity-80 transition-opacity shrink-0 flex items-center gap-2">
-            <img src="/logopic.png" alt="" className="h-[28px] w-auto dark:invert" />
-            <img src="/logotext.png" alt="Black Magician" className="h-[16px] w-auto dark:invert" />
+            <img src="/logopic.png" alt="" className="h-[40px] w-auto dark:invert" />
+            <img src="/logotext.png" alt="Black Magician" className="h-[30px] w-auto dark:invert" />
           </Link>
 
           <nav className="flex items-center gap-0.5">
