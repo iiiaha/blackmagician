@@ -9,29 +9,23 @@ export default function LibraryLayout() {
   const { user, userProfile, signOut } = useAuth()
   const [activeCategory, setActiveCategory] = useState<CategoryId>('tile')
 
-  const maxDownloads = 5
-  const usedDownloads = 0
-  const remaining = maxDownloads - usedDownloads
-
   return (
     <div className="h-screen flex flex-col">
-      {/* Header */}
       <header className="h-[42px] bg-white border-b flex items-center px-5 justify-between shrink-0">
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-5">
           <Link to="/" className="hover:opacity-70 transition-opacity shrink-0">
             <span className="text-[13px] font-bold tracking-[0.3px]">BLACK MAGICIAN</span>
           </Link>
 
-          {/* Category Tabs */}
-          <nav className="flex items-center gap-1">
+          <nav className="flex items-center">
             {CATEGORIES.map(cat => (
               <button
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id)}
-                className={`px-2.5 py-1 text-[10px] tracking-[0.5px] font-semibold rounded-sm cursor-pointer transition-colors ${
+                className={`px-2.5 py-[11px] text-[10px] tracking-[0.5px] font-semibold cursor-pointer transition-colors border-b-[2px] ${
                   activeCategory === cat.id
-                    ? 'text-foreground bg-[rgba(0,0,0,0.05)]'
-                    : 'text-text-tertiary hover:text-text-secondary'
+                    ? 'text-foreground border-foreground'
+                    : 'text-text-tertiary hover:text-text-secondary border-transparent'
                 }`}
               >
                 {cat.label}
@@ -40,20 +34,9 @@ export default function LibraryLayout() {
           </nav>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {user ? (
             <>
-              <div className="flex items-center gap-1.5 text-[9px] text-text-tertiary">
-                <span className="uppercase tracking-[0.3px] font-medium">Remaining</span>
-                <div className="w-[40px] h-[3px] bg-[rgba(0,0,0,0.06)] rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-foreground rounded-full transition-all duration-300"
-                    style={{ width: `${(remaining / maxDownloads) * 100}%` }}
-                  />
-                </div>
-                <span className="tabular-nums font-semibold">{remaining}/{maxDownloads}</span>
-              </div>
-
               <span className="text-[10px] text-text-secondary">
                 {userProfile?.display_name || user.email}
               </span>
