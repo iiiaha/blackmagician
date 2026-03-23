@@ -156,14 +156,16 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
 
       {/* Grout — always visible */}
       <div className={`px-2 py-1.5 bg-muted border border-border rounded-[4px] ${(isEmpty || !edit.groutEnabled) ? 'opacity-30 pointer-events-none' : ''}`}>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1">
           <span className="text-[9px] font-semibold text-text-secondary shrink-0">Thick</span>
-          <input type="number" value={edit.groutThickness} min={0.5} max={10} step={0.5}
-            onChange={e => updateEdit({ groutThickness: +e.target.value })}
-            className="w-[40px] h-[18px] text-center text-[9px] font-semibold bg-surface border border-border rounded-[2px] outline-none focus:border-foreground [&::-webkit-inner-spin-button]:h-[10px]" />
+          <button onClick={() => updateEdit({ groutThickness: Math.max(0.5, edit.groutThickness - 0.5) })}
+            className="w-[20px] h-[20px] flex items-center justify-center bg-surface border border-border rounded-[3px] text-[11px] font-bold text-muted-foreground hover:text-foreground cursor-pointer leading-none">−</button>
+          <span className="text-[10px] font-semibold w-[32px] text-center tabular-nums">{edit.groutThickness.toFixed(1)}</span>
+          <button onClick={() => updateEdit({ groutThickness: Math.min(10, edit.groutThickness + 0.5) })}
+            className="w-[20px] h-[20px] flex items-center justify-center bg-surface border border-border rounded-[3px] text-[11px] font-bold text-muted-foreground hover:text-foreground cursor-pointer leading-none">+</button>
           <span className="text-[9px] text-text-tertiary">mm</span>
           <input type="color" value={edit.groutColor} onChange={e => updateEdit({ groutColor: e.target.value })}
-            className="w-[28px] h-[18px] border border-border rounded-[2px] cursor-pointer p-[2px] ml-auto" />
+            className="w-[28px] h-[20px] border border-border rounded-[3px] cursor-pointer p-[2px] ml-auto" />
         </div>
       </div>
 
