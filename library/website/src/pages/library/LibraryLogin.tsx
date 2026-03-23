@@ -35,7 +35,11 @@ export default function LibraryLogin() {
 
     try {
       if (mode === 'signup') {
-        const { data: authData, error: authError } = await supabase.auth.signUp({ email, password })
+        const { error: authError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { display_name: displayName || email.split('@')[0] } },
+        })
         if (authError) {
           if (authError.message.includes('already registered')) {
             setError('이미 등록된 이메일입니다.')
@@ -46,12 +50,11 @@ export default function LibraryLogin() {
           }
           return
         }
-        if (authData.user) {
-          await supabase.from('user_profiles').insert({
-            auth_user_id: authData.user.id,
-            display_name: displayName || email.split('@')[0],
-          })
-        }
+        setError('')
+        setMode('login')
+        alert('인증 메일이 발송되었습니다. 이메일을 확인하고 링크를 클릭해주세요.')
+        setLoading(false)
+        return
       } else {
         const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
         if (authError) {
