@@ -91,7 +91,7 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, on
   }
 
   return (
-    <div className="h-full flex flex-col p-3 gap-2 overflow-y-auto">
+    <div className="h-full flex flex-col p-4 gap-3 overflow-y-auto">
       {/* Canvas */}
       <div className="flex-1 min-h-0 flex items-center justify-center bg-[rgba(0,0,0,0.02)] border border-border rounded-[4px] overflow-hidden">
         <canvas ref={canvasRef} className="max-w-full max-h-full object-contain" />
