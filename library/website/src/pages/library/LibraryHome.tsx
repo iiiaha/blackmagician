@@ -252,8 +252,12 @@ export default function LibraryHome() {
       .select('product_id').eq('user_id', userProfile.id).eq('category', activeCategory)
     if (favs && favs.length > 0) {
       const ids = favs.map((f: { product_id: string }) => f.product_id)
-      const { data: prods } = await supabase.from('products').select('*').in('id', ids)
-      setFavoriteProducts((prods as Product[]) || [])
+      const { data: prods } = await supabase.from('products').select('*, vendors(company_name)').in('id', ids)
+      const prodsWithVendor = (prods || []).map((p: Record<string, unknown>) => ({
+        ...(p as unknown as Product),
+        _vendorName: ((p.vendors as Record<string, unknown>)?.company_name as string) || '',
+      }))
+      setFavoriteProducts(prodsWithVendor as Product[])
       // Fetch images
       const { data: imgData } = await supabase.from('product_images').select('*')
         .in('product_id', ids).order('sort_order')
@@ -311,40 +315,37 @@ export default function LibraryHome() {
         </div>
 
         <div className="flex-1 overflow-y-auto px-1 pb-1 flex flex-col">
-          {selectedVendor ? (
-            /* Vendor drill-down: folder tree + back at bottom */
-            <>
-              <div className="px-2.5 pt-1 pb-2">
-                <span className="text-[11px] font-bold">{selectedVendor.company_name}</span>
-              </div>
-
-              {/* Favorites */}
-              {user && (
-                <button onClick={handleShowFavorites}
-                  className={`flex items-center gap-1.5 w-full text-left px-2.5 py-[5px] text-[10px] cursor-pointer rounded-sm mb-1 ${
-                    showFavorites ? 'font-semibold text-foreground bg-muted' : 'text-text-secondary hover:text-foreground'
-                  }`}>
-                  <Heart className={`w-3 h-3 ${showFavorites ? 'fill-current' : ''}`} />
-                  <span>Favorites</span>
-                  {favoriteIds.size > 0 && (
-                    <span className="text-[8px] text-text-tertiary ml-auto">{favoriteIds.size}</span>
-                  )}
-                </button>
+          {/* Favorites — always visible */}
+          {user && (
+            <button onClick={handleShowFavorites}
+              className={`flex items-center gap-1.5 w-full text-left px-2.5 py-[5px] text-[10px] cursor-pointer rounded-sm mb-1 ${
+                showFavorites ? 'font-semibold text-foreground bg-muted' : 'text-text-secondary hover:text-foreground'
+              }`}>
+              <Heart className={`w-3 h-3 ${showFavorites ? 'fill-current' : ''}`} />
+              <span>Favorites</span>
+              {favoriteIds.size > 0 && (
+                <span className="text-[8px] text-text-tertiary ml-auto">{favoriteIds.size}</span>
               )}
+            </button>
+          )}
+
+          {selectedVendor ? (
+            /* Vendor drill-down */
+            <>
+              {/* Vendor name + back on same row */}
+              <div className="flex items-center justify-between px-2.5 pt-1 pb-2">
+                <span className="text-[11px] font-bold">{selectedVendor.company_name}</span>
+                <button onClick={() => { setSelectedVendor(null); setExpandedVendorId(null); setSelectedFolder(null); setProducts([]); setShowFavorites(false) }}
+                  className="text-[9px] text-text-tertiary hover:text-foreground cursor-pointer">
+                  ← Back
+                </button>
+              </div>
 
               <div className="flex-1 overflow-y-auto">
                 {vendorTrees[selectedVendor.id] && vendorTrees[selectedVendor.id].length > 0
                   ? vendorTrees[selectedVendor.id].map(n => renderNode(n, 0, selectedVendor!))
                   : <p className="text-[10px] text-text-tertiary px-2 py-4 text-center">No folders</p>
                 }
-              </div>
-
-              {/* Back button at bottom-right */}
-              <div className="flex justify-end px-2 py-1.5 border-t border-border">
-                <button onClick={() => { setSelectedVendor(null); setExpandedVendorId(null); setSelectedFolder(null); setProducts([]); setShowFavorites(false) }}
-                  className="text-[9px] text-text-tertiary hover:text-foreground cursor-pointer">
-                  ← Back
-                </button>
               </div>
             </>
           ) : (
@@ -437,6 +438,7 @@ export default function LibraryHome() {
                     isFavorite={favoriteIds.has(p.id)}
                     onToggleFavorite={() => toggleFavorite(p.id)}
                     loggedIn={!!user}
+                    vendorPrefix={showFavorites ? (selectedVendor?.company_name || '') : undefined}
                     animationDelay={i * 0.03} />
                 ))}
               </div>
@@ -497,30 +499,39 @@ function LoginPopup({ onClose }: { onClose: () => void }) {
 }
 
 function VendorBanner({ vendor }: { vendor: Vendor }) {
-  // TODO: replace with real data from DB when vendor profile page is built
   const desc = vendor.description || `${vendor.company_name}은(는) 고품질 마감재를 공급하는 전문 업체입니다.`
   const website = vendor.website_url
-  const phone = vendor.contact_phone
+  const address = vendor.address
   const insta = vendor.instagram
 
   return (
-    <div className="mb-5 pb-4 border-b border-border">
-      <div className="flex items-start justify-between gap-4">
+    <div className="mb-5 rounded-[6px] overflow-hidden bg-gradient-to-r from-[#1a1a1a] to-[#333333] text-white">
+      <div className="flex items-center justify-between px-5 py-4">
         <div className="flex-1 min-w-0">
-          <h2 className="text-[14px] font-bold tracking-[0.2px] mb-1.5">{vendor.company_name}</h2>
-          <p className="text-[10px] text-muted-foreground leading-[1.6]">{desc}</p>
-        </div>
-        <div className="shrink-0 flex flex-col items-end gap-1 text-[9px] text-muted-foreground">
-          {phone && (
-            <span>{vendor.contact_name} {phone}</span>
+          <h2 className="text-[15px] font-bold tracking-[0.3px] mb-1">{vendor.company_name}</h2>
+          <p className="text-[10px] text-white/60 leading-[1.6] max-w-[360px]">{desc}</p>
+          {address && (
+            <p className="text-[9px] text-white/40 mt-1.5">{address}</p>
           )}
+        </div>
+        <div className="shrink-0 flex items-center gap-2">
           {website && (
             <a href={website} target="_blank" rel="noopener noreferrer"
-              className="hover:text-foreground transition-colors underline underline-offset-2">{website.replace(/https?:\/\//, '')}</a>
+              className="h-[26px] px-3 flex items-center gap-1.5 bg-white/10 hover:bg-white/20 rounded-[4px] text-[9px] text-white/80 hover:text-white transition-colors cursor-pointer">
+              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+              Website
+            </a>
           )}
           {insta && (
             <a href={`https://instagram.com/${insta.replace('@', '')}`} target="_blank" rel="noopener noreferrer"
-              className="hover:text-foreground transition-colors">@{insta.replace('@', '')}</a>
+              className="h-[26px] px-3 flex items-center gap-1.5 bg-white/10 hover:bg-white/20 rounded-[4px] text-[9px] text-white/80 hover:text-white transition-colors cursor-pointer">
+              <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/>
+              </svg>
+              Instagram
+            </a>
           )}
         </div>
       </div>
@@ -528,13 +539,14 @@ function VendorBanner({ vendor }: { vendor: Vendor }) {
   )
 }
 
-function MaterialItem({ product, onClick, selected, isFavorite, onToggleFavorite, loggedIn, animationDelay }: {
+function MaterialItem({ product, onClick, selected, isFavorite, onToggleFavorite, loggedIn, vendorPrefix, animationDelay }: {
   product: Product
   onClick: () => void
   selected: boolean
   isFavorite: boolean
   onToggleFavorite: () => void
   loggedIn: boolean
+  vendorPrefix?: string
   animationDelay?: number
 }) {
   return (
@@ -571,7 +583,9 @@ function MaterialItem({ product, onClick, selected, isFavorite, onToggleFavorite
 
       <div className="text-center mt-1.5">
         <p className={`text-[10px] leading-[1.3] truncate ${selected ? 'font-bold underline underline-offset-2' : 'font-medium'}`}>
-          {product.name}
+          {vendorPrefix || (product as Record<string, unknown>)._vendorName
+            ? `${vendorPrefix || (product as Record<string, unknown>)._vendorName}_${product.name}`
+            : product.name}
         </p>
       </div>
     </div>
