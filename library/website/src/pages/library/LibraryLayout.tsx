@@ -58,6 +58,20 @@ export default function LibraryLayout() {
       <main className="flex-1 overflow-hidden">
         <Outlet context={{ activeCategory }} />
       </main>
+
+      <footer className="h-[24px] bg-white border-t flex items-center justify-between px-5 shrink-0 text-[9px] text-text-tertiary">
+        <span>&copy; 2026 Black Magician. All rights reserved.</span>
+        <div className="flex items-center gap-3">
+          <a href="https://instagram.com/iiiaha.lab" target="_blank" rel="noopener noreferrer"
+            className="hover:text-foreground transition-colors flex items-center gap-1">
+            <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="5" /><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none" />
+            </svg>
+            @iiiaha.lab
+          </a>
+          <a href="mailto:iiiaha@naver.com" className="hover:text-foreground transition-colors">Contact</a>
+        </div>
+      </footer>
     </div>
   )
 }

@@ -198,8 +198,8 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
         onClick={handleInsert}
         disabled={inserting || !mainImg}
       >
-        <span>{inserting ? 'Applying...' : 'Apply to Bucket'}</span>
-        <span className="text-[9px] font-normal opacity-60">{remaining}/{maxDownloads}</span>
+        <span className="leading-none">{inserting ? 'Applying...' : 'Apply to Bucket'}</span>
+        <span className="text-[9px] font-normal opacity-60 leading-none">{remaining}/{maxDownloads}</span>
       </button>
     </div>
   )

@@ -294,7 +294,7 @@ export default function LibraryHome() {
   const displayProducts = showFavorites ? favoriteProducts : products
 
   return (
-    <div className="flex" style={{ height: 'calc(100vh - 42px)' }}>
+    <div className="flex" style={{ height: 'calc(100vh - 42px - 24px)' }}>
       {/* ── Sidebar ── */}
       <div className="w-[190px] bg-white border-r flex flex-col shrink-0">
         <div className="p-2.5">
@@ -423,20 +423,6 @@ export default function LibraryHome() {
             </div>
           )}
 
-          {/* Footer */}
-          <footer className="mt-8 pt-4 border-t border-border flex items-center justify-between text-[9px] text-text-tertiary">
-            <span>&copy; 2026 Black Magician. All rights reserved.</span>
-            <div className="flex items-center gap-3">
-              <a href="https://instagram.com/iiiaha.lab" target="_blank" rel="noopener noreferrer"
-                className="hover:text-foreground transition-colors flex items-center gap-1">
-                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="5" /><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none" />
-                </svg>
-                @iiiaha.lab
-              </a>
-              <a href="mailto:iiiaha@naver.com" className="hover:text-foreground transition-colors">Contact</a>
-            </div>
-          </footer>
         </div>
       </div>
     </div>
@@ -475,7 +461,7 @@ function MaterialItem({ product, onClick, selected, isFavorite, onToggleFavorite
             onClick={e => { e.stopPropagation(); onToggleFavorite() }}
             className={`absolute top-1.5 left-1.5 cursor-pointer transition-all drop-shadow-sm ${
               isFavorite
-                ? 'text-red-500 opacity-100'
+                ? 'text-[#FF6B8A] opacity-100'
                 : 'text-white opacity-0 group-hover:opacity-70 hover:!opacity-100'
             }`}
           >
