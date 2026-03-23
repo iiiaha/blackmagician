@@ -18,23 +18,6 @@ function GoogleIcon({ className }: { className?: string }) {
   )
 }
 
-function NaverIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24">
-      <rect width="24" height="24" rx="4" fill="#03C75A"/>
-      <path d="M13.5 12.6L10.2 7.5H7.5v9h3.3v-5.1l3.3 5.1h2.4v-9h-3v5.1z" fill="white"/>
-    </svg>
-  )
-}
-
-function KakaoIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24">
-      <rect width="24" height="24" rx="4" fill="#FEE500"/>
-      <path d="M12 6C8.13 6 5 8.46 5 11.5c0 1.97 1.3 3.69 3.27 4.65l-.84 3.1c-.05.2.17.36.34.25l3.65-2.42c.19.02.38.02.58.02 3.87 0 7-2.46 7-5.5S15.87 6 12 6z" fill="#3C1E1E"/>
-    </svg>
-  )
-}
 
 export default function LibraryLogin() {
   const navigate = useNavigate()
@@ -95,18 +78,6 @@ export default function LibraryLogin() {
     if (error) setError('소셜 로그인 중 오류가 발생했습니다.')
   }
 
-  const handleNaverLogin = async () => {
-    setError('')
-    // Naver uses custom OIDC in Supabase
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'kakao', // placeholder — Naver needs custom OIDC setup
-      options: {
-        redirectTo: window.location.origin + '/',
-      },
-    })
-    if (error) setError('소셜 로그인 중 오류가 발생했습니다.')
-  }
-
   return (
     <div className="flex items-center justify-center bg-background" style={{ height: 'calc(100vh - 60px - 24px)' }}>
       <Card className="w-full max-w-[340px] bg-surface border-border">
@@ -123,30 +94,14 @@ export default function LibraryLogin() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Social Login Buttons */}
-          <div className="flex gap-2 mb-4">
-            <button
-              onClick={() => handleSocialLogin('google')}
-              className="flex-1 h-[36px] flex items-center justify-center gap-2 border border-border rounded-[5px] bg-surface hover:bg-muted cursor-pointer transition-colors"
-            >
-              <GoogleIcon className="w-4 h-4" />
-              <span className="text-[10px] font-semibold text-foreground">Google</span>
-            </button>
-            <button
-              onClick={handleNaverLogin}
-              className="flex-1 h-[36px] flex items-center justify-center gap-2 border border-border rounded-[5px] bg-surface hover:bg-muted cursor-pointer transition-colors"
-            >
-              <NaverIcon className="w-4 h-4 rounded-[2px]" />
-              <span className="text-[10px] font-semibold text-foreground">Naver</span>
-            </button>
-            <button
-              onClick={() => handleSocialLogin('kakao')}
-              className="flex-1 h-[36px] flex items-center justify-center gap-2 border border-border rounded-[5px] bg-surface hover:bg-muted cursor-pointer transition-colors"
-            >
-              <KakaoIcon className="w-4 h-4 rounded-[2px]" />
-              <span className="text-[10px] font-semibold text-foreground">Kakao</span>
-            </button>
-          </div>
+          {/* Social Login */}
+          <button
+            onClick={() => handleSocialLogin('google')}
+            className="w-full h-[36px] flex items-center justify-center gap-2 border border-border rounded-[5px] bg-surface hover:bg-muted cursor-pointer transition-colors mb-4"
+          >
+            <GoogleIcon className="w-4 h-4" />
+            <span className="text-[11px] font-semibold text-foreground">Google로 계속하기</span>
+          </button>
 
           {/* Divider */}
           <div className="flex items-center gap-3 mb-4">
