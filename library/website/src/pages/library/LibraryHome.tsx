@@ -1,12 +1,10 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { Input } from '@/components/ui/input'
 import PreviewPanel from '@/components/PreviewPanel'
 import {
   Search, ChevronRight, ChevronDown, ChevronLeft,
-  Folder, FolderOpen, Download, Info,
-  ImageIcon, Lock,
+  Download, Info, ImageIcon, Lock,
 } from 'lucide-react'
 import type { Vendor, FolderNode, Product, ProductImage } from '@/types/database'
 
@@ -153,6 +151,7 @@ export default function LibraryHome() {
     }
   }
 
+  // Folder tree node
   const renderNode = (node: TreeNode, level: number) => {
     const isExpanded = expandedIds.has(node.id)
     const isSelected = selectedFolder?.id === node.id
@@ -160,21 +159,18 @@ export default function LibraryHome() {
       <div key={node.id}>
         <button
           onClick={() => handleSelectFolder(node)}
-          className={`flex items-center gap-1.5 py-[5px] w-full text-left rounded-sm text-xs transition-all cursor-pointer ${
+          className={`flex items-center gap-1.5 py-[5px] w-full text-left text-[11px] cursor-pointer transition-all ${
             isSelected
-              ? 'bg-foreground text-background font-semibold'
-              : 'text-foreground/70 hover:text-foreground hover:bg-secondary'
+              ? 'font-semibold text-foreground'
+              : 'text-text-secondary hover:text-foreground'
           }`}
-          style={{ paddingLeft: `${level * 16 + 8}px`, paddingRight: '8px' }}
+          style={{ paddingLeft: `${level * 14 + 12}px`, paddingRight: '12px' }}
         >
           {node.children.length > 0 || !node.is_leaf ? (
             isExpanded
-              ? <ChevronDown className="w-3 h-3 shrink-0 opacity-40" />
-              : <ChevronRight className="w-3 h-3 shrink-0 opacity-40" />
+              ? <ChevronDown className="w-3 h-3 shrink-0 opacity-30" />
+              : <ChevronRight className="w-3 h-3 shrink-0 opacity-30" />
           ) : <span className="w-3 shrink-0" />}
-          {node.is_leaf
-            ? <FolderOpen className="w-3.5 h-3.5 shrink-0 opacity-50" />
-            : <Folder className="w-3.5 h-3.5 shrink-0 opacity-50" />}
           <span className="truncate">{node.name}</span>
         </button>
         {isExpanded && node.children.map(child => renderNode(child, level + 1))}
@@ -183,60 +179,61 @@ export default function LibraryHome() {
   }
 
   return (
-    <div className="flex" style={{ height: 'calc(100vh - 44px)' }}>
-      {/* ── Left Column ── */}
-      <div className="w-[220px] border-r flex flex-col shrink-0">
-        {/* Folder Browser */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Search */}
-          <div className="p-3 pb-2">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-              <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                placeholder="제품명 검색"
-                className="h-8 text-xs pl-8 pr-3 rounded-sm bg-secondary border-0 placeholder:text-muted-foreground/60 focus-visible:ring-1" />
-            </div>
+    <div className="flex" style={{ height: 'calc(100vh - 42px)' }}>
+      {/* ── Sidebar ── */}
+      <div className="w-[240px] bg-white border-r flex flex-col shrink-0">
+        {/* Search */}
+        <div className="px-3 pt-3 pb-2">
+          <div className="relative">
+            <Search className="absolute left-[10px] top-1/2 -translate-y-1/2 w-3 h-3 text-text-tertiary" />
+            <input
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSearch()}
+              placeholder="Search materials"
+              className="w-full h-[28px] text-[11px] pl-7 pr-3 bg-[rgba(0,0,0,0.02)] border border-border rounded-[4px] outline-none placeholder:text-text-tertiary focus:border-foreground focus:shadow-[0_0_0_2px_rgba(26,26,26,0.08)]"
+            />
           </div>
+        </div>
 
-          <div className="flex-1 overflow-y-auto px-2 pb-2">
-            {selectedVendor ? (
-              <>
-                <button onClick={() => { setSelectedVendor(null); setSelectedFolder(null); setProducts([]); setFolders([]) }}
-                  className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground mb-2 px-1 cursor-pointer transition-colors">
-                  <ChevronLeft className="w-3 h-3" />
-                  <span>전체 업체</span>
+        {/* Folder tree */}
+        <div className="flex-1 overflow-y-auto">
+          {selectedVendor ? (
+            <div className="pb-3">
+              <button onClick={() => { setSelectedVendor(null); setSelectedFolder(null); setProducts([]); setFolders([]) }}
+                className="flex items-center gap-1 text-[10px] text-text-tertiary hover:text-foreground px-3 py-1 cursor-pointer">
+                <ChevronLeft className="w-3 h-3" />
+                Back
+              </button>
+              <div className="px-3 pt-1 pb-2">
+                <span className="text-[12px] font-bold">{selectedVendor.company_name}</span>
+              </div>
+              {folderTree.length > 0 ? folderTree.map(n => renderNode(n, 0)) : (
+                <p className="text-[10px] text-text-tertiary px-3 py-6 text-center">No folders</p>
+              )}
+            </div>
+          ) : (
+            <div className="pb-3">
+              <div className="px-3 py-2">
+                <span className="text-[9px] font-semibold text-text-secondary uppercase tracking-[0.5px]">Vendors</span>
+              </div>
+              {vendors.map(v => (
+                <button key={v.id} onClick={() => handleSelectVendor(v)}
+                  className="flex items-center w-full text-left px-3 py-[6px] text-[11px] text-foreground hover:bg-[rgba(0,0,0,0.02)] cursor-pointer">
+                  {v.company_name}
                 </button>
-                <div className="px-2 mb-3">
-                  <span className="text-xs font-bold text-foreground">{selectedVendor.company_name}</span>
-                </div>
-                {folderTree.length > 0 ? folderTree.map(n => renderNode(n, 0)) : (
-                  <p className="text-xs text-muted-foreground px-2 py-4">등록된 폴더가 없습니다.</p>
-                )}
-              </>
-            ) : (
-              <>
-                <div className="px-2 mb-2">
-                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Vendors</span>
-                </div>
-                {vendors.map(v => (
-                  <button key={v.id} onClick={() => handleSelectVendor(v)}
-                    className="flex items-center w-full text-left px-2 py-[6px] rounded-sm text-xs font-medium text-foreground/80 hover:text-foreground hover:bg-secondary cursor-pointer transition-all">
-                    {v.company_name}
-                  </button>
-                ))}
-                {vendors.length === 0 && (
-                  <p className="text-xs text-muted-foreground px-2 py-8 text-center">등록된 업체가 없습니다.</p>
-                )}
-              </>
-            )}
-          </div>
+              ))}
+              {vendors.length === 0 && (
+                <p className="text-[10px] text-text-tertiary px-3 py-8 text-center">No vendors</p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Divider */}
         <div className="border-t" />
 
-        {/* Preview */}
+        {/* Preview Panel */}
         <div className="h-[46%] shrink-0">
           <PreviewPanel
             images={previewImages}
@@ -249,26 +246,32 @@ export default function LibraryHome() {
       </div>
 
       {/* ── Main Content ── */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Breadcrumb / Title Bar */}
+      <div className="flex-1 flex flex-col overflow-hidden bg-background">
+        {/* Breadcrumb */}
         {(selectedFolder || searchResults !== null) && (
-          <div className="px-5 py-2.5 border-b flex items-center justify-between shrink-0">
+          <div className="px-4 py-2 border-b bg-white flex items-center justify-between shrink-0">
             {searchResults !== null ? (
               <>
-                <span className="text-xs text-muted-foreground">
-                  "<span className="text-foreground font-medium">{searchQuery}</span>" 검색 결과 {searchResults.length}건
+                <span className="text-[10px] text-text-secondary">
+                  Results for "<span className="text-foreground font-semibold">{searchQuery}</span>" — {searchResults.length} items
                 </span>
                 <button onClick={() => setSearchResults(null)}
-                  className="text-[11px] text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
-                  초기화
+                  className="text-[10px] text-text-tertiary hover:text-foreground cursor-pointer uppercase tracking-[0.3px] font-semibold">
+                  Clear
                 </button>
               </>
             ) : selectedFolder && (
-              <div className="flex items-center gap-1 text-xs">
+              <div className="flex items-center gap-1 text-[10px]">
+                {selectedVendor && (
+                  <>
+                    <span className="text-text-tertiary">{selectedVendor.company_name}</span>
+                    <ChevronRight className="w-3 h-3 text-text-tertiary opacity-40" />
+                  </>
+                )}
                 {getBreadcrumb(folders, selectedFolder.id).map((f, i, arr) => (
                   <span key={f.id} className="flex items-center gap-1">
-                    {i > 0 && <ChevronRight className="w-3 h-3 text-muted-foreground/40" />}
-                    <span className={i === arr.length - 1 ? 'font-semibold text-foreground' : 'text-muted-foreground'}>
+                    {i > 0 && <ChevronRight className="w-3 h-3 text-text-tertiary opacity-40" />}
+                    <span className={i === arr.length - 1 ? 'font-semibold text-foreground' : 'text-text-secondary'}>
                       {f.name}
                     </span>
                   </span>
@@ -278,45 +281,40 @@ export default function LibraryHome() {
           </div>
         )}
 
-        {/* Product Grid */}
-        <div className="flex-1 overflow-y-auto">
+        {/* Grid */}
+        <div className="flex-1 overflow-y-auto p-4">
           {searchResults !== null ? (
-            <div className="p-5">
-              {searchResults.length === 0 ? (
-                <EmptyState message="검색 결과가 없습니다." />
-              ) : (
-                <div className="grid grid-cols-4 gap-3">
-                  {searchResults.map(p => (
-                    <ProductCard key={p.id} product={p} images={[]}
-                      vendorName={p.vendor_name}
-                      onDownload={() => handleDownload(p, p.vendor_name)}
-                      onDetail={() => setDetailProduct(p)}
-                      loggedIn={!!user} />
-                  ))}
-                </div>
-              )}
-            </div>
+            searchResults.length === 0 ? (
+              <EmptyState />
+            ) : (
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-1">
+                {searchResults.map(p => (
+                  <MaterialItem key={p.id} product={p} images={[]}
+                    onDownload={() => handleDownload(p, p.vendor_name)}
+                    onDetail={() => setDetailProduct(p)}
+                    loggedIn={!!user}
+                    selected={previewProduct?.id === p.id} />
+                ))}
+              </div>
+            )
           ) : selectedFolder ? (
-            <div className="p-5">
-              {products.length === 0 ? (
-                <EmptyState message="이 폴더에 등록된 제품이 없습니다." />
-              ) : (
-                <div className="grid grid-cols-4 gap-3">
-                  {products.map(p => (
-                    <ProductCard key={p.id} product={p} images={productImages[p.id] || []}
-                      onDownload={() => handleDownload(p)}
-                      onDetail={() => setDetailProduct(p)}
-                      loggedIn={!!user} />
-                  ))}
-                </div>
-              )}
-            </div>
+            products.length === 0 ? (
+              <EmptyState />
+            ) : (
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-1">
+                {products.map((p, i) => (
+                  <MaterialItem key={p.id} product={p} images={productImages[p.id] || []}
+                    onDownload={() => handleDownload(p)}
+                    onDetail={() => setDetailProduct(p)}
+                    loggedIn={!!user}
+                    selected={previewProduct?.id === p.id}
+                    animationDelay={i * 0.03} />
+                ))}
+              </div>
+            )
           ) : (
             <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground/50 font-medium">마감재를 탐색하려면</p>
-                <p className="text-sm text-muted-foreground/50 font-medium">좌측에서 업체를 선택하세요.</p>
-              </div>
+              <p className="text-[11px] text-text-tertiary">Select a folder to browse materials</p>
             </div>
           )}
         </div>
@@ -324,33 +322,33 @@ export default function LibraryHome() {
 
       {/* ── Detail Sidebar ── */}
       {detailProduct && (
-        <div className="w-[200px] border-l shrink-0 flex flex-col">
-          <div className="flex items-center justify-between px-4 py-3 border-b">
-            <span className="text-xs font-bold">상세 정보</span>
+        <div className="w-[200px] bg-white border-l shrink-0 flex flex-col">
+          <div className="flex items-center justify-between px-3 py-2.5 border-b">
+            <span className="text-[9px] font-semibold uppercase tracking-[0.5px] text-text-secondary">Details</span>
             <button onClick={() => setDetailProduct(null)}
-              className="text-[11px] text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
-              닫기
+              className="text-[10px] text-text-tertiary hover:text-foreground cursor-pointer">
+              Close
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto px-4 py-3">
-            <h3 className="text-sm font-bold mb-3 leading-snug">{detailProduct.name}</h3>
-            <div className="space-y-2.5 text-xs leading-relaxed">
+          <div className="flex-1 overflow-y-auto px-3 py-3">
+            <h3 className="text-[12px] font-bold mb-4 leading-snug">{detailProduct.name}</h3>
+            <div className="space-y-3">
               {detailProduct.unit_price !== null && (
-                <InfoRow label="단가" value={`${Number(detailProduct.unit_price).toLocaleString()}원`} />
+                <DetailRow label="PRICE" value={`${Number(detailProduct.unit_price).toLocaleString()}원`} />
               )}
               {detailProduct.stock !== null && (
-                <InfoRow label="재고" value={`${detailProduct.stock}개`} />
+                <DetailRow label="STOCK" value={`${detailProduct.stock}`} />
               )}
               {detailProduct.moq !== null && (
-                <InfoRow label="MOQ" value={`${detailProduct.moq}개`} />
+                <DetailRow label="MOQ" value={`${detailProduct.moq}`} />
               )}
               {detailProduct.lead_time && (
-                <InfoRow label="리드타임" value={detailProduct.lead_time} />
+                <DetailRow label="LEAD TIME" value={detailProduct.lead_time} />
               )}
               {detailProduct.notes && (
                 <div>
-                  <span className="text-muted-foreground text-[11px]">비고</span>
-                  <p className="mt-0.5 text-foreground/80 leading-relaxed">{detailProduct.notes}</p>
+                  <span className="text-[9px] font-semibold text-text-secondary uppercase tracking-[0.5px]">Notes</span>
+                  <p className="mt-1 text-[11px] text-text-secondary leading-relaxed">{detailProduct.notes}</p>
                 </div>
               )}
             </div>
@@ -361,84 +359,91 @@ export default function LibraryHome() {
   )
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
+function DetailRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between items-baseline">
-      <span className="text-muted-foreground text-[11px]">{label}</span>
-      <span className="font-semibold">{value}</span>
+    <div>
+      <span className="text-[9px] font-semibold text-text-secondary uppercase tracking-[0.5px]">{label}</span>
+      <p className="text-[12px] font-semibold mt-0.5">{value}</p>
     </div>
   )
 }
 
-function EmptyState({ message }: { message: string }) {
+function EmptyState() {
   return (
     <div className="flex items-center justify-center py-20">
-      <p className="text-sm text-muted-foreground/50">{message}</p>
+      <p className="text-[11px] text-text-tertiary">No materials found</p>
     </div>
   )
 }
 
-function ProductCard({ product, images, vendorName, onDownload, onDetail, loggedIn }: {
+// ── Material Item (Marbello-style tile card) ──
+function MaterialItem({ product, images, onDownload, onDetail, loggedIn, selected, animationDelay }: {
   product: Product
   images: ProductImage[]
-  vendorName?: string
   onDownload: () => void
   onDetail: () => void
   loggedIn: boolean
+  selected: boolean
+  animationDelay?: number
 }) {
   return (
-    <div className="group relative cursor-pointer" onClick={onDetail}>
-      {/* Thumbnail */}
-      <div className="aspect-square bg-[#f8f8f8] rounded-sm overflow-hidden mb-2 relative">
+    <div
+      className="group relative cursor-pointer"
+      style={animationDelay !== undefined ? {
+        animation: `fadeInUp 0.25s ease-out ${animationDelay}s both`,
+      } : undefined}
+      onClick={onDetail}
+    >
+      {/* Image */}
+      <div className={`aspect-square overflow-hidden mb-[6px] relative ${
+        selected ? 'ring-[3px] ring-foreground' : ''
+      }`}>
         {product.thumbnail_url ? (
           <img src={product.thumbnail_url} alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+            className="w-full h-full object-cover transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] group-hover:scale-105"
+            loading="lazy" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <ImageIcon className="w-6 h-6 text-muted-foreground/15" />
+          <div className="w-full h-full bg-[rgba(0,0,0,0.02)] flex items-center justify-center">
+            <ImageIcon className="w-5 h-5 text-text-tertiary opacity-30" />
           </div>
         )}
 
-        {/* Hover overlay - bottom gradient */}
-        <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
-        {/* Action buttons */}
-        <div className="absolute bottom-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-          {loggedIn ? (
-            <button onClick={(e) => { e.stopPropagation(); onDownload() }}
-              className="w-7 h-7 bg-white rounded-full flex items-center justify-center hover:bg-white/90 shadow-sm cursor-pointer transition-transform hover:scale-110"
-              title="프리뷰에 로드">
-              <Download className="w-3.5 h-3.5 text-foreground" />
+        {/* Hover actions */}
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/40 to-transparent" />
+          <div className="absolute bottom-[6px] right-[6px] flex gap-1">
+            {loggedIn ? (
+              <button onClick={(e) => { e.stopPropagation(); onDownload() }}
+                className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-sm cursor-pointer hover:scale-110 transition-transform"
+                title="Load to preview">
+                <Download className="w-3 h-3 text-foreground" />
+              </button>
+            ) : (
+              <div className="w-6 h-6 bg-white/50 rounded-full flex items-center justify-center" title="Login required">
+                <Lock className="w-3 h-3 text-text-tertiary" />
+              </div>
+            )}
+            <button onClick={(e) => { e.stopPropagation(); onDetail() }}
+              className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-sm cursor-pointer hover:scale-110 transition-transform"
+              title="Details">
+              <Info className="w-3 h-3 text-foreground" />
             </button>
-          ) : (
-            <div className="w-7 h-7 bg-white/60 rounded-full flex items-center justify-center" title="로그인 필요">
-              <Lock className="w-3.5 h-3.5 text-muted-foreground" />
-            </div>
-          )}
-          <button onClick={(e) => { e.stopPropagation(); onDetail() }}
-            className="w-7 h-7 bg-white rounded-full flex items-center justify-center hover:bg-white/90 shadow-sm cursor-pointer transition-transform hover:scale-110"
-            title="상세 정보">
-            <Info className="w-3.5 h-3.5 text-foreground" />
-          </button>
+          </div>
         </div>
 
-        {/* Pattern count badge */}
+        {/* Pattern count */}
         {images.length > 1 && (
-          <span className="absolute top-1.5 right-1.5 bg-foreground/70 text-background text-[9px] font-semibold px-1.5 py-0.5 rounded-sm">
+          <span className="absolute top-[4px] right-[4px] text-[8px] font-semibold text-white bg-black/50 px-[5px] py-[1px] rounded-sm">
             {images.length}
           </span>
         )}
       </div>
 
-      {/* Info */}
-      <div className="px-0.5">
-        <p className="text-xs font-semibold truncate leading-tight">{product.name}</p>
-        {vendorName && (
-          <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{vendorName}</p>
-        )}
-        {product.unit_price !== null && (
-          <p className="text-[11px] font-bold mt-0.5">{Number(product.unit_price).toLocaleString()}원</p>
-        )}
+      {/* Name */}
+      <div className="text-center px-1">
+        <p className="text-[10px] leading-[1.3] truncate" style={{ letterSpacing: '-0.01em' }}>
+          {product.name}
+        </p>
       </div>
     </div>
   )
