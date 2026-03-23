@@ -85,7 +85,6 @@ export default function LibraryLayout() {
             </svg>
             @iiiaha.lab
           </a>
-          <a href="mailto:iiiaha@naver.com" className="hover:text-foreground transition-colors">Contact</a>
         </div>
       </footer>
     </div>
