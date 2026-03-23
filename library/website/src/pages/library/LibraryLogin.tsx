@@ -37,11 +37,7 @@ export default function LibraryLogin() {
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
-          <img src="/logopic.png" alt="" className="h-[36px] w-auto mx-auto mb-4" />
           <h2 className="text-[14px] font-bold">로그인</h2>
-          <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
-            Google 계정으로 간편하게 시작하세요
-          </p>
         </div>
 
         <div className="px-6 pb-8 pt-4">
@@ -55,9 +51,6 @@ export default function LibraryLogin() {
 
           {error && <p className="text-[10px] text-destructive text-center mt-3">{error}</p>}
 
-          <p className="text-[9px] text-text-tertiary text-center mt-6 leading-relaxed">
-            로그인 시 서비스 이용약관에 동의하는 것으로 간주됩니다.
-          </p>
         </div>
       </div>
     </div>
