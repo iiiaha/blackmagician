@@ -1,7 +1,5 @@
 import { useRef, useEffect, useCallback, useState } from 'react'
-import {
-  RotateCw, Palette, Grid3X3, Columns2, Columns3, Eye,
-} from 'lucide-react'
+import { Eye } from 'lucide-react'
 import {
   type EditState, defaultEditState, drawCanvas, calcFinalSizeMM,
   loadImage, getMixTileCount,
@@ -21,12 +19,12 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, on
   const [edit, setEdit] = useState<EditState>({ ...defaultEditState })
   const [mainImg, setMainImg] = useState<HTMLImageElement | null>(null)
   const [allImgs, setAllImgs] = useState<HTMLImageElement[]>([])
-  const [activePanel, setActivePanel] = useState<string | null>(null)
+  const [showColor, setShowColor] = useState(false)
   const [inserting, setInserting] = useState(false)
 
   useEffect(() => {
     setEdit({ ...defaultEditState })
-    setActivePanel(null)
+    setShowColor(false)
     if (images.length === 0) return
     loadImage(images[0].url).then(img => setMainImg(img))
     Promise.all(images.map(i => loadImage(i.url))).then(imgs => setAllImgs(imgs))
@@ -41,16 +39,6 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, on
 
   const updateEdit = (partial: Partial<EditState>) => {
     setEdit(prev => ({ ...prev, ...partial }))
-  }
-
-  const togglePanel = (panel: string) => {
-    if (activePanel === panel) {
-      setActivePanel(null)
-      if (panel === 'grout') updateEdit({ groutEnabled: false })
-    } else {
-      setActivePanel(panel)
-      if (panel === 'grout') updateEdit({ groutEnabled: true })
-    }
   }
 
   const handleMix = (mode: 'grid' | 'half' | 'third') => {
@@ -91,112 +79,109 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, on
   }
 
   return (
-    <div className="h-full flex flex-col p-4 gap-3 overflow-y-auto">
+    <div className="h-full flex flex-col p-3 gap-2.5 overflow-y-auto">
       {/* Canvas */}
-      <div className="flex-1 min-h-0 flex items-center justify-center bg-[rgba(0,0,0,0.02)] border border-border rounded-[4px] overflow-hidden">
+      <div className="flex-1 min-h-0 flex items-center justify-center bg-[rgba(0,0,0,0.025)] border border-border rounded-[4px] overflow-hidden">
         <canvas ref={canvasRef} className="max-w-full max-h-full object-contain" />
       </div>
 
       {/* Info */}
-      <div className="flex items-center justify-between text-[9px] text-text-secondary px-0.5">
+      <div className="flex items-center justify-between text-[9px] text-text-secondary">
         <span className="font-medium truncate max-w-[60%]">{tileName}</span>
         {finalMM && <span className="text-text-tertiary">{Math.round(finalMM.w)}×{Math.round(finalMM.h)}mm</span>}
       </div>
 
-      {/* Toolbar */}
-      <div className="flex gap-[2px]">
-        <ToolBtn icon={RotateCw} active={edit.rotation > 0}
-          onClick={() => updateEdit({ rotation: (edit.rotation + 90) % 360 })} title="Rotate" />
-        <ToolBtn icon={Palette} active={activePanel === 'color'}
-          onClick={() => togglePanel('color')} title="Color" />
-        <ToolBtn icon={Grid3X3} active={activePanel === 'grout'}
-          onClick={() => togglePanel('grout')} title="Grout" />
+      {/* Tools - with text labels */}
+      <div className="flex gap-[3px]">
+        <ToolBtn label="Rotate" active={edit.rotation > 0}
+          onClick={() => updateEdit({ rotation: (edit.rotation + 90) % 360 })} />
+        <ToolBtn label="Color" active={showColor}
+          onClick={() => setShowColor(!showColor)} />
+        <ToolBtn label="Grout" active={edit.groutEnabled}
+          onClick={() => updateEdit({ groutEnabled: !edit.groutEnabled })} />
         {hasMix && (
           <>
-            <div className="w-px bg-border mx-[2px]" />
-            <ToolBtn icon={Grid3X3} active={edit.mixMode === 'grid'}
-              onClick={() => handleMix('grid')} title="Mix" />
-            <ToolBtn icon={Columns2} active={edit.mixMode === 'half'}
-              onClick={() => handleMix('half')} title="½" />
-            <ToolBtn icon={Columns3} active={edit.mixMode === 'third'}
-              onClick={() => handleMix('third')} title="⅓" />
+            <ToolBtn label="Mix" active={edit.mixMode === 'grid'}
+              onClick={() => handleMix('grid')} />
+            <ToolBtn label="½" active={edit.mixMode === 'half'}
+              onClick={() => handleMix('half')} />
+            <ToolBtn label="⅓" active={edit.mixMode === 'third'}
+              onClick={() => handleMix('third')} />
           </>
         )}
       </div>
 
-      {/* Color Panel */}
-      {activePanel === 'color' && (
-        <div className="space-y-1.5 p-2 bg-[rgba(0,0,0,0.02)] border border-border rounded-[4px]">
-          <SliderRow label="HUE" value={edit.hue} min={-180} max={180} unit="°"
+      {/* Color Panel - toggled */}
+      {showColor && (
+        <div className="space-y-1 p-2 bg-[rgba(0,0,0,0.02)] border border-border rounded-[4px]">
+          <SliderRow label="Hue" value={edit.hue} min={-180} max={180} unit="°"
             onChange={v => updateEdit({ hue: v })} />
-          <SliderRow label="SAT" value={edit.saturation} min={0} max={200} unit="%"
+          <SliderRow label="Sat" value={edit.saturation} min={0} max={200} unit="%"
             onChange={v => updateEdit({ saturation: v })} />
-          <SliderRow label="BRI" value={edit.brightness} min={0} max={200} unit="%"
+          <SliderRow label="Bri" value={edit.brightness} min={0} max={200} unit="%"
             onChange={v => updateEdit({ brightness: v })} />
         </div>
       )}
 
-      {/* Grout Panel */}
-      {activePanel === 'grout' && (
-        <div className="p-2 bg-[rgba(0,0,0,0.02)] border border-border rounded-[4px] space-y-1.5">
-          <div className="flex items-center gap-2">
-            <span className="text-[9px] font-semibold text-text-secondary uppercase tracking-[0.3px] w-[42px]">Thick</span>
-            <input type="number" value={edit.groutThickness} min={0.5} max={10} step={0.5}
-              onChange={e => updateEdit({ groutThickness: +e.target.value })}
-              className="flex-1 h-[26px] text-center text-[12px] font-semibold bg-[rgba(0,0,0,0.02)] border border-border rounded-[4px] outline-none focus:border-foreground" />
-            <span className="text-[9px] text-text-tertiary">mm</span>
-            <input type="color" value={edit.groutColor}
-              onChange={e => updateEdit({ groutColor: e.target.value })}
-              className="w-[26px] h-[26px] border border-border rounded-[4px] cursor-pointer p-0" />
-          </div>
+      {/* Grout Panel - always visible, enabled/disabled by grout toggle */}
+      <div className={`p-2 bg-[rgba(0,0,0,0.02)] border border-border rounded-[4px] ${
+        edit.groutEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'
+      }`}>
+        <div className="flex items-center gap-2">
+          <span className="text-[9px] font-semibold text-text-secondary w-[36px] shrink-0">Thick</span>
+          <input type="number" value={edit.groutThickness} min={0.5} max={10} step={0.5}
+            onChange={e => updateEdit({ groutThickness: +e.target.value })}
+            className="flex-1 h-[24px] text-center text-[11px] font-semibold bg-white border border-border rounded-[3px] outline-none focus:border-foreground" />
+          <span className="text-[9px] text-text-tertiary">mm</span>
+          <input type="color" value={edit.groutColor}
+            onChange={e => updateEdit({ groutColor: e.target.value })}
+            className="w-[24px] h-[24px] border border-border rounded-[3px] cursor-pointer p-0" />
         </div>
-      )}
+      </div>
 
-      {/* Generate / Insert */}
+      {/* Apply */}
       <button
-        className="w-full h-[32px] bg-[#6a6a6a] hover:bg-[#5a5a5a] text-white text-[11px] font-semibold uppercase tracking-[0.5px] rounded-[4px] cursor-pointer transition-all hover:-translate-y-[1px] hover:shadow-[0_2px_8px_rgba(0,0,0,0.1)] active:translate-y-0 active:shadow-[0_1px_3px_rgba(0,0,0,0.15)] disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none"
+        className="w-full h-[30px] bg-[#5a5a5a] hover:bg-[#4a4a4a] text-white text-[10px] font-semibold uppercase tracking-[0.5px] rounded-[4px] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
         onClick={handleInsert}
         disabled={inserting || !mainImg}
       >
-        {inserting ? 'Inserting...' : 'Generate'}
+        {inserting ? 'Applying...' : 'Apply to Bucket'}
       </button>
     </div>
   )
 }
 
-function ToolBtn({ icon: Icon, active, onClick, title }: {
-  icon: React.ComponentType<{ className?: string }>
+function ToolBtn({ label, active, onClick }: {
+  label: string
   active: boolean
   onClick: () => void
-  title: string
 }) {
   return (
     <button
       onClick={onClick}
-      title={title}
-      className={`flex-1 h-[28px] flex items-center justify-center rounded-[4px] cursor-pointer transition-all ${
+      className={`flex-1 h-[26px] flex items-center justify-center rounded-[3px] text-[9px] font-semibold cursor-pointer ${
         active
-          ? 'bg-[rgba(0,0,0,0.08)] border border-[rgba(0,0,0,0.12)]'
-          : 'bg-[rgba(0,0,0,0.02)] border border-border hover:bg-[rgba(0,0,0,0.04)] hover:border-[rgba(0,0,0,0.12)]'
+          ? 'bg-foreground text-white'
+          : 'bg-[rgba(0,0,0,0.04)] text-text-secondary hover:bg-[rgba(0,0,0,0.07)]'
       }`}
     >
-      <Icon className="w-3 h-3" />
+      {label}
     </button>
   )
 }
 
-function SliderRow({ label, value, min, max, step, unit, onChange, fixed }: {
+function SliderRow({ label, value, min, max, step, unit, onChange }: {
   label: string; value: number; min: number; max: number; step?: number; unit: string
-  onChange: (v: number) => void; fixed?: number
+  onChange: (v: number) => void
 }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[9px] font-semibold text-text-secondary uppercase tracking-[0.3px] w-[28px] shrink-0">{label}</span>
+      <span className="text-[9px] font-semibold text-text-secondary w-[24px] shrink-0">{label}</span>
       <input type="range" min={min} max={max} step={step || 1} value={value}
         onChange={e => onChange(+e.target.value)}
         className="flex-1" />
-      <span className="text-[9px] text-text-tertiary w-[32px] text-right tabular-nums">
-        {fixed !== undefined ? value.toFixed(fixed) : value}{unit}
+      <span className="text-[9px] text-text-tertiary w-[30px] text-right tabular-nums">
+        {value}{unit}
       </span>
     </div>
   )

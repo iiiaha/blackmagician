@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import PreviewPanel from '@/components/PreviewPanel'
 import {
   Search, ChevronRight, ChevronDown, ChevronLeft,
-  Download, Info, ImageIcon, Lock,
+  Download, Info, ImageIcon, Lock, X,
 } from 'lucide-react'
 import type { Vendor, FolderNode, Product, ProductImage } from '@/types/database'
 
@@ -45,7 +45,10 @@ export default function LibraryHome() {
   const [previewImages, setPreviewImages] = useState<ProductImage[]>([])
   const [previewVendor, setPreviewVendor] = useState('')
   const [previewSizeStr, setPreviewSizeStr] = useState('')
+
+  // Detail popup
   const [detailProduct, setDetailProduct] = useState<Product | null>(null)
+  const [detailPos, setDetailPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
 
   useEffect(() => {
     supabase.from('vendors').select('*').eq('approved', true).order('company_name')
@@ -144,8 +147,14 @@ export default function LibraryHome() {
     if (sk?.insert_material) {
       sk.insert_material(dataUrl, vendor, tileName, sizeStr)
     } else {
-      alert('SketchUp 환경에서만 Insert 가능합니다.')
+      alert('SketchUp 환경에서만 사용 가능합니다.')
     }
+  }
+
+  const handleShowDetail = (product: Product, e: React.MouseEvent) => {
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    setDetailProduct(product)
+    setDetailPos({ x: rect.right + 8, y: rect.top })
   }
 
   const renderNode = (node: TreeNode, level: number) => {
@@ -155,12 +164,12 @@ export default function LibraryHome() {
       <div key={node.id}>
         <button
           onClick={() => handleSelectFolder(node)}
-          className={`flex items-center gap-2 py-[7px] w-full text-left text-[11px] cursor-pointer transition-all ${
+          className={`flex items-center gap-2 py-[6px] w-full text-left text-[11px] cursor-pointer ${
             isSelected
               ? 'font-semibold text-foreground'
               : 'text-text-secondary hover:text-foreground'
           }`}
-          style={{ paddingLeft: `${level * 18 + 20}px`, paddingRight: '20px' }}
+          style={{ paddingLeft: `${level * 16 + 16}px`, paddingRight: '16px' }}
         >
           {node.children.length > 0 || !node.is_leaf ? (
             isExpanded
@@ -177,50 +186,50 @@ export default function LibraryHome() {
   return (
     <div className="flex" style={{ height: 'calc(100vh - 48px)' }}>
       {/* ── Sidebar ── */}
-      <div className="w-[250px] bg-white border-r flex flex-col shrink-0">
+      <div className="w-[220px] bg-white border-r flex flex-col shrink-0">
         {/* Search */}
-        <div className="px-5 pt-5 pb-4">
+        <div className="p-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-tertiary" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-tertiary" />
             <input
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSearch()}
               placeholder="Search materials"
-              className="w-full h-[34px] text-[11px] pl-9 pr-4 bg-[rgba(0,0,0,0.025)] border border-border rounded-[6px] outline-none placeholder:text-text-tertiary focus:border-foreground focus:shadow-[0_0_0_2px_rgba(26,26,26,0.06)]"
+              className="w-full h-[30px] text-[11px] pl-8 pr-3 bg-[rgba(0,0,0,0.025)] border border-border rounded-[5px] outline-none placeholder:text-text-tertiary focus:border-foreground focus:shadow-[0_0_0_2px_rgba(26,26,26,0.06)]"
             />
           </div>
         </div>
 
         {/* Folder tree */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto px-2">
           {selectedVendor ? (
-            <div className="pb-4">
+            <div className="pb-3">
               <button onClick={() => { setSelectedVendor(null); setSelectedFolder(null); setProducts([]); setFolders([]) }}
-                className="flex items-center gap-1 text-[10px] text-text-tertiary hover:text-foreground px-5 py-2 cursor-pointer">
+                className="flex items-center gap-1 text-[10px] text-text-tertiary hover:text-foreground px-3 py-1.5 cursor-pointer">
                 <ChevronLeft className="w-3 h-3" />
                 Back
               </button>
-              <div className="px-5 pt-1 pb-4">
-                <span className="text-[13px] font-bold">{selectedVendor.company_name}</span>
+              <div className="px-3 pt-1 pb-3">
+                <span className="text-[12px] font-bold">{selectedVendor.company_name}</span>
               </div>
               {folderTree.length > 0 ? folderTree.map(n => renderNode(n, 0)) : (
-                <p className="text-[11px] text-text-tertiary px-5 py-8 text-center">No folders</p>
+                <p className="text-[11px] text-text-tertiary px-3 py-6 text-center">No folders</p>
               )}
             </div>
           ) : (
-            <div className="pb-4">
-              <div className="px-5 pb-3">
+            <div className="pb-3">
+              <div className="px-3 pb-2">
                 <span className="text-[9px] font-semibold text-text-secondary uppercase tracking-[0.5px]">Vendors</span>
               </div>
               {vendors.map(v => (
                 <button key={v.id} onClick={() => handleSelectVendor(v)}
-                  className="flex items-center w-full text-left px-5 py-[9px] text-[11px] text-foreground hover:bg-[rgba(0,0,0,0.02)] cursor-pointer">
+                  className="flex items-center w-full text-left px-3 py-[7px] text-[11px] text-foreground hover:bg-[rgba(0,0,0,0.02)] cursor-pointer rounded-sm">
                   {v.company_name}
                 </button>
               ))}
               {vendors.length === 0 && (
-                <p className="text-[11px] text-text-tertiary px-5 py-10 text-center">No vendors</p>
+                <p className="text-[11px] text-text-tertiary px-3 py-8 text-center">No vendors</p>
               )}
             </div>
           )}
@@ -244,11 +253,11 @@ export default function LibraryHome() {
       <div className="flex-1 flex flex-col overflow-hidden bg-background">
         {/* Breadcrumb */}
         {(selectedFolder || searchResults !== null) && (
-          <div className="px-8 py-3.5 border-b bg-white flex items-center justify-between shrink-0">
+          <div className="px-6 py-2.5 border-b bg-white flex items-center justify-between shrink-0">
             {searchResults !== null ? (
               <>
                 <span className="text-[11px] text-text-secondary">
-                  Results for "<span className="text-foreground font-semibold">{searchQuery}</span>" — {searchResults.length} items
+                  "<span className="text-foreground font-semibold">{searchQuery}</span>" — {searchResults.length} items
                 </span>
                 <button onClick={() => setSearchResults(null)}
                   className="text-[10px] text-text-tertiary hover:text-foreground cursor-pointer uppercase tracking-[0.3px] font-semibold">
@@ -277,16 +286,16 @@ export default function LibraryHome() {
         )}
 
         {/* Grid */}
-        <div className="flex-1 overflow-y-auto px-8 py-6">
+        <div className="flex-1 overflow-y-auto p-5">
           {searchResults !== null ? (
             searchResults.length === 0 ? (
               <EmptyState />
             ) : (
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-5">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-4">
                 {searchResults.map(p => (
                   <MaterialItem key={p.id} product={p} images={[]}
                     onDownload={() => handleDownload(p, p.vendor_name)}
-                    onDetail={() => setDetailProduct(p)}
+                    onDetail={(e) => handleShowDetail(p, e)}
                     loggedIn={!!user}
                     selected={previewProduct?.id === p.id} />
                 ))}
@@ -296,11 +305,11 @@ export default function LibraryHome() {
             products.length === 0 ? (
               <EmptyState />
             ) : (
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-5">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-4">
                 {products.map((p, i) => (
                   <MaterialItem key={p.id} product={p} images={productImages[p.id] || []}
                     onDownload={() => handleDownload(p)}
-                    onDetail={() => setDetailProduct(p)}
+                    onDetail={(e) => handleShowDetail(p, e)}
                     loggedIn={!!user}
                     selected={previewProduct?.id === p.id}
                     animationDelay={i * 0.03} />
@@ -315,40 +324,49 @@ export default function LibraryHome() {
         </div>
       </div>
 
-      {/* ── Detail Sidebar ── */}
+      {/* ── Detail Popup ── */}
       {detailProduct && (
-        <div className="w-[230px] bg-white border-l shrink-0 flex flex-col">
-          <div className="flex items-center justify-between px-5 py-4 border-b">
-            <span className="text-[9px] font-semibold uppercase tracking-[0.5px] text-text-secondary">Details</span>
-            <button onClick={() => setDetailProduct(null)}
-              className="text-[10px] text-text-tertiary hover:text-foreground cursor-pointer">
-              Close
-            </button>
-          </div>
-          <div className="flex-1 overflow-y-auto px-5 py-5">
-            <h3 className="text-[14px] font-bold mb-6 leading-snug">{detailProduct.name}</h3>
-            <div className="space-y-5">
-              {detailProduct.unit_price !== null && (
-                <DetailRow label="PRICE" value={`${Number(detailProduct.unit_price).toLocaleString()}원`} />
-              )}
-              {detailProduct.stock !== null && (
-                <DetailRow label="STOCK" value={`${detailProduct.stock}`} />
-              )}
-              {detailProduct.moq !== null && (
-                <DetailRow label="MOQ" value={`${detailProduct.moq}`} />
-              )}
-              {detailProduct.lead_time && (
-                <DetailRow label="LEAD TIME" value={detailProduct.lead_time} />
-              )}
-              {detailProduct.notes && (
-                <div>
-                  <span className="text-[9px] font-semibold text-text-secondary uppercase tracking-[0.5px]">Notes</span>
-                  <p className="mt-1.5 text-[11px] text-text-secondary leading-[1.7]">{detailProduct.notes}</p>
-                </div>
-              )}
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setDetailProduct(null)} />
+          <div
+            className="fixed z-50 bg-white rounded-lg shadow-[0_4px_24px_rgba(0,0,0,0.12)] border border-border w-[220px] overflow-hidden"
+            style={{
+              left: Math.min(detailPos.x, window.innerWidth - 240),
+              top: Math.min(detailPos.y, window.innerHeight - 300),
+            }}
+          >
+            <div className="flex items-center justify-between px-4 pt-3 pb-2">
+              <span className="text-[9px] font-semibold uppercase tracking-[0.5px] text-text-secondary">Details</span>
+              <button onClick={() => setDetailProduct(null)}
+                className="text-text-tertiary hover:text-foreground cursor-pointer">
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+            <div className="px-4 pb-4">
+              <h3 className="text-[12px] font-bold mb-3 leading-snug">{detailProduct.name}</h3>
+              <div className="space-y-2.5">
+                {detailProduct.unit_price !== null && (
+                  <DetailRow label="단가" value={`${Number(detailProduct.unit_price).toLocaleString()}원`} />
+                )}
+                {detailProduct.stock !== null && (
+                  <DetailRow label="재고" value={`${detailProduct.stock}개`} />
+                )}
+                {detailProduct.moq !== null && (
+                  <DetailRow label="MOQ" value={`${detailProduct.moq}개`} />
+                )}
+                {detailProduct.lead_time && (
+                  <DetailRow label="리드타임" value={detailProduct.lead_time} />
+                )}
+                {detailProduct.notes && (
+                  <div className="pt-1">
+                    <span className="text-[9px] font-semibold text-text-secondary uppercase tracking-[0.3px]">비고</span>
+                    <p className="mt-1 text-[11px] text-text-secondary leading-[1.6]">{detailProduct.notes}</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   )
@@ -356,16 +374,16 @@ export default function LibraryHome() {
 
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <span className="text-[9px] font-semibold text-text-secondary uppercase tracking-[0.5px]">{label}</span>
-      <p className="text-[13px] font-semibold mt-1">{value}</p>
+    <div className="flex justify-between items-baseline">
+      <span className="text-[10px] text-text-secondary">{label}</span>
+      <span className="text-[11px] font-semibold">{value}</span>
     </div>
   )
 }
 
 function EmptyState() {
   return (
-    <div className="flex items-center justify-center py-24">
+    <div className="flex items-center justify-center py-20">
       <p className="text-[12px] text-text-tertiary">No materials found</p>
     </div>
   )
@@ -375,25 +393,24 @@ function MaterialItem({ product, images, onDownload, onDetail, loggedIn, selecte
   product: Product
   images: ProductImage[]
   onDownload: () => void
-  onDetail: () => void
+  onDetail: (e: React.MouseEvent) => void
   loggedIn: boolean
   selected: boolean
   animationDelay?: number
 }) {
   return (
     <div
-      className="group relative cursor-pointer"
+      className="group relative"
       style={animationDelay !== undefined ? {
         animation: `fadeInUp 0.25s ease-out ${animationDelay}s both`,
       } : undefined}
-      onClick={onDetail}
     >
-      <div className={`aspect-square rounded-[4px] overflow-hidden relative ${
-        selected ? 'ring-[3px] ring-foreground' : ''
+      <div className={`aspect-square rounded-[3px] overflow-hidden relative ${
+        selected ? 'ring-[2px] ring-foreground' : ''
       }`}>
         {product.thumbnail_url ? (
           <img src={product.thumbnail_url} alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] group-hover:scale-105"
+            className="w-full h-full object-cover"
             loading="lazy" />
         ) : (
           <div className="w-full h-full bg-[rgba(0,0,0,0.03)] flex items-center justify-center">
@@ -401,38 +418,38 @@ function MaterialItem({ product, images, onDownload, onDetail, loggedIn, selecte
           </div>
         )}
 
-        {/* Hover */}
-        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-          <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/40 to-transparent" />
-          <div className="absolute bottom-2 right-2 flex gap-1.5">
+        {/* Hover overlay */}
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+          <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/40 to-transparent" />
+          <div className="absolute bottom-1.5 right-1.5 flex gap-1">
             {loggedIn ? (
               <button onClick={(e) => { e.stopPropagation(); onDownload() }}
-                className="w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-sm cursor-pointer hover:scale-110 transition-transform"
-                title="Load to preview">
-                <Download className="w-3.5 h-3.5 text-foreground" />
+                className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-sm cursor-pointer"
+                title="프리뷰에 로드">
+                <Download className="w-3 h-3 text-foreground" />
               </button>
             ) : (
-              <div className="w-7 h-7 bg-white/50 rounded-full flex items-center justify-center" title="Login required">
-                <Lock className="w-3.5 h-3.5 text-text-tertiary" />
+              <div className="w-6 h-6 bg-white/50 rounded-full flex items-center justify-center" title="로그인 필요">
+                <Lock className="w-3 h-3 text-text-tertiary" />
               </div>
             )}
-            <button onClick={(e) => { e.stopPropagation(); onDetail() }}
-              className="w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-sm cursor-pointer hover:scale-110 transition-transform"
-              title="Details">
-              <Info className="w-3.5 h-3.5 text-foreground" />
+            <button onClick={(e) => { e.stopPropagation(); onDetail(e) }}
+              className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-sm cursor-pointer"
+              title="상세 정보">
+              <Info className="w-3 h-3 text-foreground" />
             </button>
           </div>
         </div>
 
         {images.length > 1 && (
-          <span className="absolute top-1.5 right-1.5 text-[8px] font-semibold text-white bg-black/50 px-[6px] py-[2px] rounded-sm">
+          <span className="absolute top-1 right-1 text-[8px] font-semibold text-white bg-black/50 px-[5px] py-[1px] rounded-sm">
             {images.length}
           </span>
         )}
       </div>
 
-      <div className="text-center mt-2.5 px-1">
-        <p className="text-[10px] font-medium leading-[1.4] truncate">{product.name}</p>
+      <div className="text-center mt-1.5">
+        <p className="text-[10px] font-medium leading-[1.3] truncate">{product.name}</p>
       </div>
     </div>
   )
