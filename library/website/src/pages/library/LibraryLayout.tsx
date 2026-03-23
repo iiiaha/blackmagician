@@ -22,16 +22,15 @@ export default function LibraryLayout() {
           {user ? (
             <>
               {/* Download gauge */}
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-[60px] h-[4px] bg-[rgba(0,0,0,0.06)] rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-foreground rounded-full transition-all duration-300"
-                      style={{ width: `${(remaining / maxDownloads) * 100}%` }}
-                    />
-                  </div>
-                  <span className="text-[9px] text-text-tertiary tabular-nums">{remaining}/{maxDownloads}</span>
+              <div className="flex items-center gap-1.5 text-[9px] text-text-tertiary">
+                <span className="uppercase tracking-[0.3px] font-medium">Remaining</span>
+                <div className="w-[48px] h-[4px] bg-[rgba(0,0,0,0.06)] rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-foreground rounded-full transition-all duration-300"
+                    style={{ width: `${(remaining / maxDownloads) * 100}%` }}
+                  />
                 </div>
+                <span className="tabular-nums font-semibold">{remaining}/{maxDownloads}</span>
               </div>
 
               <span className="text-[10px] text-text-secondary">

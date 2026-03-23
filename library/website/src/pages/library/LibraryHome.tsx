@@ -230,7 +230,7 @@ export default function LibraryHome() {
         <div className="border-t" />
 
         {/* Preview Panel */}
-        <div className="h-[46%] shrink-0">
+        <div className="h-[58%] shrink-0">
           <PreviewPanel
             images={previewImages}
             sizeStr={previewSizeStr}
@@ -338,11 +338,7 @@ function MaterialItem({ product, onClick, selected, animationDelay }: {
         animation: `fadeInUp 0.25s ease-out ${animationDelay}s both`,
       } : undefined}
     >
-      <div className={`aspect-square rounded-[3px] overflow-hidden relative transition-shadow duration-200 ${
-        selected
-          ? 'shadow-[0_0_0_2px_rgba(0,0,0,0.08),0_0_0_4px_rgba(0,102,255,0.4)]'
-          : 'hover:shadow-[0_2px_8px_rgba(0,0,0,0.1)]'
-      }`}>
+      <div className="aspect-square rounded-[3px] overflow-hidden relative hover:shadow-[0_2px_8px_rgba(0,0,0,0.1)] transition-shadow duration-200">
         {product.thumbnail_url ? (
           <img src={product.thumbnail_url} alt={product.name}
             className="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.04]"
@@ -355,7 +351,7 @@ function MaterialItem({ product, onClick, selected, animationDelay }: {
       </div>
 
       <div className="text-center mt-1.5">
-        <p className={`text-[10px] leading-[1.3] truncate ${selected ? 'font-bold' : 'font-medium'}`}>
+        <p className={`text-[10px] leading-[1.3] truncate ${selected ? 'font-bold underline underline-offset-2' : 'font-medium'}`}>
           {product.name}
         </p>
       </div>

@@ -35,30 +35,23 @@ function MixIcon({ className }: { className?: string }) {
 }
 
 function HalfStaggerIcon({ className }: { className?: string }) {
+  // Two planks stacked, bottom shifted right by 1/2
   return (
-    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3">
-      <rect x="0.5" y="1" width="7" height="4" rx="0.3" />
-      <rect x="8.5" y="1" width="7" height="4" rx="0.3" />
-      <rect x="4" y="6" width="7" height="4" rx="0.3" />
-      <rect x="12" y="6" width="3.5" height="4" rx="0.3" />
-      <rect x="0.5" y="6" width="2.5" height="4" rx="0.3" />
-      <rect x="0.5" y="11" width="7" height="4" rx="0.3" />
-      <rect x="8.5" y="11" width="7" height="4" rx="0.3" />
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+      <rect x="1" y="3" width="14" height="4" rx="0.5" />
+      <rect x="8" y="9" width="14" height="4" rx="0.5" strokeDasharray="0" />
+      <rect x="-6" y="9" width="14" height="4" rx="0.5" />
     </svg>
   )
 }
 
 function ThirdStaggerIcon({ className }: { className?: string }) {
+  // Three planks stacked like stairs, each shifted by 1/3
   return (
-    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3">
-      <rect x="0.5" y="0.5" width="7" height="4" rx="0.3" />
-      <rect x="8.5" y="0.5" width="7" height="4" rx="0.3" />
-      <rect x="3" y="5.5" width="7" height="4" rx="0.3" />
-      <rect x="11" y="5.5" width="4.5" height="4" rx="0.3" />
-      <rect x="0.5" y="5.5" width="1.5" height="4" rx="0.3" />
-      <rect x="5.5" y="10.5" width="7" height="4" rx="0.3" />
-      <rect x="13.5" y="10.5" width="2" height="4" rx="0.3" />
-      <rect x="0.5" y="10.5" width="4" height="4" rx="0.3" />
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+      <rect x="1" y="1" width="14" height="3.5" rx="0.5" />
+      <rect x="5.5" y="6" width="14" height="3.5" rx="0.5" />
+      <rect x="10" y="11" width="14" height="3.5" rx="0.5" />
     </svg>
   )
 }
