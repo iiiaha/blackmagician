@@ -105,6 +105,7 @@ export default function LibraryHome() {
     )
     setFilteredVendors(allVendors.filter(v => matchingVendorIds.has(v.id)))
     setExpandedVendorId(null)
+    setSelectedVendor(null)
     setSelectedFolder(null)
     setProducts([])
     setProductImages({})
@@ -500,12 +501,12 @@ function LoginPopup({ onClose }: { onClose: () => void }) {
 
 function VendorBanner({ vendor }: { vendor: Vendor }) {
   const desc = vendor.description || `${vendor.company_name}은(는) 고품질 마감재를 공급하는 전문 업체입니다.`
-  const website = vendor.website_url
-  const address = vendor.address
-  const insta = vendor.instagram
+  const website = vendor.website_url || 'https://example.com'
+  const address = vendor.address || '서울특별시 강남구'
+  const insta = vendor.instagram || 'blackmagician'
 
   return (
-    <div className="mb-5 rounded-[6px] overflow-hidden bg-gradient-to-r from-[#1a1a1a] to-[#333333] text-white">
+    <div className="mb-5 rounded-[6px] overflow-hidden bg-gradient-to-br from-[#2a2a2a] via-[#3a3a3a] to-[#4a4a4a] text-white">
       <div className="flex items-center justify-between px-5 py-4">
         <div className="flex-1 min-w-0">
           <h2 className="text-[15px] font-bold tracking-[0.3px] mb-1">{vendor.company_name}</h2>
@@ -582,10 +583,13 @@ function MaterialItem({ product, onClick, selected, isFavorite, onToggleFavorite
       </div>
 
       <div className="text-center mt-1.5">
+        {Boolean(vendorPrefix || (product as Record<string, unknown>)._vendorName) && (
+          <span className="inline-block text-[8px] font-semibold text-muted-foreground bg-muted border border-border rounded-[3px] px-1.5 py-[1px] mb-0.5 leading-tight">
+            {String(vendorPrefix || (product as Record<string, unknown>)._vendorName || '')}
+          </span>
+        )}
         <p className={`text-[10px] leading-[1.3] truncate ${selected ? 'font-bold underline underline-offset-2' : 'font-medium'}`}>
-          {vendorPrefix || (product as Record<string, unknown>)._vendorName
-            ? `${vendorPrefix || (product as Record<string, unknown>)._vendorName}_${product.name}`
-            : product.name}
+          {product.name}
         </p>
       </div>
     </div>
