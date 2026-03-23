@@ -2,11 +2,10 @@ import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 import PreviewPanel from '@/components/PreviewPanel'
 import {
   Search, ChevronRight, ChevronDown, ChevronLeft,
-  Folder, FolderOpen, Building2, Download, Info,
+  Folder, FolderOpen, Download, Info,
   ImageIcon, Lock,
 } from 'lucide-react'
 import type { Vendor, FolderNode, Product, ProductImage } from '@/types/database'
@@ -44,16 +43,15 @@ export default function LibraryHome() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<(Product & { vendor_name: string; folder_path: string })[] | null>(null)
 
-  // Preview state
+  // Preview
   const [previewProduct, setPreviewProduct] = useState<Product | null>(null)
   const [previewImages, setPreviewImages] = useState<ProductImage[]>([])
   const [previewVendor, setPreviewVendor] = useState('')
   const [previewSizeStr, setPreviewSizeStr] = useState('')
 
-  // Detail panel
+  // Detail
   const [detailProduct, setDetailProduct] = useState<Product | null>(null)
 
-  // Fetch vendors
   useEffect(() => {
     supabase.from('vendors').select('*').eq('approved', true).order('company_name')
       .then(({ data }) => setVendors((data as Vendor[]) || []))
@@ -80,7 +78,6 @@ export default function LibraryHome() {
     const { data } = await supabase.from('products').select('*').eq('folder_id', folderId).order('name')
     const prods = (data as Product[]) || []
     setProducts(prods)
-
     if (prods.length > 0) {
       const { data: imgData } = await supabase.from('product_images').select('*')
         .in('product_id', prods.map(p => p.id)).order('sort_order')
@@ -113,7 +110,6 @@ export default function LibraryHome() {
     })
   }
 
-  // Search
   const handleSearch = async () => {
     if (!searchQuery.trim()) { setSearchResults(null); return }
     const { data } = await supabase.from('products')
@@ -126,7 +122,7 @@ export default function LibraryHome() {
         const { data: fd } = await supabase.from('folder_nodes').select('*').eq('vendor_id', p.vendor_id as string)
         const allF = (fd as FolderNode[]) || []
         const bc = getBreadcrumb(allF, p.folder_id as string)
-        return { ...(p as unknown as Product), vendor_name: vendor.company_name as string, folder_path: bc.map(f => f.name).join(' > ') }
+        return { ...(p as unknown as Product), vendor_name: vendor.company_name as string, folder_path: bc.map(f => f.name).join(' / ') }
       }))
       setSearchResults(results.filter(Boolean) as (Product & { vendor_name: string; folder_path: string })[])
     }
@@ -134,17 +130,12 @@ export default function LibraryHome() {
     setSelectedVendor(null)
   }
 
-  // Download → load into preview (no local file save)
   const handleDownload = (product: Product, vendorName?: string) => {
     if (!user) { alert('로그인 후 이용 가능합니다.'); return }
-
     const imgs = productImages[product.id] || []
     if (imgs.length === 0) { alert('이미지가 없습니다.'); return }
-
     const vName = vendorName || selectedVendor?.company_name || ''
     const breadcrumb = selectedFolder ? getBreadcrumb(folders, selectedFolder.id) : []
-
-    // Set preview directly from Supabase URLs
     setPreviewProduct(product)
     setPreviewImages(imgs)
     setPreviewVendor(vName)
@@ -152,7 +143,6 @@ export default function LibraryHome() {
     setPreviewSizeStr(sizeNode?.name || '600x600')
   }
 
-  // Insert: call sketchup directly (HtmlDialog loads this page directly, no iframe)
   const handleInsert = (dataUrl: string, vendor: string, tileName: string, sizeStr: string) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sk = (window as any).sketchup as Record<string, (...args: string[]) => void> | undefined
@@ -163,7 +153,6 @@ export default function LibraryHome() {
     }
   }
 
-  // Render folder tree node
   const renderNode = (node: TreeNode, level: number) => {
     const isExpanded = expandedIds.has(node.id)
     const isSelected = selectedFolder?.id === node.id
@@ -171,15 +160,21 @@ export default function LibraryHome() {
       <div key={node.id}>
         <button
           onClick={() => handleSelectFolder(node)}
-          className={`flex items-center gap-1 py-1 px-1 w-full text-left rounded text-[11px] transition-colors cursor-pointer ${
-            isSelected ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary/50'
+          className={`flex items-center gap-1.5 py-[5px] w-full text-left rounded-sm text-xs transition-all cursor-pointer ${
+            isSelected
+              ? 'bg-foreground text-background font-semibold'
+              : 'text-foreground/70 hover:text-foreground hover:bg-secondary'
           }`}
-          style={{ paddingLeft: `${level * 14 + 4}px` }}
+          style={{ paddingLeft: `${level * 16 + 8}px`, paddingRight: '8px' }}
         >
           {node.children.length > 0 || !node.is_leaf ? (
-            isExpanded ? <ChevronDown className="w-3 h-3 shrink-0" /> : <ChevronRight className="w-3 h-3 shrink-0" />
+            isExpanded
+              ? <ChevronDown className="w-3 h-3 shrink-0 opacity-40" />
+              : <ChevronRight className="w-3 h-3 shrink-0 opacity-40" />
           ) : <span className="w-3 shrink-0" />}
-          {node.is_leaf ? <FolderOpen className="w-3 h-3 shrink-0" /> : <Folder className="w-3 h-3 shrink-0" />}
+          {node.is_leaf
+            ? <FolderOpen className="w-3.5 h-3.5 shrink-0 opacity-50" />
+            : <Folder className="w-3.5 h-3.5 shrink-0 opacity-50" />}
           <span className="truncate">{node.name}</span>
         </button>
         {isExpanded && node.children.map(child => renderNode(child, level + 1))}
@@ -188,52 +183,61 @@ export default function LibraryHome() {
   }
 
   return (
-    <div className="flex h-full" style={{ height: 'calc(100vh - 40px)' }}>
+    <div className="flex" style={{ height: 'calc(100vh - 44px)' }}>
       {/* ── Left Column ── */}
-      <div className="w-52 border-r flex flex-col shrink-0 overflow-hidden">
-        {/* Top: Folder Browser */}
-        <div className="flex-1 flex flex-col overflow-hidden border-b">
-          <div className="p-1.5 border-b">
+      <div className="w-[220px] border-r flex flex-col shrink-0">
+        {/* Folder Browser */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Search */}
+          <div className="p-3 pb-2">
             <div className="relative">
-              <Search className="absolute left-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
               <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                placeholder="제품 검색..." className="h-6 text-[11px] pl-6 pr-2" />
+                placeholder="제품명 검색"
+                className="h-8 text-xs pl-8 pr-3 rounded-sm bg-secondary border-0 placeholder:text-muted-foreground/60 focus-visible:ring-1" />
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto p-1.5">
+
+          <div className="flex-1 overflow-y-auto px-2 pb-2">
             {selectedVendor ? (
               <>
                 <button onClick={() => { setSelectedVendor(null); setSelectedFolder(null); setProducts([]); setFolders([]) }}
-                  className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground mb-1.5 cursor-pointer">
-                  <ChevronLeft className="w-3 h-3" /> 전체 업체
+                  className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground mb-2 px-1 cursor-pointer transition-colors">
+                  <ChevronLeft className="w-3 h-3" />
+                  <span>전체 업체</span>
                 </button>
-                <div className="flex items-center gap-1 mb-2 px-0.5">
-                  <Building2 className="w-3 h-3 text-muted-foreground" />
-                  <span className="text-xs font-medium">{selectedVendor.company_name}</span>
+                <div className="px-2 mb-3">
+                  <span className="text-xs font-bold text-foreground">{selectedVendor.company_name}</span>
                 </div>
                 {folderTree.length > 0 ? folderTree.map(n => renderNode(n, 0)) : (
-                  <p className="text-[11px] text-muted-foreground px-1">폴더가 없습니다.</p>
+                  <p className="text-xs text-muted-foreground px-2 py-4">등록된 폴더가 없습니다.</p>
                 )}
               </>
             ) : (
               <>
-                <p className="text-[10px] font-medium text-muted-foreground mb-1 px-0.5">업체 목록</p>
+                <div className="px-2 mb-2">
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Vendors</span>
+                </div>
                 {vendors.map(v => (
                   <button key={v.id} onClick={() => handleSelectVendor(v)}
-                    className="flex items-center gap-1.5 w-full text-left px-1.5 py-1 rounded text-xs hover:bg-secondary/50 cursor-pointer">
-                    <Building2 className="w-3 h-3 text-muted-foreground shrink-0" />
-                    <span className="truncate">{v.company_name}</span>
+                    className="flex items-center w-full text-left px-2 py-[6px] rounded-sm text-xs font-medium text-foreground/80 hover:text-foreground hover:bg-secondary cursor-pointer transition-all">
+                    {v.company_name}
                   </button>
                 ))}
-                {vendors.length === 0 && <p className="text-[11px] text-muted-foreground">업체 없음</p>}
+                {vendors.length === 0 && (
+                  <p className="text-xs text-muted-foreground px-2 py-8 text-center">등록된 업체가 없습니다.</p>
+                )}
               </>
             )}
           </div>
         </div>
 
-        {/* Bottom: Preview */}
-        <div className="h-[45%] shrink-0">
+        {/* Divider */}
+        <div className="border-t" />
+
+        {/* Preview */}
+        <div className="h-[46%] shrink-0">
           <PreviewPanel
             images={previewImages}
             sizeStr={previewSizeStr}
@@ -244,90 +248,112 @@ export default function LibraryHome() {
         </div>
       </div>
 
-      {/* ── Right: Product Grid ── */}
-      <div className="flex-1 overflow-y-auto p-3">
-        {searchResults !== null ? (
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xs font-semibold">검색: "{searchQuery}"</h2>
-              <button onClick={() => setSearchResults(null)} className="text-[11px] text-muted-foreground hover:text-foreground cursor-pointer">취소</button>
-            </div>
-            {searchResults.length === 0 ? (
-              <p className="text-center py-12 text-xs text-muted-foreground">결과 없음</p>
-            ) : (
-              <div className="grid grid-cols-4 gap-2">
-                {searchResults.map(p => (
-                  <ProductCard key={p.id} product={p} images={[]}
-                    vendorName={p.vendor_name}
-                    onDownload={() => handleDownload(p, p.vendor_name)}
-                    onDetail={() => setDetailProduct(p)}
-                    loggedIn={!!user} />
-                ))}
-              </div>
-            )}
-          </div>
-        ) : selectedFolder ? (
-          <div>
-            <div className="flex items-center gap-1 mb-3 text-[11px] text-muted-foreground">
-              {getBreadcrumb(folders, selectedFolder.id).map((f, i, arr) => (
-                <span key={f.id} className="flex items-center gap-1">
-                  {i > 0 && <ChevronRight className="w-3 h-3" />}
-                  <span className={i === arr.length - 1 ? 'text-foreground font-medium' : ''}>{f.name}</span>
+      {/* ── Main Content ── */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Breadcrumb / Title Bar */}
+        {(selectedFolder || searchResults !== null) && (
+          <div className="px-5 py-2.5 border-b flex items-center justify-between shrink-0">
+            {searchResults !== null ? (
+              <>
+                <span className="text-xs text-muted-foreground">
+                  "<span className="text-foreground font-medium">{searchQuery}</span>" 검색 결과 {searchResults.length}건
                 </span>
-              ))}
-              <Badge variant="outline" className="text-[10px] ml-auto">{products.length}개</Badge>
-            </div>
-            {products.length === 0 ? (
-              <p className="text-center py-12 text-xs text-muted-foreground">제품이 없습니다.</p>
-            ) : (
-              <div className="grid grid-cols-4 gap-2">
-                {products.map(p => (
-                  <ProductCard key={p.id} product={p} images={productImages[p.id] || []}
-                    onDownload={() => handleDownload(p)}
-                    onDetail={() => setDetailProduct(p)}
-                    loggedIn={!!user} />
+                <button onClick={() => setSearchResults(null)}
+                  className="text-[11px] text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
+                  초기화
+                </button>
+              </>
+            ) : selectedFolder && (
+              <div className="flex items-center gap-1 text-xs">
+                {getBreadcrumb(folders, selectedFolder.id).map((f, i, arr) => (
+                  <span key={f.id} className="flex items-center gap-1">
+                    {i > 0 && <ChevronRight className="w-3 h-3 text-muted-foreground/40" />}
+                    <span className={i === arr.length - 1 ? 'font-semibold text-foreground' : 'text-muted-foreground'}>
+                      {f.name}
+                    </span>
+                  </span>
                 ))}
               </div>
             )}
-          </div>
-        ) : (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center text-muted-foreground">
-              <Building2 className="w-10 h-10 mx-auto mb-2 opacity-15" />
-              <p className="text-xs">업체를 선택하고 폴더를 탐색하세요</p>
-            </div>
           </div>
         )}
+
+        {/* Product Grid */}
+        <div className="flex-1 overflow-y-auto">
+          {searchResults !== null ? (
+            <div className="p-5">
+              {searchResults.length === 0 ? (
+                <EmptyState message="검색 결과가 없습니다." />
+              ) : (
+                <div className="grid grid-cols-4 gap-3">
+                  {searchResults.map(p => (
+                    <ProductCard key={p.id} product={p} images={[]}
+                      vendorName={p.vendor_name}
+                      onDownload={() => handleDownload(p, p.vendor_name)}
+                      onDetail={() => setDetailProduct(p)}
+                      loggedIn={!!user} />
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : selectedFolder ? (
+            <div className="p-5">
+              {products.length === 0 ? (
+                <EmptyState message="이 폴더에 등록된 제품이 없습니다." />
+              ) : (
+                <div className="grid grid-cols-4 gap-3">
+                  {products.map(p => (
+                    <ProductCard key={p.id} product={p} images={productImages[p.id] || []}
+                      onDownload={() => handleDownload(p)}
+                      onDetail={() => setDetailProduct(p)}
+                      loggedIn={!!user} />
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground/50 font-medium">마감재를 탐색하려면</p>
+                <p className="text-sm text-muted-foreground/50 font-medium">좌측에서 업체를 선택하세요.</p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── Detail Sidebar ── */}
       {detailProduct && (
-        <div className="w-56 border-l p-3 overflow-y-auto shrink-0">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold">{detailProduct.name}</h3>
-            <button onClick={() => setDetailProduct(null)} className="text-muted-foreground hover:text-foreground cursor-pointer text-xs">닫기</button>
+        <div className="w-[200px] border-l shrink-0 flex flex-col">
+          <div className="flex items-center justify-between px-4 py-3 border-b">
+            <span className="text-xs font-bold">상세 정보</span>
+            <button onClick={() => setDetailProduct(null)}
+              className="text-[11px] text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
+              닫기
+            </button>
           </div>
-          <div className="space-y-2 text-xs">
-            {detailProduct.unit_price !== null && (
-              <div><span className="text-muted-foreground">단가:</span> {Number(detailProduct.unit_price).toLocaleString()}원</div>
-            )}
-            {detailProduct.stock !== null && (
-              <div><span className="text-muted-foreground">재고:</span> {detailProduct.stock}개</div>
-            )}
-            {detailProduct.moq !== null && (
-              <div><span className="text-muted-foreground">MOQ:</span> {detailProduct.moq}개</div>
-            )}
-            {detailProduct.lead_time && (
-              <div><span className="text-muted-foreground">LT:</span> {detailProduct.lead_time}</div>
-            )}
-            {detailProduct.notes && (
-              <div><span className="text-muted-foreground">비고:</span> {detailProduct.notes}</div>
-            )}
-            {(productImages[detailProduct.id] || []).length > 0 && (
-              <div>
-                <span className="text-muted-foreground">이미지:</span> {(productImages[detailProduct.id] || []).length}장
-              </div>
-            )}
+          <div className="flex-1 overflow-y-auto px-4 py-3">
+            <h3 className="text-sm font-bold mb-3 leading-snug">{detailProduct.name}</h3>
+            <div className="space-y-2.5 text-xs leading-relaxed">
+              {detailProduct.unit_price !== null && (
+                <InfoRow label="단가" value={`${Number(detailProduct.unit_price).toLocaleString()}원`} />
+              )}
+              {detailProduct.stock !== null && (
+                <InfoRow label="재고" value={`${detailProduct.stock}개`} />
+              )}
+              {detailProduct.moq !== null && (
+                <InfoRow label="MOQ" value={`${detailProduct.moq}개`} />
+              )}
+              {detailProduct.lead_time && (
+                <InfoRow label="리드타임" value={detailProduct.lead_time} />
+              )}
+              {detailProduct.notes && (
+                <div>
+                  <span className="text-muted-foreground text-[11px]">비고</span>
+                  <p className="mt-0.5 text-foreground/80 leading-relaxed">{detailProduct.notes}</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -335,7 +361,23 @@ export default function LibraryHome() {
   )
 }
 
-// ── Product Card with hover actions ──
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between items-baseline">
+      <span className="text-muted-foreground text-[11px]">{label}</span>
+      <span className="font-semibold">{value}</span>
+    </div>
+  )
+}
+
+function EmptyState({ message }: { message: string }) {
+  return (
+    <div className="flex items-center justify-center py-20">
+      <p className="text-sm text-muted-foreground/50">{message}</p>
+    </div>
+  )
+}
+
 function ProductCard({ product, images, vendorName, onDownload, onDetail, loggedIn }: {
   product: Product
   images: ProductImage[]
@@ -345,41 +387,57 @@ function ProductCard({ product, images, vendorName, onDownload, onDetail, logged
   loggedIn: boolean
 }) {
   return (
-    <div className="group relative border rounded-lg overflow-hidden">
-      <div className="aspect-square bg-secondary flex items-center justify-center">
+    <div className="group relative cursor-pointer" onClick={onDetail}>
+      {/* Thumbnail */}
+      <div className="aspect-square bg-[#f8f8f8] rounded-sm overflow-hidden mb-2 relative">
         {product.thumbnail_url ? (
-          <img src={product.thumbnail_url} alt={product.name} className="w-full h-full object-cover" />
+          <img src={product.thumbnail_url} alt={product.name}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
         ) : (
-          <ImageIcon className="w-6 h-6 text-muted-foreground/20" />
+          <div className="w-full h-full flex items-center justify-center">
+            <ImageIcon className="w-6 h-6 text-muted-foreground/15" />
+          </div>
         )}
-      </div>
 
-      {/* Hover overlay */}
-      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-        {loggedIn ? (
-          <button onClick={onDownload}
-            className="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 shadow cursor-pointer"
-            title="다운로드">
-            <Download className="w-4 h-4 text-gray-800" />
-          </button>
-        ) : (
-          <button className="w-8 h-8 bg-white/50 rounded-full flex items-center justify-center cursor-not-allowed" title="로그인 필요">
-            <Lock className="w-4 h-4 text-gray-500" />
-          </button>
-        )}
-        <button onClick={onDetail}
-          className="w-8 h-8 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 shadow cursor-pointer"
-          title="상세 정보">
-          <Info className="w-4 h-4 text-gray-800" />
-        </button>
-      </div>
+        {/* Hover overlay - bottom gradient */}
+        <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
-      {/* Label */}
-      <div className="p-1.5">
-        <p className="text-[11px] font-medium truncate">{product.name}</p>
-        {vendorName && <p className="text-[10px] text-muted-foreground truncate">{vendorName}</p>}
+        {/* Action buttons */}
+        <div className="absolute bottom-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+          {loggedIn ? (
+            <button onClick={(e) => { e.stopPropagation(); onDownload() }}
+              className="w-7 h-7 bg-white rounded-full flex items-center justify-center hover:bg-white/90 shadow-sm cursor-pointer transition-transform hover:scale-110"
+              title="프리뷰에 로드">
+              <Download className="w-3.5 h-3.5 text-foreground" />
+            </button>
+          ) : (
+            <div className="w-7 h-7 bg-white/60 rounded-full flex items-center justify-center" title="로그인 필요">
+              <Lock className="w-3.5 h-3.5 text-muted-foreground" />
+            </div>
+          )}
+          <button onClick={(e) => { e.stopPropagation(); onDetail() }}
+            className="w-7 h-7 bg-white rounded-full flex items-center justify-center hover:bg-white/90 shadow-sm cursor-pointer transition-transform hover:scale-110"
+            title="상세 정보">
+            <Info className="w-3.5 h-3.5 text-foreground" />
+          </button>
+        </div>
+
+        {/* Pattern count badge */}
         {images.length > 1 && (
-          <span className="text-[9px] text-muted-foreground">{images.length} patterns</span>
+          <span className="absolute top-1.5 right-1.5 bg-foreground/70 text-background text-[9px] font-semibold px-1.5 py-0.5 rounded-sm">
+            {images.length}
+          </span>
+        )}
+      </div>
+
+      {/* Info */}
+      <div className="px-0.5">
+        <p className="text-xs font-semibold truncate leading-tight">{product.name}</p>
+        {vendorName && (
+          <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{vendorName}</p>
+        )}
+        {product.unit_price !== null && (
+          <p className="text-[11px] font-bold mt-0.5">{Number(product.unit_price).toLocaleString()}원</p>
         )}
       </div>
     </div>
