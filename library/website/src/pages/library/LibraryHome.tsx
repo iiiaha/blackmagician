@@ -582,13 +582,13 @@ function MaterialItem({ product, onClick, selected, isFavorite, onToggleFavorite
         )}
       </div>
 
-      <div className="text-center mt-1.5">
-        {Boolean(vendorPrefix || (product as Record<string, unknown>)._vendorName) && (
-          <span className="inline-block text-[8px] font-semibold text-muted-foreground bg-muted border border-border rounded-[3px] px-1.5 py-[1px] mb-0.5 leading-tight">
-            {String(vendorPrefix || (product as Record<string, unknown>)._vendorName || '')}
-          </span>
-        )}
-        <p className={`text-[10px] leading-[1.3] truncate ${selected ? 'font-bold underline underline-offset-2' : 'font-medium'}`}>
+      <div className="mt-1.5 px-0.5">
+        <p className={`text-[10px] leading-[1.3] truncate text-center ${selected ? 'font-bold underline underline-offset-2' : 'font-medium'}`}>
+          {Boolean(vendorPrefix || (product as Record<string, unknown>)._vendorName) && (
+            <span className="text-[8px] text-muted-foreground font-normal mr-1">
+              {String(vendorPrefix || (product as Record<string, unknown>)._vendorName || '')}
+            </span>
+          )}
           {product.name}
         </p>
       </div>
