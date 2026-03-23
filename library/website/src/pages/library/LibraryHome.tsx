@@ -159,12 +159,12 @@ export default function LibraryHome() {
       <div key={node.id}>
         <button
           onClick={() => handleSelectFolder(node)}
-          className={`flex items-center gap-1.5 py-[5px] w-full text-left text-[11px] cursor-pointer transition-all ${
+          className={`flex items-center gap-1.5 py-[7px] w-full text-left text-[11px] cursor-pointer transition-all ${
             isSelected
               ? 'font-semibold text-foreground'
               : 'text-text-secondary hover:text-foreground'
           }`}
-          style={{ paddingLeft: `${level * 14 + 12}px`, paddingRight: '12px' }}
+          style={{ paddingLeft: `${level * 16 + 16}px`, paddingRight: '16px' }}
         >
           {node.children.length > 0 || !node.is_leaf ? (
             isExpanded
@@ -183,7 +183,7 @@ export default function LibraryHome() {
       {/* ── Sidebar ── */}
       <div className="w-[240px] bg-white border-r flex flex-col shrink-0">
         {/* Search */}
-        <div className="px-3 pt-3 pb-2">
+        <div className="px-4 pt-4 pb-3">
           <div className="relative">
             <Search className="absolute left-[10px] top-1/2 -translate-y-1/2 w-3 h-3 text-text-tertiary" />
             <input
@@ -191,7 +191,7 @@ export default function LibraryHome() {
               onChange={e => setSearchQuery(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSearch()}
               placeholder="Search materials"
-              className="w-full h-[28px] text-[11px] pl-7 pr-3 bg-[rgba(0,0,0,0.02)] border border-border rounded-[4px] outline-none placeholder:text-text-tertiary focus:border-foreground focus:shadow-[0_0_0_2px_rgba(26,26,26,0.08)]"
+              className="w-full h-[32px] text-[11px] pl-8 pr-3 bg-[rgba(0,0,0,0.02)] border border-border rounded-[4px] outline-none placeholder:text-text-tertiary focus:border-foreground focus:shadow-[0_0_0_2px_rgba(26,26,26,0.08)]"
             />
           </div>
         </div>
@@ -201,12 +201,12 @@ export default function LibraryHome() {
           {selectedVendor ? (
             <div className="pb-3">
               <button onClick={() => { setSelectedVendor(null); setSelectedFolder(null); setProducts([]); setFolders([]) }}
-                className="flex items-center gap-1 text-[10px] text-text-tertiary hover:text-foreground px-3 py-1 cursor-pointer">
+                className="flex items-center gap-1 text-[10px] text-text-tertiary hover:text-foreground px-4 py-1.5 cursor-pointer">
                 <ChevronLeft className="w-3 h-3" />
                 Back
               </button>
-              <div className="px-3 pt-1 pb-2">
-                <span className="text-[12px] font-bold">{selectedVendor.company_name}</span>
+              <div className="px-4 pt-2 pb-3">
+                <span className="text-[13px] font-bold">{selectedVendor.company_name}</span>
               </div>
               {folderTree.length > 0 ? folderTree.map(n => renderNode(n, 0)) : (
                 <p className="text-[10px] text-text-tertiary px-3 py-6 text-center">No folders</p>
@@ -214,12 +214,12 @@ export default function LibraryHome() {
             </div>
           ) : (
             <div className="pb-3">
-              <div className="px-3 py-2">
+              <div className="px-4 py-3">
                 <span className="text-[9px] font-semibold text-text-secondary uppercase tracking-[0.5px]">Vendors</span>
               </div>
               {vendors.map(v => (
                 <button key={v.id} onClick={() => handleSelectVendor(v)}
-                  className="flex items-center w-full text-left px-3 py-[6px] text-[11px] text-foreground hover:bg-[rgba(0,0,0,0.02)] cursor-pointer">
+                  className="flex items-center w-full text-left px-4 py-[8px] text-[11px] text-foreground hover:bg-[rgba(0,0,0,0.02)] cursor-pointer">
                   {v.company_name}
                 </button>
               ))}
@@ -249,7 +249,7 @@ export default function LibraryHome() {
       <div className="flex-1 flex flex-col overflow-hidden bg-background">
         {/* Breadcrumb */}
         {(selectedFolder || searchResults !== null) && (
-          <div className="px-4 py-2 border-b bg-white flex items-center justify-between shrink-0">
+          <div className="px-6 py-3 border-b bg-white flex items-center justify-between shrink-0">
             {searchResults !== null ? (
               <>
                 <span className="text-[10px] text-text-secondary">
@@ -261,7 +261,7 @@ export default function LibraryHome() {
                 </button>
               </>
             ) : selectedFolder && (
-              <div className="flex items-center gap-1 text-[10px]">
+              <div className="flex items-center gap-1 text-[11px]">
                 {selectedVendor && (
                   <>
                     <span className="text-text-tertiary">{selectedVendor.company_name}</span>
@@ -282,12 +282,12 @@ export default function LibraryHome() {
         )}
 
         {/* Grid */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-6">
           {searchResults !== null ? (
             searchResults.length === 0 ? (
               <EmptyState />
             ) : (
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-1">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-4">
                 {searchResults.map(p => (
                   <MaterialItem key={p.id} product={p} images={[]}
                     onDownload={() => handleDownload(p, p.vendor_name)}
@@ -301,7 +301,7 @@ export default function LibraryHome() {
             products.length === 0 ? (
               <EmptyState />
             ) : (
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-1">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-4">
                 {products.map((p, i) => (
                   <MaterialItem key={p.id} product={p} images={productImages[p.id] || []}
                     onDownload={() => handleDownload(p)}
@@ -322,17 +322,17 @@ export default function LibraryHome() {
 
       {/* ── Detail Sidebar ── */}
       {detailProduct && (
-        <div className="w-[200px] bg-white border-l shrink-0 flex flex-col">
-          <div className="flex items-center justify-between px-3 py-2.5 border-b">
+        <div className="w-[220px] bg-white border-l shrink-0 flex flex-col">
+          <div className="flex items-center justify-between px-4 py-3 border-b">
             <span className="text-[9px] font-semibold uppercase tracking-[0.5px] text-text-secondary">Details</span>
             <button onClick={() => setDetailProduct(null)}
               className="text-[10px] text-text-tertiary hover:text-foreground cursor-pointer">
               Close
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto px-3 py-3">
-            <h3 className="text-[12px] font-bold mb-4 leading-snug">{detailProduct.name}</h3>
-            <div className="space-y-3">
+          <div className="flex-1 overflow-y-auto px-4 py-4">
+            <h3 className="text-[13px] font-bold mb-5 leading-snug">{detailProduct.name}</h3>
+            <div className="space-y-4">
               {detailProduct.unit_price !== null && (
                 <DetailRow label="PRICE" value={`${Number(detailProduct.unit_price).toLocaleString()}원`} />
               )}
@@ -411,7 +411,7 @@ function MaterialItem({ product, images, onDownload, onDetail, loggedIn, selecte
         {/* Hover actions */}
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/40 to-transparent" />
-          <div className="absolute bottom-[6px] right-[6px] flex gap-1">
+          <div className="absolute bottom-[6px] right-[6px] flex gap-4">
             {loggedIn ? (
               <button onClick={(e) => { e.stopPropagation(); onDownload() }}
                 className="w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-sm cursor-pointer hover:scale-110 transition-transform"
@@ -440,8 +440,8 @@ function MaterialItem({ product, images, onDownload, onDetail, loggedIn, selecte
       </div>
 
       {/* Name */}
-      <div className="text-center px-1">
-        <p className="text-[10px] leading-[1.3] truncate" style={{ letterSpacing: '-0.01em' }}>
+      <div className="text-center px-1 py-1">
+        <p className="text-[10px] leading-[1.4] truncate font-medium" style={{ letterSpacing: '-0.01em' }}>
           {product.name}
         </p>
       </div>
