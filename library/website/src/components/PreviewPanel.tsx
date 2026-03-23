@@ -216,7 +216,7 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
 
       {/* Apply */}
       <button
-        className="w-full h-[30px] bg-[#5a5a5a] hover:bg-[#4a4a4a] text-white text-[10px] font-semibold uppercase tracking-[0.5px] rounded-[4px] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-full h-[28px] border border-foreground/20 hover:border-foreground/40 hover:bg-[rgba(0,0,0,0.03)] text-foreground text-[10px] font-semibold uppercase tracking-[0.3px] rounded-[4px] cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         onClick={handleInsert}
         disabled={inserting || !mainImg}
       >

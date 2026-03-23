@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback } from 'react'
+import { useOutletContext } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
+import { CATEGORIES, type CategoryId } from '@/lib/categories'
 import PreviewPanel from '@/components/PreviewPanel'
 import {
-  Search, ChevronRight, ChevronDown, ChevronLeft,
-  ImageIcon,
+  Search, ChevronRight, ChevronDown, ChevronLeft, ImageIcon,
 } from 'lucide-react'
 import type { Vendor, FolderNode, Product, ProductImage } from '@/types/database'
 
@@ -29,8 +30,12 @@ function getBreadcrumb(nodes: FolderNode[], folderId: string): FolderNode[] {
 
 export default function LibraryHome() {
   const { user } = useAuth()
+  const { activeCategory } = useOutletContext<{ activeCategory: CategoryId }>()
 
-  const [vendors, setVendors] = useState<Vendor[]>([])
+  const [allVendors, setAllVendors] = useState<Vendor[]>([])
+  const [allFolderRoots, setAllFolderRoots] = useState<FolderNode[]>([])
+  const [filteredVendors, setFilteredVendors] = useState<Vendor[]>([])
+
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null)
   const [folders, setFolders] = useState<FolderNode[]>([])
   const [folderTree, setFolderTree] = useState<TreeNode[]>([])
@@ -46,20 +51,68 @@ export default function LibraryHome() {
   const [previewVendor, setPreviewVendor] = useState('')
   const [previewSizeStr, setPreviewSizeStr] = useState('')
 
-  // (detail popup removed - info shown in preview panel)
-
+  // Fetch all vendors + root folder nodes on mount
   useEffect(() => {
-    supabase.from('vendors').select('*').eq('approved', true).order('company_name')
-      .then(({ data }) => setVendors((data as Vendor[]) || []))
+    const fetchAll = async () => {
+      const [vendorsRes, rootsRes] = await Promise.all([
+        supabase.from('vendors').select('*').eq('approved', true).order('company_name'),
+        supabase.from('folder_nodes').select('*').eq('depth', 0),
+      ])
+      setAllVendors((vendorsRes.data as Vendor[]) || [])
+      setAllFolderRoots((rootsRes.data as FolderNode[]) || [])
+    }
+    fetchAll()
   }, [])
+
+  // Filter vendors by active category
+  useEffect(() => {
+    const cat = CATEGORIES.find(c => c.id === activeCategory)
+    if (!cat) { setFilteredVendors(allVendors); return }
+
+    const matchingVendorIds = new Set(
+      allFolderRoots
+        .filter(f => cat.folderNames.some(name =>
+          f.name.toLowerCase().includes(name.toLowerCase())
+        ))
+        .map(f => f.vendor_id)
+    )
+    setFilteredVendors(allVendors.filter(v => matchingVendorIds.has(v.id)))
+
+    // Reset selection when category changes
+    setSelectedVendor(null)
+    setSelectedFolder(null)
+    setProducts([])
+    setProductImages({})
+    setSearchResults(null)
+  }, [activeCategory, allVendors, allFolderRoots])
 
   const fetchFolders = useCallback(async (vendorId: string) => {
     const { data } = await supabase.from('folder_nodes').select('*').eq('vendor_id', vendorId).order('sort_order')
     const f = (data as FolderNode[]) || []
-    setFolders(f)
-    setExpandedIds(new Set(f.map(n => n.id)))
-    setFolderTree(buildTree(f, null))
-  }, [])
+
+    // Filter to show only folders under the matching category root
+    const cat = CATEGORIES.find(c => c.id === activeCategory)
+    let filtered = f
+    if (cat) {
+      const categoryRoot = f.find(node =>
+        node.depth === 0 && cat.folderNames.some(name =>
+          node.name.toLowerCase().includes(name.toLowerCase())
+        )
+      )
+      if (categoryRoot) {
+        // Show children of the category root (skip the category level)
+        const getDescendants = (parentId: string): FolderNode[] => {
+          const children = f.filter(n => n.parent_id === parentId)
+          return children.flatMap(c => [c, ...getDescendants(c.id)])
+        }
+        filtered = getDescendants(categoryRoot.id)
+      }
+    }
+
+    setFolders(f) // Keep all for breadcrumb
+    setExpandedIds(new Set(filtered.map(n => n.id)))
+    setFolderTree(buildTree(filtered, filtered.length > 0 ? filtered[0]?.parent_id ?? null : null))
+  }, [activeCategory])
 
   const handleSelectVendor = (v: Vendor) => {
     setSelectedVendor(v)
@@ -126,10 +179,10 @@ export default function LibraryHome() {
     setSelectedVendor(null)
   }
 
-  const handleDownload = (product: Product, vendorName?: string) => {
+  const handleSelectProduct = (product: Product, vendorName?: string) => {
     if (!user) { alert('로그인 후 이용 가능합니다.'); return }
     const imgs = productImages[product.id] || []
-    if (imgs.length === 0) { alert('이미지가 없습니다.'); return }
+    if (imgs.length === 0) return
     const vName = vendorName || selectedVendor?.company_name || ''
     const breadcrumb = selectedFolder ? getBreadcrumb(folders, selectedFolder.id) : []
     setPreviewProduct(product)
@@ -156,12 +209,12 @@ export default function LibraryHome() {
       <div key={node.id}>
         <button
           onClick={() => handleSelectFolder(node)}
-          className={`flex items-center gap-2 py-[6px] w-full text-left text-[11px] cursor-pointer ${
+          className={`flex items-center gap-1.5 py-[4px] w-full text-left text-[11px] cursor-pointer ${
             isSelected
               ? 'font-semibold text-foreground'
               : 'text-text-secondary hover:text-foreground'
           }`}
-          style={{ paddingLeft: `${level * 16 + 16}px`, paddingRight: '16px' }}
+          style={{ paddingLeft: `${level * 14 + 12}px`, paddingRight: '12px' }}
         >
           {node.children.length > 0 || !node.is_leaf ? (
             isExpanded
@@ -176,52 +229,49 @@ export default function LibraryHome() {
   }
 
   return (
-    <div className="flex" style={{ height: 'calc(100vh - 48px)' }}>
+    <div className="flex" style={{ height: 'calc(100vh - 42px)' }}>
       {/* ── Sidebar ── */}
-      <div className="w-[220px] bg-white border-r flex flex-col shrink-0">
+      <div className="w-[200px] bg-white border-r flex flex-col shrink-0">
         {/* Search */}
-        <div className="p-4">
+        <div className="p-3">
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-tertiary" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-text-tertiary" />
             <input
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSearch()}
-              placeholder="Search materials"
-              className="w-full h-[30px] text-[11px] pl-8 pr-3 bg-[rgba(0,0,0,0.025)] border border-border rounded-[5px] outline-none placeholder:text-text-tertiary focus:border-foreground focus:shadow-[0_0_0_2px_rgba(26,26,26,0.06)]"
+              placeholder="Search"
+              className="w-full h-[28px] text-[10px] pl-7 pr-3 bg-[rgba(0,0,0,0.025)] border border-border rounded-[4px] outline-none placeholder:text-text-tertiary focus:border-foreground focus:shadow-[0_0_0_2px_rgba(26,26,26,0.06)]"
             />
           </div>
         </div>
 
-        {/* Folder tree */}
-        <div className="flex-1 overflow-y-auto px-2">
+        {/* Vendor / Folder tree */}
+        <div className="flex-1 overflow-y-auto px-1">
           {selectedVendor ? (
-            <div className="pb-3">
+            <div className="pb-2">
               <button onClick={() => { setSelectedVendor(null); setSelectedFolder(null); setProducts([]); setFolders([]) }}
-                className="flex items-center gap-1 text-[10px] text-text-tertiary hover:text-foreground px-3 py-1.5 cursor-pointer">
+                className="flex items-center gap-1 text-[10px] text-text-tertiary hover:text-foreground px-3 py-1 cursor-pointer">
                 <ChevronLeft className="w-3 h-3" />
                 Back
               </button>
-              <div className="px-3 pt-1 pb-3">
-                <span className="text-[12px] font-bold">{selectedVendor.company_name}</span>
+              <div className="px-3 pt-1 pb-2">
+                <span className="text-[11px] font-bold">{selectedVendor.company_name}</span>
               </div>
               {folderTree.length > 0 ? folderTree.map(n => renderNode(n, 0)) : (
-                <p className="text-[11px] text-text-tertiary px-3 py-6 text-center">No folders</p>
+                <p className="text-[10px] text-text-tertiary px-3 py-4 text-center">No folders</p>
               )}
             </div>
           ) : (
-            <div className="pb-3">
-              <div className="px-3 pb-2">
-                <span className="text-[9px] font-semibold text-text-secondary uppercase tracking-[0.5px]">Vendors</span>
-              </div>
-              {vendors.map(v => (
+            <div className="pb-2">
+              {filteredVendors.map(v => (
                 <button key={v.id} onClick={() => handleSelectVendor(v)}
-                  className="flex items-center w-full text-left px-3 py-[7px] text-[11px] text-foreground hover:bg-[rgba(0,0,0,0.02)] cursor-pointer rounded-sm">
+                  className="flex items-center w-full text-left px-3 py-[5px] text-[11px] text-foreground hover:bg-[rgba(0,0,0,0.02)] cursor-pointer rounded-sm">
                   {v.company_name}
                 </button>
               ))}
-              {vendors.length === 0 && (
-                <p className="text-[11px] text-text-tertiary px-3 py-8 text-center">No vendors</p>
+              {filteredVendors.length === 0 && (
+                <p className="text-[10px] text-text-tertiary px-3 py-6 text-center">No vendors</p>
               )}
             </div>
           )}
@@ -246,19 +296,19 @@ export default function LibraryHome() {
       <div className="flex-1 flex flex-col overflow-hidden bg-background">
         {/* Breadcrumb */}
         {(selectedFolder || searchResults !== null) && (
-          <div className="px-6 py-2.5 border-b bg-white flex items-center justify-between shrink-0">
+          <div className="px-5 py-2 border-b bg-white flex items-center justify-between shrink-0">
             {searchResults !== null ? (
               <>
-                <span className="text-[11px] text-text-secondary">
+                <span className="text-[10px] text-text-secondary">
                   "<span className="text-foreground font-semibold">{searchQuery}</span>" — {searchResults.length} items
                 </span>
                 <button onClick={() => setSearchResults(null)}
-                  className="text-[10px] text-text-tertiary hover:text-foreground cursor-pointer uppercase tracking-[0.3px] font-semibold">
+                  className="text-[10px] text-text-tertiary hover:text-foreground cursor-pointer font-semibold">
                   Clear
                 </button>
               </>
             ) : selectedFolder && (
-              <div className="flex items-center gap-1.5 text-[11px]">
+              <div className="flex items-center gap-1.5 text-[10px]">
                 {selectedVendor && (
                   <>
                     <span className="text-text-tertiary">{selectedVendor.company_name}</span>
@@ -286,7 +336,8 @@ export default function LibraryHome() {
             ) : (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-4">
                 {searchResults.map(p => (
-                  <MaterialItem key={p.id} product={p}                     onClick={() => handleDownload(p, p.vendor_name)}
+                  <MaterialItem key={p.id} product={p}
+                    onClick={() => handleSelectProduct(p, p.vendor_name)}
                     selected={previewProduct?.id === p.id} />
                 ))}
               </div>
@@ -297,7 +348,8 @@ export default function LibraryHome() {
             ) : (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-4">
                 {products.map((p, i) => (
-                  <MaterialItem key={p.id} product={p}                     onClick={() => handleDownload(p)}
+                  <MaterialItem key={p.id} product={p}
+                    onClick={() => handleSelectProduct(p)}
                     selected={previewProduct?.id === p.id}
                     animationDelay={i * 0.03} />
                 ))}
@@ -305,21 +357,19 @@ export default function LibraryHome() {
             )
           ) : (
             <div className="flex items-center justify-center h-full">
-              <p className="text-[12px] text-text-tertiary">Select a folder to browse materials</p>
+              <p className="text-[11px] text-text-tertiary">Select a vendor and folder</p>
             </div>
           )}
         </div>
       </div>
-
-      {/* detail popup removed */}
     </div>
   )
 }
 
 function EmptyState() {
   return (
-    <div className="flex items-center justify-center py-20">
-      <p className="text-[12px] text-text-tertiary">No materials found</p>
+    <div className="flex items-center justify-center py-16">
+      <p className="text-[11px] text-text-tertiary">No materials found</p>
     </div>
   )
 }
@@ -338,10 +388,10 @@ function MaterialItem({ product, onClick, selected, animationDelay }: {
         animation: `fadeInUp 0.25s ease-out ${animationDelay}s both`,
       } : undefined}
     >
-      <div className="aspect-square rounded-[3px] overflow-hidden relative hover:shadow-[0_2px_8px_rgba(0,0,0,0.1)] transition-shadow duration-200">
+      <div className="aspect-square rounded-[3px] overflow-hidden relative hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-shadow duration-200">
         {product.thumbnail_url ? (
           <img src={product.thumbnail_url} alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.04]"
+            className="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]"
             loading="lazy" />
         ) : (
           <div className="w-full h-full bg-[rgba(0,0,0,0.03)] flex items-center justify-center">
@@ -349,7 +399,6 @@ function MaterialItem({ product, onClick, selected, animationDelay }: {
           </div>
         )}
       </div>
-
       <div className="text-center mt-1.5">
         <p className={`text-[10px] leading-[1.3] truncate ${selected ? 'font-bold underline underline-offset-2' : 'font-medium'}`}>
           {product.name}
