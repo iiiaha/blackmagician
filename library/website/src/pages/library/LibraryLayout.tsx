@@ -77,21 +77,20 @@ export default function LibraryLayout() {
               </button>
 
               {showUserMenu && (
-                <div className="absolute right-0 top-full mt-1 w-[140px] bg-surface border border-border rounded-[5px] shadow-[0_4px_16px_rgba(0,0,0,0.1)] overflow-hidden z-50">
+                <div className="absolute right-0 top-full mt-1 w-[110px] bg-surface border border-border rounded-[5px] shadow-[0_4px_16px_rgba(0,0,0,0.1)] overflow-hidden z-50 py-1">
                   <button
                     onClick={() => { signOut(); setShowUserMenu(false) }}
-                    className="w-full text-left px-3 py-2 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer flex items-center gap-2"
+                    className="w-full text-center py-1.5 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
                   >
-                    <LogOut className="w-3 h-3" />
                     로그아웃
                   </button>
-                  <div className="border-t border-border" />
+                  <div className="border-t border-border mx-2" />
                   <button
                     onClick={() => {
                       setShowUserMenu(false)
                       setShowDeleteConfirm(true)
                     }}
-                    className="w-full text-left px-3 py-2 text-[10px] text-destructive hover:bg-muted cursor-pointer"
+                    className="w-full text-center py-1.5 text-[10px] text-destructive hover:bg-muted cursor-pointer"
                   >
                     회원탈퇴
                   </button>
