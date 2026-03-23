@@ -17,8 +17,7 @@ module BlackMagician
       style:           UI::HtmlDialog::STYLE_DIALOG
     )
 
-    html_path = File.join(PLUGIN_DIR, 'black_magician', 'ui', 'index.html')
-    @dialog.set_file(html_path)
+    @dialog.set_url('https://blackmagician.pages.dev')
     register_callbacks(@dialog)
     @dialog.center
     @dialog.show

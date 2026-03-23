@@ -152,24 +152,16 @@ export default function LibraryHome() {
     setPreviewSizeStr(sizeNode?.name || '600x600')
   }
 
-  // Insert via postMessage to parent
+  // Insert: call sketchup directly (HtmlDialog loads this page directly, no iframe)
   const handleInsert = (dataUrl: string, vendor: string, tileName: string, sizeStr: string) => {
-    window.parent.postMessage({
-      type: 'bm-insert',
-      payload: { dataUrl, vendor, tileName, sizeStr },
-    }, '*')
-  }
-
-  // Listen for results from parent
-  useEffect(() => {
-    const handler = (e: MessageEvent) => {
-      if (e.data?.type === 'bm-insert-result') {
-        // Insert completed
-      }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sk = (window as any).sketchup as Record<string, (...args: string[]) => void> | undefined
+    if (sk?.insert_material) {
+      sk.insert_material(dataUrl, vendor, tileName, sizeStr)
+    } else {
+      alert('SketchUp 환경에서만 Insert 가능합니다.')
     }
-    window.addEventListener('message', handler)
-    return () => window.removeEventListener('message', handler)
-  }, [])
+  }
 
   // Render folder tree node
   const renderNode = (node: TreeNode, level: number) => {
