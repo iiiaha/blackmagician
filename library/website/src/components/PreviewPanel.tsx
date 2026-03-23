@@ -194,12 +194,12 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
 
       {/* Apply */}
       <button
-        className="w-full h-[30px] bg-foreground hover:bg-foreground/85 text-white text-[10px] font-semibold tracking-[0.3px] rounded-[4px] cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+        className="w-full h-[30px] bg-foreground hover:bg-foreground/85 text-white text-[10px] font-semibold tracking-[0.3px] rounded-[4px] cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed transition-colors relative flex items-center justify-center"
         onClick={handleInsert}
         disabled={inserting || !mainImg}
       >
         <span className="leading-none">{inserting ? 'Applying...' : 'Apply to Bucket'}</span>
-        <span className="text-[9px] font-normal opacity-60 leading-none">{remaining}/{maxDownloads}</span>
+        <span className="absolute right-3 text-[9px] font-normal opacity-50 leading-none">{remaining}/{maxDownloads}</span>
       </button>
     </div>
   )
