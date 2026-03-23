@@ -1,5 +1,5 @@
 import { useRef, useEffect, useCallback, useState } from 'react'
-import { RotateCw, Palette, Eye } from 'lucide-react'
+import { RotateCw, Palette } from 'lucide-react'
 import {
   type EditState, defaultEditState, drawCanvas, calcFinalSizeMM,
   loadImage, getMixTileCount,
@@ -107,32 +107,27 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
 
   const finalMM = calcFinalSizeMM(sizeStr, edit)
 
-  if (images.length === 0) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center">
-          <Eye className="w-4 h-4 mx-auto mb-1.5 text-text-tertiary opacity-30" />
-          <p className="text-[10px] text-text-tertiary">Select a material</p>
-        </div>
-      </div>
-    )
-  }
+  const isEmpty = images.length === 0
 
   return (
     <div className="h-full flex flex-col p-3 gap-2 overflow-y-auto">
       {/* Canvas */}
       <div className="flex-1 min-h-0 flex items-center justify-center bg-[rgba(0,0,0,0.025)] border border-border rounded-[4px] overflow-hidden">
-        <canvas ref={canvasRef} className="max-w-full max-h-full object-contain" />
+        {isEmpty ? (
+          <p className="text-[10px] text-text-tertiary">Select a material</p>
+        ) : (
+          <canvas ref={canvasRef} className="max-w-full max-h-full object-contain" />
+        )}
       </div>
 
       {/* Info */}
-      <div className="flex items-center justify-between text-[9px] text-text-secondary">
-        <span className="font-semibold truncate max-w-[60%]">{tileName}</span>
-        {finalMM && <span className="text-text-tertiary">{Math.round(finalMM.w)}×{Math.round(finalMM.h)}mm</span>}
+      <div className={`flex items-center justify-between text-[9px] text-text-secondary ${isEmpty ? 'opacity-30' : ''}`}>
+        <span className="font-semibold truncate max-w-[60%]">{tileName || '-'}</span>
+        <span className="text-text-tertiary">{finalMM ? `${Math.round(finalMM.w)}×${Math.round(finalMM.h)}mm` : '-'}</span>
       </div>
 
       {/* Toolbar */}
-      <div className="flex gap-[3px]">
+      <div className={`flex gap-[3px] ${isEmpty ? 'opacity-30 pointer-events-none' : ''}`}>
         <ToolBtn icon={<RotateCw className="w-3.5 h-3.5" />} active={edit.rotation > 0}
           onClick={() => updateEdit({ rotation: (edit.rotation + 90) % 360 })} title="Rotate" />
         <ToolBtn icon={<Palette className="w-3.5 h-3.5" />} active={showColor}
@@ -149,7 +144,7 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
       </div>
 
       {/* Color */}
-      {showColor && (
+      {showColor && !isEmpty && (
         <div className="space-y-1 p-2 bg-[rgba(0,0,0,0.02)] border border-border rounded-[4px]">
           <SliderRow label="Hue" value={edit.hue} min={-180} max={180} unit="°" onChange={v => updateEdit({ hue: v })} />
           <SliderRow label="Sat" value={edit.saturation} min={0} max={200} unit="%" onChange={v => updateEdit({ saturation: v })} />
@@ -158,7 +153,7 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
       )}
 
       {/* Grout — always visible */}
-      <div className={`p-2 bg-[rgba(0,0,0,0.02)] border border-border rounded-[4px] ${edit.groutEnabled ? '' : 'opacity-30 pointer-events-none'}`}>
+      <div className={`p-2 bg-[rgba(0,0,0,0.02)] border border-border rounded-[4px] ${(isEmpty || !edit.groutEnabled) ? 'opacity-30 pointer-events-none' : ''}`}>
         <div className="flex items-center gap-2">
           <span className="text-[9px] font-semibold text-text-secondary w-[36px] shrink-0">Thick</span>
           <input type="number" value={edit.groutThickness} min={0.5} max={10} step={0.5}
@@ -171,7 +166,7 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
       </div>
 
       {/* Product Info — 4 fields only */}
-      <table className="w-full text-[9px] border border-border rounded-[3px] overflow-hidden">
+      <table className={`w-full text-[9px] border border-border rounded-[3px] overflow-hidden ${isEmpty ? 'opacity-30' : ''}`}>
         <tbody>
           <tr className="border-b border-border">
             <td className="px-2 py-[3px] text-text-secondary font-semibold bg-[rgba(0,0,0,0.02)] w-[40px]">단가</td>
@@ -196,7 +191,7 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
       <button
         className="w-full h-[30px] bg-foreground hover:bg-foreground/85 text-white text-[10px] font-semibold tracking-[0.3px] rounded-[4px] cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed transition-colors relative flex items-center justify-center"
         onClick={handleInsert}
-        disabled={inserting || !mainImg}
+        disabled={inserting || !mainImg || isEmpty}
       >
         <span className="leading-none">{inserting ? 'Applying...' : 'Apply to Bucket'}</span>
         <span className="absolute right-3 text-[9px] font-normal opacity-50 leading-none">{remaining}/{maxDownloads}</span>
