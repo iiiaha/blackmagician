@@ -90,7 +90,7 @@ export default function LibraryLayout() {
                       setShowUserMenu(false)
                       setShowDeleteConfirm(true)
                     }}
-                    className="w-full text-center py-1.5 text-[10px] text-destructive hover:bg-muted cursor-pointer"
+                    className="w-full text-center py-1.5 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
                   >
                     회원탈퇴
                   </button>
@@ -146,7 +146,7 @@ export default function LibraryLayout() {
                   await supabase.auth.signOut({ scope: 'global' })
                   window.location.href = '/'
                 }}
-                className="flex-1 h-[34px] text-[11px] font-semibold bg-destructive text-white rounded-[5px] cursor-pointer hover:opacity-90 transition-opacity"
+                className="flex-1 h-[34px] text-[11px] font-semibold border border-border rounded-[5px] bg-surface hover:bg-muted cursor-pointer transition-colors"
               >
                 탈퇴하기
               </button>
