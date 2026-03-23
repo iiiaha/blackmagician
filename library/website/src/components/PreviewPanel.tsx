@@ -155,15 +155,15 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
       )}
 
       {/* Grout — always visible */}
-      <div className={`p-2 bg-muted border border-border rounded-[4px] ${(isEmpty || !edit.groutEnabled) ? 'opacity-30 pointer-events-none' : ''}`}>
-        <div className="flex items-center gap-2">
-          <span className="text-[9px] font-semibold text-text-secondary w-[36px] shrink-0">Thick</span>
+      <div className={`px-2 py-1.5 bg-muted border border-border rounded-[4px] ${(isEmpty || !edit.groutEnabled) ? 'opacity-30 pointer-events-none' : ''}`}>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[9px] font-semibold text-text-secondary shrink-0">Thick</span>
           <input type="number" value={edit.groutThickness} min={0.5} max={10} step={0.5}
             onChange={e => updateEdit({ groutThickness: +e.target.value })}
-            className="flex-1 h-[22px] text-center text-[10px] font-semibold bg-surface border border-border rounded-[3px] outline-none focus:border-foreground" />
+            className="w-[40px] h-[18px] text-center text-[9px] font-semibold bg-surface border border-border rounded-[2px] outline-none focus:border-foreground [&::-webkit-inner-spin-button]:h-[10px]" />
           <span className="text-[9px] text-text-tertiary">mm</span>
           <input type="color" value={edit.groutColor} onChange={e => updateEdit({ groutColor: e.target.value })}
-            className="w-[22px] h-[22px] border border-border rounded-[3px] cursor-pointer p-0" />
+            className="w-[28px] h-[18px] border border-border rounded-[2px] cursor-pointer p-[2px] ml-auto" />
         </div>
       </div>
 
