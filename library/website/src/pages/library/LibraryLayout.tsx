@@ -12,7 +12,7 @@ export default function LibraryLayout() {
   return (
     <div className="h-screen flex flex-col">
       <header className="h-[42px] bg-white border-b flex items-center px-5 justify-between shrink-0">
-        <div className="flex items-center gap-5">
+        <div className="flex items-baseline gap-5">
           <Link to="/" className="hover:opacity-70 transition-opacity shrink-0">
             <span className="text-[13px] font-bold tracking-[0.3px]">BLACK MAGICIAN</span>
           </Link>
