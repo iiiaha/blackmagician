@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { useOutletContext, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { CATEGORIES, type CategoryId } from '@/lib/categories'
@@ -30,6 +30,7 @@ function getBreadcrumb(nodes: FolderNode[], folderId: string): FolderNode[] {
 
 export default function LibraryHome() {
   const { user, userProfile } = useAuth()
+  const navigate = useNavigate()
   const { activeCategory } = useOutletContext<{ activeCategory: CategoryId }>()
 
   const [allVendors, setAllVendors] = useState<Vendor[]>([])
@@ -201,7 +202,6 @@ export default function LibraryHome() {
   }
 
   const handleSelectProduct = (product: Product, vendorName?: string) => {
-    if (!user) { alert('로그인 후 이용 가능합니다.'); return }
     const imgs = productImages[product.id] || []
     if (imgs.length === 0) return
     const vName = vendorName || selectedVendor?.company_name || ''
@@ -358,7 +358,9 @@ export default function LibraryHome() {
             vendor={selectedVendor}
             remaining={remaining}
             maxDownloads={maxDownloads}
+            loggedIn={!!user}
             onInsertRequest={handleInsert}
+            onLoginRequest={() => navigate('/library/login')}
           />
         </div>
       </div>
