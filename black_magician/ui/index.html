@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Black Magician</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { overflow: hidden; height: 100vh; }
+  iframe { width: 100%; height: 100%; border: none; }
+  .toast {
+    position: fixed; bottom: -50px; left: 50%; transform: translateX(-50%);
+    background: #212121; color: #fff; padding: 8px 20px; border-radius: 6px;
+    font-size: 13px; font-family: -apple-system, sans-serif;
+    transition: bottom .3s; z-index: 9999;
+  }
+  .toast.show { bottom: 16px; }
+  .toast.toast-error { background: #c62828; }
+</style>
+</head>
+<body>
+<iframe id="app-frame" src="http://localhost:5173"></iframe>
+
+<script>
+// ── postMessage 브릿지: React ↔ SketchUp Ruby ──
+window.addEventListener('message', function(event) {
+  var msg = event.data;
+  if (!msg || !msg.type) return;
+
+  if (msg.type === 'bm-insert') {
+    // 프리뷰에서 Insert 요청
+    sketchup.insert_material(
+      msg.payload.dataUrl,
+      msg.payload.vendor,
+      msg.payload.tileName,
+      msg.payload.sizeStr
+    );
+  }
+});
+
+// ── Ruby → JS 콜백 → iframe으로 전달 ──
+function onInsertResult(success, message) {
+  var frame = document.getElementById('app-frame');
+  frame.contentWindow.postMessage({
+    type: 'bm-insert-result',
+    success: success,
+    message: message
+  }, '*');
+  if (success) {
+    showToast('머티리얼 등록 완료: ' + message);
+  } else {
+    showToast('오류: ' + message, true);
+  }
+}
+
+// ── Toast ──
+function showToast(msg, isError) {
+  var old = document.getElementById('toast');
+  if (old) old.remove();
+  var toast = document.createElement('div');
+  toast.id = 'toast';
+  toast.className = 'toast' + (isError ? ' toast-error' : '');
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  requestAnimationFrame(function() { toast.classList.add('show'); });
+  setTimeout(function() { toast.classList.remove('show'); setTimeout(function() { toast.remove(); }, 300); }, 3000);
+}
+</script>
+</body>
+</html>
