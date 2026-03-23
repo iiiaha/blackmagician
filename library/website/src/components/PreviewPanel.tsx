@@ -30,9 +30,8 @@ function MixIcon({ className }: { className?: string }) {
 function HalfStaggerIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
-      <rect x="1" y="3" width="14" height="4" rx="0.5" />
-      <rect x="8" y="9" width="14" height="4" rx="0.5" />
-      <rect x="-6" y="9" width="14" height="4" rx="0.5" />
+      <rect x="1" y="2.5" width="12" height="5" rx="0.5" />
+      <rect x="7" y="8.5" width="12" height="5" rx="0.5" />
     </svg>
   )
 }
@@ -40,9 +39,9 @@ function HalfStaggerIcon({ className }: { className?: string }) {
 function ThirdStaggerIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
-      <rect x="1" y="1" width="14" height="3.5" rx="0.5" />
-      <rect x="5.5" y="6" width="14" height="3.5" rx="0.5" />
-      <rect x="10" y="11" width="14" height="3.5" rx="0.5" />
+      <rect x="1" y="1" width="11" height="4" rx="0.5" />
+      <rect x="5" y="6" width="11" height="4" rx="0.5" />
+      <rect x="9" y="11" width="11" height="4" rx="0.5" />
     </svg>
   )
 }
@@ -195,11 +194,12 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
 
       {/* Apply */}
       <button
-        className="w-full h-[28px] border border-foreground/20 hover:border-foreground/40 hover:bg-[rgba(0,0,0,0.03)] text-foreground text-[10px] font-semibold uppercase tracking-[0.3px] rounded-[4px] cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        className="w-full h-[30px] bg-foreground hover:bg-foreground/85 text-white text-[10px] font-semibold tracking-[0.3px] rounded-[4px] cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
         onClick={handleInsert}
         disabled={inserting || !mainImg}
       >
-        {inserting ? 'Applying...' : `Apply to Bucket (${remaining}/${maxDownloads})`}
+        <span>{inserting ? 'Applying...' : 'Apply to Bucket'}</span>
+        <span className="text-[9px] font-normal opacity-60">{remaining}/{maxDownloads}</span>
       </button>
     </div>
   )

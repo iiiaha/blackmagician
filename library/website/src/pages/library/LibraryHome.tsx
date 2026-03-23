@@ -422,6 +422,21 @@ export default function LibraryHome() {
               <p className="text-[11px] text-text-tertiary">Select a vendor and folder</p>
             </div>
           )}
+
+          {/* Footer */}
+          <footer className="mt-8 pt-4 border-t border-border flex items-center justify-between text-[9px] text-text-tertiary">
+            <span>&copy; 2026 Black Magician. All rights reserved.</span>
+            <div className="flex items-center gap-3">
+              <a href="https://instagram.com/iiiaha.lab" target="_blank" rel="noopener noreferrer"
+                className="hover:text-foreground transition-colors flex items-center gap-1">
+                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="5" /><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none" />
+                </svg>
+                @iiiaha.lab
+              </a>
+              <a href="mailto:iiiaha@naver.com" className="hover:text-foreground transition-colors">Contact</a>
+            </div>
+          </footer>
         </div>
       </div>
     </div>
@@ -458,13 +473,13 @@ function MaterialItem({ product, onClick, selected, isFavorite, onToggleFavorite
         {loggedIn && (
           <button
             onClick={e => { e.stopPropagation(); onToggleFavorite() }}
-            className={`absolute top-1 left-1 w-5 h-5 flex items-center justify-center rounded-full cursor-pointer transition-all ${
+            className={`absolute top-1.5 left-1.5 cursor-pointer transition-all drop-shadow-sm ${
               isFavorite
-                ? 'bg-white/90 text-red-500'
-                : 'bg-black/20 text-white opacity-0 group-hover:opacity-100'
+                ? 'text-red-500 opacity-100'
+                : 'text-white opacity-0 group-hover:opacity-70 hover:!opacity-100'
             }`}
           >
-            <Heart className={`w-3 h-3 ${isFavorite ? 'fill-current' : ''}`} />
+            <Heart className={`w-3.5 h-3.5 ${isFavorite ? 'fill-current' : ''}`} />
           </button>
         )}
       </div>

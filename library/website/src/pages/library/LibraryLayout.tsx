@@ -22,10 +22,10 @@ export default function LibraryLayout() {
               <button
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id)}
-                className={`px-2.5 py-[11px] text-[10px] tracking-[0.5px] font-semibold cursor-pointer transition-colors border-b-[2px] ${
+                className={`px-2.5 py-1 text-[10px] tracking-[0.5px] font-semibold cursor-pointer transition-colors ${
                   activeCategory === cat.id
-                    ? 'text-foreground border-foreground'
-                    : 'text-text-tertiary hover:text-text-secondary border-transparent'
+                    ? 'text-foreground underline underline-offset-[3px] decoration-[1.5px]'
+                    : 'text-text-tertiary hover:text-text-secondary'
                 }`}
               >
                 {cat.label}
