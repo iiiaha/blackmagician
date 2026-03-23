@@ -1,14 +1,27 @@
 import { Outlet, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
-import { LogOut, LogIn, Sun, Moon } from 'lucide-react'
+import { LogOut, LogIn, Sun, Moon, ChevronDown } from 'lucide-react'
 import { CATEGORIES, type CategoryId } from '@/lib/categories'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 export default function LibraryLayout() {
   const { user, userProfile, signOut } = useAuth()
   const [activeCategory, setActiveCategory] = useState<CategoryId>('tile')
   const [showLoginPopup, setShowLoginPopup] = useState(false)
+  const [showUserMenu, setShowUserMenu] = useState(false)
+  const userMenuRef = useRef<HTMLDivElement>(null)
+
+  // Close user menu on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setShowUserMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
   const [dark, setDark] = useState(() => localStorage.getItem('bm-theme') === 'dark')
 
   useEffect(() => {
@@ -53,14 +66,43 @@ export default function LibraryLayout() {
           </button>
 
           {user ? (
-            <>
-              <span className="text-[10px] text-muted-foreground">
-                {userProfile?.display_name || user.email}
-              </span>
-              <button onClick={signOut} className="text-muted-foreground hover:text-foreground cursor-pointer" title="로그아웃">
-                <LogOut className="w-3 h-3" />
+            <div className="relative" ref={userMenuRef}>
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground cursor-pointer"
+              >
+                <span>{userProfile?.display_name || user.email}</span>
+                <ChevronDown className="w-3 h-3" />
               </button>
-            </>
+
+              {showUserMenu && (
+                <div className="absolute right-0 top-full mt-1 w-[140px] bg-surface border border-border rounded-[5px] shadow-[0_4px_16px_rgba(0,0,0,0.1)] overflow-hidden z-50">
+                  <button
+                    onClick={() => { signOut(); setShowUserMenu(false) }}
+                    className="w-full text-left px-3 py-2 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer flex items-center gap-2"
+                  >
+                    <LogOut className="w-3 h-3" />
+                    로그아웃
+                  </button>
+                  <div className="border-t border-border" />
+                  <button
+                    onClick={async () => {
+                      if (!confirm('정말 탈퇴하시겠습니까? 모든 데이터가 삭제됩니다.')) return
+                      // Delete user profile and favorites
+                      if (userProfile) {
+                        await supabase.from('favorites').delete().eq('user_id', userProfile.id)
+                        await supabase.from('user_profiles').delete().eq('id', userProfile.id)
+                      }
+                      await signOut()
+                      setShowUserMenu(false)
+                    }}
+                    className="w-full text-left px-3 py-2 text-[10px] text-destructive hover:bg-muted cursor-pointer"
+                  >
+                    회원탈퇴
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
             <button onClick={() => setShowLoginPopup(true)}
               className="h-6 flex items-center gap-1 text-[10px] font-semibold text-muted-foreground hover:text-foreground cursor-pointer px-2">
