@@ -190,23 +190,14 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
       </table>
 
       {/* Apply */}
-      {loggedIn ? (
-        <button
-          className="w-full h-[30px] bg-foreground hover:bg-foreground/85 text-primary-foreground text-[10px] font-semibold tracking-[0.3px] rounded-[4px] cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed transition-colors relative flex items-center justify-center"
-          onClick={handleInsert}
-          disabled={inserting || !mainImg || isEmpty}
-        >
-          <span className="leading-none">{inserting ? 'Applying...' : 'Apply to Bucket'}</span>
-          <span className="absolute right-3 text-[9px] font-normal opacity-50 leading-none">{remaining}/{maxDownloads}</span>
-        </button>
-      ) : (
-        <button
-          className="w-full h-[30px] border border-border hover:bg-muted text-muted-foreground text-[10px] font-semibold tracking-[0.3px] rounded-[4px] cursor-pointer transition-colors flex items-center justify-center"
-          onClick={onLoginRequest}
-        >
-          로그인 후 이용 가능합니다
-        </button>
-      )}
+      <button
+        className="w-full h-[30px] bg-foreground hover:bg-foreground/85 text-primary-foreground text-[10px] font-semibold tracking-[0.3px] rounded-[4px] cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed transition-colors relative flex items-center justify-center"
+        onClick={loggedIn ? handleInsert : onLoginRequest}
+        disabled={loggedIn && (inserting || !mainImg || isEmpty)}
+      >
+        <span className="leading-none">{inserting ? 'Applying...' : 'Apply to Bucket'}</span>
+        {loggedIn && <span className="absolute right-3 text-[9px] font-normal opacity-50 leading-none">{remaining}/{maxDownloads}</span>}
+      </button>
     </div>
   )
 }
