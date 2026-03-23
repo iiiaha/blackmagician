@@ -2,6 +2,8 @@ require_relative 'scanner'
 require_relative 'material'
 
 module BlackMagician
+  LIBRARY_URL = 'https://blackmagician.pages.dev'
+
   def self.show_dialog
     if @dialog && @dialog.visible?
       @dialog.bring_to_front
@@ -17,8 +19,8 @@ module BlackMagician
       style:           UI::HtmlDialog::STYLE_DIALOG
     )
 
-    @dialog.set_url('https://blackmagician.pages.dev')
     register_callbacks(@dialog)
+    @dialog.set_url(LIBRARY_URL)
     @dialog.center
     @dialog.show
   end
