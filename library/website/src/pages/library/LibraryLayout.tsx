@@ -10,6 +10,7 @@ export default function LibraryLayout() {
   const [activeCategory, setActiveCategory] = useState<CategoryId>('tile')
   const [showLoginPopup, setShowLoginPopup] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
 
   // Close user menu on outside click
@@ -86,11 +87,9 @@ export default function LibraryLayout() {
                   </button>
                   <div className="border-t border-border" />
                   <button
-                    onClick={async () => {
-                      if (!confirm('정말 탈퇴하시겠습니까? 모든 데이터가 삭제됩니다.')) return
-                      await supabase.rpc('delete_own_account')
-                      await supabase.auth.signOut({ scope: 'global' })
-                      window.location.href = '/'
+                    onClick={() => {
+                      setShowUserMenu(false)
+                      setShowDeleteConfirm(true)
                     }}
                     className="w-full text-left px-3 py-2 text-[10px] text-destructive hover:bg-muted cursor-pointer"
                   >
@@ -125,6 +124,37 @@ export default function LibraryLayout() {
           </a>
         </div>
       </footer>
+
+      {/* Delete Account Confirm */}
+      {showDeleteConfirm && (
+        <>
+          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setShowDeleteConfirm(false)} />
+          <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] bg-surface border border-border rounded-[8px] p-6 text-center shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+            <h3 className="text-[13px] font-bold mb-2">회원탈퇴</h3>
+            <p className="text-[10px] text-muted-foreground mb-5 leading-relaxed">
+              정말 탈퇴하시겠습니까?<br />모든 데이터가 삭제됩니다.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 h-[34px] text-[11px] font-semibold border border-border rounded-[5px] bg-surface hover:bg-muted cursor-pointer transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={async () => {
+                  await supabase.rpc('delete_own_account')
+                  await supabase.auth.signOut({ scope: 'global' })
+                  window.location.href = '/'
+                }}
+                className="flex-1 h-[34px] text-[11px] font-semibold bg-destructive text-white rounded-[5px] cursor-pointer hover:opacity-90 transition-opacity"
+              >
+                탈퇴하기
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Login Popup */}
       {showLoginPopup && (
