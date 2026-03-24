@@ -441,7 +441,7 @@ export default function VendorProducts() {
 
               <button onClick={() => setShowFolderGuide(true)}
                 className="h-[28px] px-3 border border-[rgba(0,0,0,0.1)] text-[10px] font-semibold rounded-[4px] cursor-pointer hover:bg-[rgba(0,0,0,0.02)] flex items-center gap-1.5 shrink-0">
-                <FolderOpen className="w-3 h-3" /> 폴더 등록
+                <FolderOpen className="w-3 h-3" /> 폴더로 일괄 등록
               </button>
               {/* @ts-expect-error webkitdirectory is not in React types */}
               <input ref={folderInputRef} type="file" webkitdirectory="" multiple className="hidden"
@@ -533,7 +533,7 @@ export default function VendorProducts() {
                       <FolderOpen className="w-3 h-3 text-white" />
                     </div>
                     <span className="font-bold">선택할 폴더</span>
-                    <span className="text-[9px] text-[#999] ml-auto">← 이 폴더를 선택</span>
+                    <span className="text-[9px] text-[#e53e3e] font-bold">← 이 폴더를 선택</span>
                   </div>
 
                   {/* Product folders */}
@@ -560,8 +560,8 @@ export default function VendorProducts() {
               </div>
 
               <div className="text-[10px] text-[#666] leading-[1.6] space-y-1">
-                <p>• <strong>최하위 폴더</strong>를 선택하면 그 안의 <strong>하위 폴더들</strong>이 각각 하나의 제품으로 등록됩니다.</p>
-                <p>• 하위 폴더의 <strong>이름 = 제품명</strong>, 폴더 안의 이미지들이 제품 이미지가 됩니다.</p>
+                <p>• 선택한 폴더 안의 <strong>하위 폴더들</strong>이 각각 하나의 제품으로 등록됩니다.</p>
+                <p>• 하위 폴더의 <strong>이름이 제품명</strong>으로, 폴더 안의 이미지들이 제품 이미지로 일괄 등록됩니다.</p>
                 <p>• JPG, PNG 이미지만 인식됩니다.</p>
               </div>
             </div>
