@@ -561,7 +561,7 @@ export default function VendorProducts() {
 
               <div className="text-[10px] text-[#666] leading-[1.6] space-y-1">
                 <p>• 선택한 폴더 안의 <strong>하위 폴더들</strong>이 각각 하나의 제품으로 등록됩니다.</p>
-                <p>• 하위 폴더의 <strong>이름이 제품명</strong>으로, 폴더 안의 이미지들이 제품 이미지로 일괄 등록됩니다.</p>
+                <p>• 하위 폴더의 <strong>폴더명이 제품명</strong>으로, 그 안의 이미지들이 제품 이미지로 일괄 등록됩니다.</p>
                 <p>• JPG, PNG 이미지만 인식됩니다.</p>
               </div>
             </div>
