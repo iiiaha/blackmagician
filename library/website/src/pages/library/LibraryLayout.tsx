@@ -6,11 +6,12 @@ import { CATEGORIES, type CategoryId } from '@/lib/categories'
 import { useState, useEffect, useRef } from 'react'
 
 export default function LibraryLayout() {
-  const { user, userProfile, signOut } = useAuth()
+  const { user, userProfile, signOut, isPro, todayApplyCount, maxFreeApplies } = useAuth()
   const [activeCategory, setActiveCategory] = useState<CategoryId>('tile')
   const [showLoginPopup, setShowLoginPopup] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showPlanInfo, setShowPlanInfo] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
   const navRef = useRef<HTMLElement>(null)
   const [indicatorStyle, setIndicatorStyle] = useState<{ left: number; width: number }>({ left: 0, width: 0 })
@@ -88,6 +89,15 @@ export default function LibraryLayout() {
 
           {user ? (
             <>
+              {/* Plan badge */}
+              <span className={`text-[8px] font-bold px-1.5 py-[2px] rounded-[3px] leading-none ${
+                isPro
+                  ? 'bg-[#34d399] text-white'
+                  : 'bg-muted text-text-tertiary'
+              }`}>
+                {isPro ? 'PRO' : 'FREE'}
+              </span>
+
               <div className="relative" ref={userMenuRef}>
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
@@ -99,6 +109,13 @@ export default function LibraryLayout() {
 
               {showUserMenu && (
                 <div className="absolute right-0 top-full mt-1 w-[110px] bg-surface border border-border rounded-[5px] shadow-[0_4px_16px_rgba(0,0,0,0.1)] overflow-hidden z-50 py-1">
+                  <button
+                    onClick={() => { setShowUserMenu(false); setShowPlanInfo(true) }}
+                    className="w-full text-center py-1.5 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
+                  >
+                    구독 정보
+                  </button>
+                  <div className="border-t border-border mx-2" />
                   <button
                     onClick={() => { signOut(); setShowUserMenu(false) }}
                     className="w-full text-center py-1.5 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
@@ -147,6 +164,67 @@ export default function LibraryLayout() {
           </a>
         </div>
       </footer>
+
+      {/* Plan Info Popup */}
+      {showPlanInfo && (
+        <>
+          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setShowPlanInfo(false)} />
+          <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] bg-surface border border-border rounded-[8px] p-6 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+            <h3 className="text-[13px] font-bold mb-4 text-center">구독 정보</h3>
+            <div className="space-y-3 text-[11px]">
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">현재 플랜</span>
+                <span className="font-semibold">
+                  {isPro ? (
+                    <span className="inline-flex items-center gap-1">
+                      <span className="text-[8px] font-bold bg-foreground text-primary-foreground px-1.5 py-[2px] rounded-[3px]">PRO</span>
+                      무제한
+                    </span>
+                  ) : 'Free'}
+                </span>
+              </div>
+              {!isPro && (
+                <>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">잔여 횟수</span>
+                    <span className="font-semibold">{Math.max(0, maxFreeApplies - todayApplyCount)} / {maxFreeApplies}회</span>
+                  </div>
+                  {todayApplyCount >= maxFreeApplies && (
+                    <p className="text-[9px] text-text-tertiary text-right">
+                      <TimeUntilMidnightKST /> 후 갱신
+                    </p>
+                  )}
+                </>
+              )}
+              {userProfile?.trial_expires_at && new Date(userProfile.trial_expires_at) > new Date() && (
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">체험 만료</span>
+                  <span className="font-semibold">{new Date(userProfile.trial_expires_at).toLocaleDateString('ko-KR')}</span>
+                </div>
+              )}
+              {isPro && userProfile?.plan_expires_at && (
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">다음 결제일</span>
+                  <span className="font-semibold">{new Date(userProfile.plan_expires_at).toLocaleDateString('ko-KR')}</span>
+                </div>
+              )}
+              {!isPro && (
+                <div className="mt-4 pt-3 border-t border-border text-center">
+                  <p className="text-[10px] text-muted-foreground mb-2">Pro 구독 시 Apply to Bucket 무제한</p>
+                  <p className="text-[14px] font-bold">월 3,900원</p>
+                  <button className="w-full h-[32px] mt-3 bg-foreground text-primary-foreground text-[10px] font-semibold rounded-[5px] cursor-pointer hover:bg-foreground/85 transition-colors">
+                    Pro 구독하기
+                  </button>
+                </div>
+              )}
+            </div>
+            <button onClick={() => setShowPlanInfo(false)}
+              className="w-full h-[28px] mt-4 border border-border rounded-[4px] text-[10px] font-semibold cursor-pointer hover:bg-muted transition-colors">
+              닫기
+            </button>
+          </div>
+        </>
+      )}
 
       {/* Delete Account Confirm */}
       {showDeleteConfirm && (
@@ -210,4 +288,28 @@ export default function LibraryLayout() {
       )}
     </div>
   )
+}
+
+function TimeUntilMidnightKST() {
+  const [text, setText] = useState('')
+
+  useEffect(() => {
+    const calc = () => {
+      const now = new Date()
+      // KST = UTC+9
+      const kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000)
+      const kstMidnight = new Date(kstNow)
+      kstMidnight.setUTCHours(24, 0, 0, 0) // next KST midnight in UTC terms
+      const diff = kstMidnight.getTime() - kstNow.getTime()
+      const h = Math.floor(diff / (1000 * 60 * 60))
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+      const s = Math.floor((diff % (1000 * 60)) / 1000)
+      setText(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`)
+    }
+    calc()
+    const id = setInterval(calc, 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  return <>{text}</>
 }

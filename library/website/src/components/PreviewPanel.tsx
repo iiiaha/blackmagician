@@ -53,11 +53,16 @@ interface Props {
   tileName: string
   product?: Product | null
   loggedIn: boolean
+  isPro: boolean
+  canApply: boolean
+  todayApplyCount: number
+  maxFreeApplies: number
   onInsertRequest?: (dataUrl: string, vendor: string, tileName: string, sizeStr: string) => void
   onLoginRequest?: () => void
+  onApplyLog?: (productId: string) => Promise<boolean>
 }
 
-export default function PreviewPanel({ images, sizeStr, vendorName, tileName, product, loggedIn, onInsertRequest, onLoginRequest }: Props) {
+export default function PreviewPanel({ images, sizeStr, vendorName, tileName, product, loggedIn, isPro, canApply, todayApplyCount, maxFreeApplies, onInsertRequest, onLoginRequest, onApplyLog }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [edit, setEdit] = useState<EditState>({ ...defaultEditState })
   const [mainImg, setMainImg] = useState<HTMLImageElement | null>(null)
@@ -94,8 +99,16 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
     updateEdit({ mixMode: mode, mixSelections: picks })
   }
 
-  const handleInsert = () => {
+  const handleInsert = async () => {
     if (!canvasRef.current || !onInsertRequest || !mainImg) return
+    if (!canApply) return
+
+    // Log the apply (checks limit server-side)
+    if (onApplyLog && product) {
+      const ok = await onApplyLog(product.id)
+      if (!ok) return
+    }
+
     setInserting(true)
     // Re-draw at actual grout size for export
     drawCanvas(canvasRef.current, sizeStr, edit, mainImg, true)
@@ -196,14 +209,30 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
         </tbody>
       </table>
 
-      {/* Apply */}
-      <button
-        className="w-full h-[30px] bg-foreground hover:bg-foreground/85 text-primary-foreground text-[10px] font-semibold tracking-[0.3px] rounded-[4px] cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
-        onClick={loggedIn ? handleInsert : onLoginRequest}
-        disabled={loggedIn && (inserting || !mainImg || isEmpty)}
-      >
-        <span className="leading-none">{inserting ? 'Applying...' : 'Apply to Bucket'}</span>
-      </button>
+      {/* Apply / Subscribe */}
+      {loggedIn && !isPro && !canApply ? (
+        <button
+          className="w-full h-[30px] bg-foreground hover:bg-foreground/85 text-primary-foreground text-[10px] font-semibold tracking-[0.3px] rounded-[4px] cursor-pointer transition-colors flex items-center justify-center"
+        >
+          Subscribe
+        </button>
+      ) : (
+        <button
+          className="w-full h-[30px] bg-foreground hover:bg-foreground/85 text-primary-foreground text-[10px] font-semibold tracking-[0.3px] rounded-[4px] cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed transition-colors relative flex items-center justify-center"
+          onClick={loggedIn ? handleInsert : onLoginRequest}
+          disabled={loggedIn && (inserting || !mainImg || isEmpty)}
+        >
+          <span className="leading-none">{inserting ? 'Applying...' : 'Apply to Bucket'}</span>
+          {loggedIn && !isPro && (
+            <span className="absolute right-3 text-[9px] font-normal opacity-50 leading-none">
+              {Math.max(0, maxFreeApplies - todayApplyCount)}/{maxFreeApplies}
+            </span>
+          )}
+          {loggedIn && isPro && (
+            <span className="absolute right-3 text-[9px] font-normal opacity-50 leading-none">PRO</span>
+          )}
+        </button>
+      )}
     </div>
   )
 }
