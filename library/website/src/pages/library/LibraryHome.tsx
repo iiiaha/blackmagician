@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import type { CategoryId } from '@/lib/categories'
 import PreviewPanel from '@/components/PreviewPanel'
 import {
-  Search, ChevronRight, ChevronDown, ImageIcon, Heart,
+  Search, ChevronRight, ChevronDown, ImageIcon, Heart, Folder, FolderOpen,
 } from 'lucide-react'
 import type { Vendor, FolderNode, Product, ProductImage } from '@/types/database'
 
@@ -268,6 +268,9 @@ export default function LibraryHome() {
             isExpanded ? <ChevronDown className="w-2.5 h-2.5 shrink-0 opacity-30" />
               : <ChevronRight className="w-2.5 h-2.5 shrink-0 opacity-30" />
           ) : <span className="w-2.5 shrink-0" />}
+          {node.children.length === 0
+            ? <FolderOpen className="w-3.5 h-3.5 shrink-0 opacity-50" />
+            : <Folder className="w-3.5 h-3.5 shrink-0 opacity-50" />}
           <span className="truncate">{node.name}</span>
         </button>
         {isExpanded && node.children.map(child => renderNode(child, level + 1, vendor))}
