@@ -80,14 +80,14 @@ body {
 
 /* Vendor button overlay */
 .vendor-overlay {
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(0, 0, 0, 0.3);
 }
 .group:hover .vendor-overlay {
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(0, 0, 0, 0.15);
 }
 .vendor-text {
-  color: #1a1a1a;
-  text-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+  color: #ffffff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
 }
 .dark .vendor-overlay {
   background: rgba(0, 0, 0, 0.55);
