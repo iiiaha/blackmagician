@@ -43,7 +43,6 @@ function buildFilter(edit: EditState) {
   return `hue-rotate(${edit.hue}deg) saturate(${edit.saturation}%) brightness(${edit.brightness / 100})`
 }
 
-const MAX_ASPECT_RATIO = 1.0
 
 function getMixGrid(mixMode: string, sizeStr?: string) {
   if (mixMode === 'grid') return { cols: 3, rows: 3 }
