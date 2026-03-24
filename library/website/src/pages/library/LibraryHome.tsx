@@ -604,7 +604,7 @@ function VendorBanner({ vendor }: { vendor: Vendor }) {
       {vendor.logo_url && (
         <>
           <img src={vendor.logo_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-black/50" />
+          <div className="absolute inset-0 bg-black/[0.15] dark:bg-black/[0.45]" />
         </>
       )}
       <div className="relative flex items-center justify-between px-6 py-6">
