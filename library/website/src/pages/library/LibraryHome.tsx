@@ -371,12 +371,11 @@ export default function LibraryHome() {
                   style={{ animation: `fadeInUp 0.2s ease-out ${i * 0.04}s both` }}>
                   {v.logo_url ? (
                     <>
-                      <img src={v.logo_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/40 group-hover:bg-black/25 transition-colors duration-200" />
-                      <span className="relative text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{v.company_name}</span>
+                      <img src={v.logo_url} alt="" className="absolute inset-0 w-full h-full object-cover brightness-[0.85] dark:brightness-[0.45] group-hover:brightness-[0.95] dark:group-hover:brightness-[0.55] transition-[filter] duration-200" />
+                      <span className="relative text-white/90 dark:text-white/80 drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)]">{v.company_name}</span>
                     </>
                   ) : (
-                    <span className="text-text-secondary border border-border rounded-[5px] w-full h-full flex items-center justify-center bg-muted">
+                    <span className="text-text-secondary border border-border rounded-[5px] w-full h-full flex items-center justify-center bg-muted hover:bg-accent">
                       {v.company_name}
                     </span>
                   )}
