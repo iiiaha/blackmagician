@@ -414,12 +414,12 @@ export default function LibraryHome() {
             {/* Filter indicator — always visible, lights up when active */}
             <span className={`inline-flex items-center gap-1.5 text-[8px] font-bold px-2 py-[3px] rounded-full whitespace-nowrap transition-all duration-300 ${
               hasActiveFilter
-                ? 'text-white bg-emerald-500 dark:text-emerald-100 dark:bg-emerald-700'
+                ? 'text-[#1a1a1a] bg-[#e8e8e8] dark:text-[#e0e0e0] dark:bg-[#3a3a3a]'
                 : 'text-text-secondary bg-muted'
             }`}>
               <span className={`inline-block w-[6px] h-[6px] rounded-full transition-all duration-300 ${
                 hasActiveFilter
-                  ? 'bg-white shadow-[0_0_6px_rgba(255,255,255,0.6)] dark:bg-emerald-200 dark:shadow-[0_0_6px_rgba(167,243,208,0.5)]'
+                  ? 'bg-[#18a0fb] shadow-[0_0_5px_rgba(24,160,251,0.5)]'
                   : 'bg-text-tertiary/30 dark:bg-text-tertiary/50'
               }`} />
               FILTER
