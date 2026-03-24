@@ -30,7 +30,7 @@ function getBreadcrumb(nodes: FolderNode[], folderId: string): FolderNode[] {
 }
 
 export default function LibraryHome() {
-  const { user, userProfile } = useAuth()
+  const { user, userProfile, isPro, canApply, todayApplyCount, maxFreeApplies, logApply } = useAuth()
 
   const { activeCategory } = useOutletContext<{ activeCategory: CategoryId }>()
 
@@ -70,9 +70,6 @@ export default function LibraryHome() {
   // Login popup
   const [showLoginPopup, setShowLoginPopup] = useState(false)
 
-  // Download count for button
-  const maxDownloads = 5
-  const remaining = maxDownloads // TODO: track actual usage
 
   // Fetch vendors + roots
   useEffect(() => {
@@ -391,12 +388,14 @@ export default function LibraryHome() {
             vendorName={previewVendor}
             tileName={previewProduct?.name || ''}
             product={previewProduct}
-            vendor={selectedVendor}
-            remaining={remaining}
-            maxDownloads={maxDownloads}
             loggedIn={!!user}
+            isPro={isPro}
+            canApply={canApply}
+            todayApplyCount={todayApplyCount}
+            maxFreeApplies={maxFreeApplies}
             onInsertRequest={handleInsert}
             onLoginRequest={() => setShowLoginPopup(true)}
+            onApplyLog={logApply}
           />
         </div>
       </div>

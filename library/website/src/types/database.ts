@@ -170,25 +170,58 @@ export interface Database {
           id: string
           auth_user_id: string
           display_name: string | null
-          plan: string
+          plan: 'free' | 'pro'
           plan_expires_at: string | null
+          trial_used: boolean
+          trial_expires_at: string | null
+          deleted_at: string | null
+          rejoin_available_at: string | null
           created_at: string
         }
         Insert: {
           id?: string
           auth_user_id: string
           display_name?: string | null
-          plan?: string
+          plan?: 'free' | 'pro'
           plan_expires_at?: string | null
+          trial_used?: boolean
+          trial_expires_at?: string | null
+          deleted_at?: string | null
+          rejoin_available_at?: string | null
           created_at?: string
         }
         Update: {
           id?: string
           auth_user_id?: string
           display_name?: string | null
-          plan?: string
+          plan?: 'free' | 'pro'
           plan_expires_at?: string | null
+          trial_used?: boolean
+          trial_expires_at?: string | null
+          deleted_at?: string | null
+          rejoin_available_at?: string | null
           created_at?: string
+        }
+        Relationships: []
+      }
+      apply_logs: {
+        Row: {
+          id: string
+          user_id: string
+          product_id: string
+          applied_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          product_id: string
+          applied_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          product_id?: string
+          applied_at?: string
         }
         Relationships: []
       }
