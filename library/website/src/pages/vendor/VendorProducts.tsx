@@ -35,9 +35,12 @@ export default function VendorProducts() {
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null)
   const [bulkDeleteTarget, setBulkDeleteTarget] = useState<Product[]>([])
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set())
-  const [bulkImporting, setBulkImporting] = useState(false)
-  const [bulkProgress, setBulkProgress] = useState('')
-  const [dragOver, setDragOver] = useState(false)
+  // Bulk import states
+  const [showImportPopup, setShowImportPopup] = useState(false)
+  const [importPhase, setImportPhase] = useState<'scanning' | 'confirm' | 'uploading' | 'done'>('scanning')
+  const [importItems, setImportItems] = useState<{ name: string; files: File[] }[]>([])
+  const [importProgress, setImportProgress] = useState({ current: 0, total: 0, name: '' })
+  const folderInputRef = useRef<HTMLInputElement>(null)
 
   const fetchFolders = useCallback(async () => {
     if (!vendor) return
@@ -313,67 +316,61 @@ export default function VendorProducts() {
     if (selectedFolder) fetchProducts(selectedFolder.id)
   }
 
-  // Bulk import: drag folders → create products + upload images
-  const handleBulkImport = async (items: DataTransferItemList) => {
+  // Bulk import: folder picker → scan → confirm → upload
+  const handleFolderSelect = (files: FileList) => {
+    // Group files by their parent folder name
+    const folderMap: Record<string, File[]> = {}
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i]
+      if (!['image/jpeg', 'image/png'].includes(file.type)) continue
+      // webkitRelativePath: "folderName/image.jpg"
+      const path = file.webkitRelativePath
+      const parts = path.split('/')
+      if (parts.length < 2) continue
+      const folderName = parts[parts.length - 2] // immediate parent folder
+      // Skip root folder (the selected directory itself)
+      if (parts.length === 2) {
+        // file is directly in root selected folder — skip (we want subfolders)
+        // Actually, treat the root folder name as a single product
+        if (!folderMap[parts[0]]) folderMap[parts[0]] = []
+        folderMap[parts[0]].push(file)
+      } else {
+        // file is in a subfolder — subfolder name = product name
+        if (!folderMap[folderName]) folderMap[folderName] = []
+        folderMap[folderName].push(file)
+      }
+    }
+
+    const items = Object.entries(folderMap).map(([name, files]) => ({
+      name,
+      files: files.sort((a, b) => a.name.localeCompare(b.name)),
+    }))
+
+    if (items.length === 0) return
+
+    setImportItems(items)
+    setImportPhase('confirm')
+    setShowImportPopup(true)
+  }
+
+  const executeImport = async () => {
     if (!vendor || !selectedFolder) return
-    setBulkImporting(true)
+    setImportPhase('uploading')
+    setImportProgress({ current: 0, total: importItems.length, name: '' })
 
-    // Collect folder→files mapping from drag
-    const folderFiles: Record<string, File[]> = {}
+    for (let fi = 0; fi < importItems.length; fi++) {
+      const item = importItems[fi]
+      setImportProgress({ current: fi + 1, total: importItems.length, name: item.name })
 
-    const traverseEntry = (entry: FileSystemEntry): Promise<void> => {
-      return new Promise((resolve) => {
-        if (entry.isDirectory) {
-          const dirReader = (entry as FileSystemDirectoryEntry).createReader()
-          dirReader.readEntries(async (entries) => {
-            for (const child of entries) {
-              if (child.isFile) {
-                const file = await new Promise<File>((res) => (child as FileSystemFileEntry).file(res))
-                if (['image/jpeg', 'image/png'].includes(file.type)) {
-                  if (!folderFiles[entry.name]) folderFiles[entry.name] = []
-                  folderFiles[entry.name].push(file)
-                }
-              }
-            }
-            resolve()
-          })
-        } else {
-          resolve()
-        }
-      })
-    }
-
-    // Process all dragged items
-    const entries: FileSystemEntry[] = []
-    for (let i = 0; i < items.length; i++) {
-      const entry = items[i].webkitGetAsEntry?.()
-      if (entry?.isDirectory) entries.push(entry)
-    }
-
-    await Promise.all(entries.map(e => traverseEntry(e)))
-
-    const folderNames = Object.keys(folderFiles)
-    if (folderNames.length === 0) {
-      setBulkImporting(false)
-      return
-    }
-
-    for (let fi = 0; fi < folderNames.length; fi++) {
-      const productName = folderNames[fi]
-      const files = folderFiles[productName]
-      setBulkProgress(`${fi + 1}/${folderNames.length} — ${productName}`)
-
-      // Create product
       const { data: newProduct } = await supabase.from('products')
-        .insert({ vendor_id: vendor.id, folder_id: selectedFolder.id, name: productName })
+        .insert({ vendor_id: vendor.id, folder_id: selectedFolder.id, name: item.name })
         .select().single()
 
       if (!newProduct) continue
       const productId = (newProduct as Product).id
 
-      // Upload images
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i]
+      for (let i = 0; i < item.files.length; i++) {
+        const file = item.files[i]
         const resized = await resizeImage(file, 2048)
         const ext = file.type === 'image/png' ? 'png' : 'jpg'
         const fileName = `${String(i + 1).padStart(3, '0')}.${ext}`
@@ -394,8 +391,7 @@ export default function VendorProducts() {
       }
     }
 
-    setBulkImporting(false)
-    setBulkProgress('')
+    setImportPhase('done')
     fetchProducts(selectedFolder.id)
   }
 
@@ -465,7 +461,7 @@ export default function VendorProducts() {
               )}
             </div>
 
-            {/* Add product */}
+            {/* Add product + folder import */}
             <div className="flex gap-2 mb-3">
               <input value={newProductName} onChange={e => setNewProductName(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleAddProduct()}
@@ -475,32 +471,13 @@ export default function VendorProducts() {
                 className="h-[32px] px-4 bg-[#1a1a1a] text-white text-[10px] font-semibold rounded-[4px] cursor-pointer disabled:opacity-30 flex items-center gap-1.5">
                 <Plus className="w-3 h-3" /> 추가
               </button>
-            </div>
-
-            {/* Bulk import drop zone */}
-            <div
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={async (e) => {
-                e.preventDefault()
-                setDragOver(false)
-                if (e.dataTransfer.items) await handleBulkImport(e.dataTransfer.items)
-              }}
-              className={`mb-3 border-2 border-dashed rounded-[6px] py-3 text-center transition-colors ${
-                dragOver
-                  ? 'border-[#1a1a1a] bg-[rgba(0,0,0,0.03)]'
-                  : 'border-[rgba(0,0,0,0.08)] hover:border-[rgba(0,0,0,0.15)]'
-              }`}
-            >
-              {bulkImporting ? (
-                <p className="text-[10px] text-[#666]">
-                  임포트 중... <span className="font-semibold">{bulkProgress}</span>
-                </p>
-              ) : (
-                <p className="text-[10px] text-[#aaa]">
-                  폴더를 여기에 드래그하세요 — 폴더명 = 제품명, 폴더 안 이미지 자동 등록
-                </p>
-              )}
+              <button onClick={() => folderInputRef.current?.click()}
+                className="h-[32px] px-4 border border-[rgba(0,0,0,0.1)] text-[10px] font-semibold rounded-[4px] cursor-pointer hover:bg-[rgba(0,0,0,0.02)] flex items-center gap-1.5">
+                <FolderOpen className="w-3 h-3" /> 폴더 등록
+              </button>
+              {/* @ts-expect-error webkitdirectory is not in React types */}
+              <input ref={folderInputRef} type="file" webkitdirectory="" multiple className="hidden"
+                onChange={(e) => { if (e.target.files?.length) { handleFolderSelect(e.target.files); e.target.value = '' } }} />
             </div>
 
             {/* AG Grid Table */}
@@ -553,6 +530,112 @@ export default function VendorProducts() {
           </>
         )}
       </div>
+
+      {/* Import popup */}
+      {showImportPopup && (
+        <>
+          <div className="fixed inset-0 bg-black/30 z-40" onClick={importPhase === 'uploading' ? undefined : () => { setShowImportPopup(false); setImportItems([]) }} />
+          <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px] bg-white border border-[rgba(0,0,0,0.08)] rounded-[8px] shadow-[0_8px_30px_rgba(0,0,0,0.12)] overflow-hidden">
+            <div className="px-5 py-4 border-b border-[rgba(0,0,0,0.06)]">
+              <h3 className="text-[13px] font-bold">
+                {importPhase === 'confirm' && '폴더 등록 확인'}
+                {importPhase === 'uploading' && '등록 중...'}
+                {importPhase === 'done' && '등록 완료'}
+              </h3>
+            </div>
+
+            <div className="px-5 py-4">
+              {/* Confirm phase */}
+              {importPhase === 'confirm' && (
+                <>
+                  <p className="text-[11px] text-[#666] mb-3">
+                    <span className="font-semibold text-[#333]">{importItems.length}개 제품</span>이 등록됩니다.
+                  </p>
+                  <div className="max-h-[200px] overflow-y-auto border border-[rgba(0,0,0,0.06)] rounded-[4px] mb-4">
+                    <table className="w-full text-[10px]">
+                      <thead className="bg-[#f8f8f8] sticky top-0">
+                        <tr>
+                          <th className="text-left px-3 py-1.5 font-semibold text-[#888]">제품명</th>
+                          <th className="text-right px-3 py-1.5 font-semibold text-[#888]">이미지</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {importItems.map((item, i) => (
+                          <tr key={i} className="border-t border-[rgba(0,0,0,0.04)]">
+                            <td className="px-3 py-1.5">{item.name}</td>
+                            <td className="px-3 py-1.5 text-right text-[#999]">{item.files.length}장</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => { setShowImportPopup(false); setImportItems([]) }}
+                      className="flex-1 h-[34px] text-[11px] font-semibold border border-[rgba(0,0,0,0.08)] rounded-[5px] cursor-pointer hover:bg-[#f5f5f5]">
+                      취소
+                    </button>
+                    <button onClick={executeImport}
+                      className="flex-1 h-[34px] text-[11px] font-semibold bg-[#1a1a1a] text-white rounded-[5px] cursor-pointer hover:opacity-90">
+                      등록하기
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* Uploading phase */}
+              {importPhase === 'uploading' && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[11px] font-semibold">{importProgress.name}</span>
+                    <span className="text-[10px] text-[#999]">{importProgress.current}/{importProgress.total}</span>
+                  </div>
+                  <div className="w-full h-[6px] bg-[#f0f0f0] rounded-full overflow-hidden mb-3">
+                    <div
+                      className="h-full bg-[#1a1a1a] rounded-full transition-all duration-300"
+                      style={{ width: `${(importProgress.current / importProgress.total) * 100}%` }}
+                    />
+                  </div>
+                  <p className="text-[10px] text-[#aaa] text-center">이미지를 업로드하고 있습니다. 잠시 기다려주세요...</p>
+                </div>
+              )}
+
+              {/* Done phase */}
+              {importPhase === 'done' && (
+                <>
+                  <div className="text-center mb-4">
+                    <div className="w-10 h-10 bg-[#f0f0f0] rounded-full flex items-center justify-center mx-auto mb-2">
+                      <span className="text-[16px]">✓</span>
+                    </div>
+                    <p className="text-[12px] font-semibold">{importItems.length}개 제품 등록 완료</p>
+                  </div>
+                  <div className="max-h-[150px] overflow-y-auto border border-[rgba(0,0,0,0.06)] rounded-[4px] mb-4">
+                    <table className="w-full text-[10px]">
+                      <thead className="bg-[#f8f8f8] sticky top-0">
+                        <tr>
+                          <th className="text-left px-3 py-1.5 font-semibold text-[#888]">제품명</th>
+                          <th className="text-right px-3 py-1.5 font-semibold text-[#888]">이미지</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {importItems.map((item, i) => (
+                          <tr key={i} className="border-t border-[rgba(0,0,0,0.04)]">
+                            <td className="px-3 py-1.5">{item.name}</td>
+                            <td className="px-3 py-1.5 text-right text-[#999]">{item.files.length}장</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <button onClick={() => { setShowImportPopup(false); setImportItems([]) }}
+                    className="w-full h-[34px] text-[11px] font-semibold bg-[#1a1a1a] text-white rounded-[5px] cursor-pointer hover:opacity-90">
+                    확인
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Bulk delete confirmation popup */}
       {bulkDeleteTarget.length > 0 && (
