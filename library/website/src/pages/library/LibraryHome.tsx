@@ -412,12 +412,14 @@ export default function LibraryHome() {
           <div className={`px-5 py-1.5 border-b shrink-0 flex items-center gap-3 transition-colors ${
             hasActiveFilter ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900' : 'bg-surface'
           }`}>
-            {/* Filter ON indicator */}
-            {hasActiveFilter && (
-              <span className="text-[8px] font-bold text-blue-500 bg-blue-100 dark:bg-blue-900/50 px-1.5 py-0.5 rounded-[3px] whitespace-nowrap">
-                FILTER ON
-              </span>
-            )}
+            {/* Filter indicator — always visible, lights up when active */}
+            <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-[3px] whitespace-nowrap transition-colors ${
+              hasActiveFilter
+                ? 'text-blue-500 bg-blue-100 dark:bg-blue-900/50'
+                : 'text-text-tertiary/40 bg-muted'
+            }`}>
+              FILTER
+            </span>
 
             {/* 단가 */}
             <span className="text-[9px] text-text-tertiary whitespace-nowrap">단가</span>
