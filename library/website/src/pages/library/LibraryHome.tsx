@@ -371,7 +371,7 @@ export default function LibraryHome() {
                   style={{ animation: `fadeInUp 0.2s ease-out ${i * 0.04}s both` }}>
                   {v.logo_url ? (
                     <>
-                      <img src={v.logo_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                      <img src={v.logo_url} alt="" className="absolute inset-0 w-full h-full object-cover blur-[2px] scale-[1.05]" />
                       <div className="absolute inset-0 vendor-overlay transition-colors duration-200" />
                       <span className="relative vendor-text font-medium">{v.company_name}</span>
                     </>
