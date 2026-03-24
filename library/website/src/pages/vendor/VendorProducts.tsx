@@ -216,17 +216,21 @@ export default function VendorProducts() {
   // AG Grid column definitions
   const columnDefs: ColDef[] = [
     {
-      headerName: '', width: 36, sortable: false, filter: false, editable: false, resizable: false,
+      headerName: '', width: 40, minWidth: 40, maxWidth: 40, sortable: false, filter: false, editable: false, resizable: false,
       headerComponent: () => (
-        <input type="checkbox" checked={products.length > 0 && checkedIds.size === products.length}
-          onChange={toggleCheckAll}
-          className="cursor-pointer" />
+        <div className="flex items-center justify-center w-full">
+          <input type="checkbox" checked={products.length > 0 && checkedIds.size === products.length}
+            onChange={toggleCheckAll}
+            className="cursor-pointer w-[14px] h-[14px]" />
+        </div>
       ),
       cellRenderer: (p: { data: Product }) => (
-        <input type="checkbox" checked={checkedIds.has(p.data.id)}
-          onChange={() => toggleCheck(p.data.id)}
-          onClick={(e) => e.stopPropagation()}
-          className="cursor-pointer" />
+        <div className="flex items-center justify-center w-full h-full">
+          <input type="checkbox" checked={checkedIds.has(p.data.id)}
+            onChange={() => toggleCheck(p.data.id)}
+            onClick={(e) => e.stopPropagation()}
+            className="cursor-pointer w-[14px] h-[14px]" />
+        </div>
       ),
     },
     {
@@ -447,37 +451,43 @@ export default function VendorProducts() {
           </div>
         ) : (
           <>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-3">
-                <h2 className="text-[14px] font-bold">{selectedFolder.name}</h2>
-                <span className="text-[10px] text-[#999]">{products.length}개 제품</span>
-              </div>
-              {checkedIds.size > 0 && (
-                <button
-                  onClick={() => setBulkDeleteTarget(products.filter(p => checkedIds.has(p.id)))}
-                  className="h-[28px] px-3 text-[10px] font-semibold text-[#e53e3e] border border-[rgba(229,62,62,0.3)] rounded-[4px] cursor-pointer hover:bg-[rgba(229,62,62,0.05)]">
-                  선택 삭제 ({checkedIds.size})
-                </button>
-              )}
-            </div>
+            {/* Toolbar — fixed height, no layout shift */}
+            <div className="flex items-center gap-2 mb-3 h-[32px]">
+              <h2 className="text-[13px] font-bold shrink-0">{selectedFolder.name}</h2>
+              <span className="text-[10px] text-[#999] shrink-0">{products.length}개</span>
 
-            {/* Add product + folder import */}
-            <div className="flex gap-2 mb-3">
-              <input value={newProductName} onChange={e => setNewProductName(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleAddProduct()}
-                placeholder="새 제품명"
-                className="flex-1 h-[32px] text-[11px] px-3 bg-white border border-[rgba(0,0,0,0.08)] rounded-[4px] outline-none focus:border-[#1a1a1a]" />
-              <button onClick={handleAddProduct} disabled={!newProductName.trim()}
-                className="h-[32px] px-4 bg-[#1a1a1a] text-white text-[10px] font-semibold rounded-[4px] cursor-pointer disabled:opacity-30 flex items-center gap-1.5">
-                <Plus className="w-3 h-3" /> 추가
+              <div className="flex-1" />
+
+              {/* Bulk delete — always takes space, visible when checked */}
+              <button
+                onClick={() => checkedIds.size > 0 && setBulkDeleteTarget(products.filter(p => checkedIds.has(p.id)))}
+                className={`h-[28px] px-3 text-[10px] font-semibold rounded-[4px] shrink-0 transition-opacity ${
+                  checkedIds.size > 0
+                    ? 'text-[#e53e3e] border border-[rgba(229,62,62,0.3)] cursor-pointer hover:bg-[rgba(229,62,62,0.05)] opacity-100'
+                    : 'text-transparent border border-transparent pointer-events-none opacity-0'
+                }`}>
+                선택 삭제 ({checkedIds.size})
               </button>
+
               <button onClick={() => folderInputRef.current?.click()}
-                className="h-[32px] px-4 border border-[rgba(0,0,0,0.1)] text-[10px] font-semibold rounded-[4px] cursor-pointer hover:bg-[rgba(0,0,0,0.02)] flex items-center gap-1.5">
+                className="h-[28px] px-3 border border-[rgba(0,0,0,0.1)] text-[10px] font-semibold rounded-[4px] cursor-pointer hover:bg-[rgba(0,0,0,0.02)] flex items-center gap-1.5 shrink-0">
                 <FolderOpen className="w-3 h-3" /> 폴더 등록
               </button>
               {/* @ts-expect-error webkitdirectory is not in React types */}
               <input ref={folderInputRef} type="file" webkitdirectory="" multiple className="hidden"
                 onChange={(e) => { if (e.target.files?.length) { handleFolderSelect(e.target.files); e.target.value = '' } }} />
+            </div>
+
+            {/* Add single product */}
+            <div className="flex gap-2 mb-3">
+              <input value={newProductName} onChange={e => setNewProductName(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleAddProduct()}
+                placeholder="새 제품명 입력 후 Enter"
+                className="w-[200px] h-[28px] text-[10px] px-3 bg-white border border-[rgba(0,0,0,0.08)] rounded-[4px] outline-none focus:border-[#1a1a1a]" />
+              <button onClick={handleAddProduct} disabled={!newProductName.trim()}
+                className="h-[28px] px-3 bg-[#1a1a1a] text-white text-[10px] font-semibold rounded-[4px] cursor-pointer disabled:opacity-30 flex items-center gap-1">
+                <Plus className="w-3 h-3" /> 추가
+              </button>
             </div>
 
             {/* AG Grid Table */}
