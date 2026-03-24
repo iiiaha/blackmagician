@@ -69,10 +69,11 @@ function getMixGrid(mixMode: string, sizeStr?: string) {
   let cols = Math.round((rows * longSide) / shortSide)
   if (cols < 2) cols = 2
 
-  // Try increasing rows to get more tiles while staying roughly square
+  // Try increasing rows, max 36 tiles total
+  const MAX_TILES = 36
   for (let r = step; r <= step * 6; r += step) {
     const c = Math.round((r * longSide) / shortSide)
-    if (c < 2) continue
+    if (c < 2 || c * r > MAX_TILES) continue
     const totalLong = r * longSide
     const totalShort = c * shortSide
     const ratio = Math.max(totalLong, totalShort) / Math.min(totalLong, totalShort)
