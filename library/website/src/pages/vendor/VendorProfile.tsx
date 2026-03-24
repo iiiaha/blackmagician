@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
-import { Save, Check } from 'lucide-react'
+import { Save, Check, Upload, X } from 'lucide-react'
 
 export default function VendorProfile() {
   const { vendor, refreshVendor } = useAuth()
@@ -71,6 +71,43 @@ export default function VendorProfile() {
               className="w-full h-[34px] text-[11px] px-3 bg-white border border-[rgba(0,0,0,0.08)] rounded-[4px] outline-none focus:border-[#1a1a1a]" />
           </FormField>
         </div>
+
+        {/* Banner image */}
+        <FormField label="배너 이미지">
+          <div className="relative">
+            {vendor.logo_url ? (
+              <div className="relative rounded-[6px] overflow-hidden h-[80px] bg-[#f5f5f5]">
+                <img src={vendor.logo_url} alt="배너" className="w-full h-full object-cover" />
+                <button
+                  onClick={async () => {
+                    await supabase.from('vendors').update({ logo_url: null }).eq('id', vendor.id)
+                    await refreshVendor()
+                  }}
+                  className="absolute top-2 right-2 w-5 h-5 bg-black/50 rounded-full flex items-center justify-center cursor-pointer hover:bg-black/70"
+                >
+                  <X className="w-3 h-3 text-white" />
+                </button>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center h-[80px] border-2 border-dashed border-[rgba(0,0,0,0.1)] rounded-[6px] cursor-pointer hover:bg-[rgba(0,0,0,0.01)]">
+                <Upload className="w-4 h-4 text-[#ccc] mb-1" />
+                <span className="text-[10px] text-[#aaa]">배너 이미지 업로드 (권장: 1200×300)</span>
+                <input type="file" accept="image/jpeg,image/png" className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+                    const storagePath = `banners/${vendor.id}/banner.${file.type === 'image/png' ? 'png' : 'jpg'}`
+                    await supabase.storage.from('product-images').upload(storagePath, file, { contentType: file.type, upsert: true })
+                    const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(storagePath)
+                    await supabase.from('vendors').update({ logo_url: urlData.publicUrl }).eq('id', vendor.id)
+                    await refreshVendor()
+                    e.target.value = ''
+                  }} />
+              </label>
+            )}
+          </div>
+          <p className="text-[9px] text-[#aaa] mt-1">Library에서 업체 페이지 상단에 표시됩니다.</p>
+        </FormField>
 
         <FormField label="소개글">
           <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))}

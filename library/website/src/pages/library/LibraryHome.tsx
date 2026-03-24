@@ -506,8 +506,18 @@ function VendorBanner({ vendor }: { vendor: Vendor }) {
   const insta = vendor.instagram || 'blackmagician'
 
   return (
-    <div className="shrink-0 bg-gradient-to-br from-[#2a2a2a] via-[#3a3a3a] to-[#4a4a4a] text-white">
-      <div className="flex items-center justify-between px-5 py-4">
+    <div className="shrink-0 text-white relative overflow-hidden" style={{
+      background: vendor.logo_url
+        ? undefined
+        : 'linear-gradient(135deg, #2a2a2a, #3a3a3a, #4a4a4a)',
+    }}>
+      {vendor.logo_url && (
+        <>
+          <img src={vendor.logo_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-black/50" />
+        </>
+      )}
+      <div className="relative flex items-center justify-between px-5 py-4">
         <div className="flex-1 min-w-0">
           <h2 className="text-[15px] font-bold tracking-[0.3px] mb-1">{vendor.company_name}</h2>
           <p className="text-[10px] text-white/60 leading-[1.6] max-w-[360px]">{desc}</p>
