@@ -6,6 +6,7 @@ import type { CategoryId } from '@/lib/categories'
 import PreviewPanel from '@/components/PreviewPanel'
 import {
   Search, ChevronRight, ChevronDown, ImageIcon, Heart, Folder, FolderOpen,
+  Filter, X,
 } from 'lucide-react'
 import type { Vendor, FolderNode, Product, ProductImage } from '@/types/database'
 
@@ -59,6 +60,13 @@ export default function LibraryHome() {
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set())
   const [showFavorites, setShowFavorites] = useState(false)
   const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([])
+
+  // Filters
+  const [showFilters, setShowFilters] = useState(false)
+  const [filterMinPrice, setFilterMinPrice] = useState('')
+  const [filterMaxPrice, setFilterMaxPrice] = useState('')
+  const [filterMinStock, setFilterMinStock] = useState('')
+  const [filterOrigins, setFilterOrigins] = useState<Set<string>>(new Set())
 
   // Login popup
   const [showLoginPopup, setShowLoginPopup] = useState(false)
@@ -279,7 +287,36 @@ export default function LibraryHome() {
     )
   }
 
-  const displayProducts = showFavorites ? favoriteProducts : products
+  // Collect unique origins from current product set
+  const baseProducts = showFavorites ? favoriteProducts : products
+  const availableOrigins = [...new Set(baseProducts.map(p => p.origin).filter((o): o is string => !!o))].sort()
+
+  // Apply filters
+  const displayProducts = baseProducts.filter(p => {
+    if (filterMinPrice) {
+      const min = Number(filterMinPrice)
+      if (!isNaN(min) && (p.unit_price == null || p.unit_price < min)) return false
+    }
+    if (filterMaxPrice) {
+      const max = Number(filterMaxPrice)
+      if (!isNaN(max) && (p.unit_price == null || p.unit_price > max)) return false
+    }
+    if (filterMinStock) {
+      const minS = Number(filterMinStock)
+      if (!isNaN(minS) && (p.stock == null || p.stock < minS)) return false
+    }
+    if (filterOrigins.size > 0 && (!p.origin || !filterOrigins.has(p.origin))) return false
+    return true
+  })
+
+  const hasActiveFilter = !!(filterMinPrice || filterMaxPrice || filterMinStock || filterOrigins.size > 0)
+
+  const clearFilters = () => {
+    setFilterMinPrice('')
+    setFilterMaxPrice('')
+    setFilterMinStock('')
+    setFilterOrigins(new Set())
+  }
 
   return (
     <div className="flex" style={{ height: 'calc(100vh - 60px - 24px)' }}>
@@ -369,6 +406,77 @@ export default function LibraryHome() {
         {/* Vendor Banner — full width, outside scroll */}
         {selectedVendor && !searchResults && !showFavorites && (
           <VendorBanner vendor={selectedVendor} />
+        )}
+
+        {/* Filter bar */}
+        {selectedVendor && !searchResults && (
+          <div className="px-5 py-1.5 border-b bg-surface shrink-0">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowFilters(prev => !prev)}
+                className={`flex items-center gap-1 text-[10px] cursor-pointer px-2 py-1 rounded-[4px] transition-colors ${
+                  showFilters || hasActiveFilter ? 'text-foreground bg-muted font-semibold' : 'text-text-tertiary hover:text-foreground'
+                }`}
+              >
+                <Filter className="w-3 h-3" />
+                필터
+                {hasActiveFilter && (
+                  <span className="ml-0.5 w-1.5 h-1.5 rounded-full bg-blue-500 inline-block" />
+                )}
+              </button>
+
+              {hasActiveFilter && (
+                <button onClick={clearFilters}
+                  className="text-[9px] text-text-tertiary hover:text-foreground cursor-pointer flex items-center gap-0.5">
+                  <X className="w-2.5 h-2.5" /> 초기화
+                </button>
+              )}
+
+              {hasActiveFilter && (
+                <span className="text-[9px] text-text-tertiary ml-auto">
+                  {displayProducts.length}개 표시
+                </span>
+              )}
+            </div>
+
+            {showFilters && (
+              <div className="flex items-center gap-4 mt-2 pb-1" style={{ animation: 'slideDown 0.2s ease-out' }}>
+                {/* 단가 필터 */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[9px] text-text-tertiary whitespace-nowrap">단가</span>
+                  <input
+                    type="number" placeholder="최소" value={filterMinPrice}
+                    onChange={e => setFilterMinPrice(e.target.value)}
+                    className="w-[70px] h-[22px] text-[10px] px-1.5 bg-muted border border-border rounded-[3px] outline-none focus:border-foreground"
+                  />
+                  <span className="text-[9px] text-text-tertiary">~</span>
+                  <input
+                    type="number" placeholder="최대" value={filterMaxPrice}
+                    onChange={e => setFilterMaxPrice(e.target.value)}
+                    className="w-[70px] h-[22px] text-[10px] px-1.5 bg-muted border border-border rounded-[3px] outline-none focus:border-foreground"
+                  />
+                </div>
+
+                {/* 재고 필터 */}
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[9px] text-text-tertiary whitespace-nowrap">재고</span>
+                  <input
+                    type="number" placeholder="이상" value={filterMinStock}
+                    onChange={e => setFilterMinStock(e.target.value)}
+                    className="w-[60px] h-[22px] text-[10px] px-1.5 bg-muted border border-border rounded-[3px] outline-none focus:border-foreground"
+                  />
+                  <span className="text-[9px] text-text-tertiary">이상</span>
+                </div>
+
+                {/* 원산지 필터 */}
+                <OriginDropdown
+                  origins={availableOrigins}
+                  selected={filterOrigins}
+                  onChange={setFilterOrigins}
+                />
+              </div>
+            )}
+          </div>
         )}
 
         {(selectedFolder || searchResults !== null || showFavorites) && (
@@ -558,6 +666,58 @@ function VendorBanner({ vendor }: { vendor: Vendor }) {
               className="w-full h-[28px] mt-4 border border-[rgba(0,0,0,0.1)] rounded-[4px] text-[10px] font-semibold text-foreground cursor-pointer hover:bg-[rgba(0,0,0,0.03)]">
               닫기
             </button>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function OriginDropdown({ origins, selected, onChange }: {
+  origins: string[]
+  selected: Set<string>
+  onChange: (s: Set<string>) => void
+}) {
+  const [open, setOpen] = useState(false)
+
+  const toggle = (origin: string) => {
+    const next = new Set(selected)
+    if (next.has(origin)) next.delete(origin); else next.add(origin)
+    onChange(next)
+  }
+
+  return (
+    <div className="relative flex items-center gap-1.5">
+      <span className="text-[9px] text-text-tertiary whitespace-nowrap">원산지</span>
+      <button
+        onClick={() => setOpen(prev => !prev)}
+        className="h-[22px] min-w-[80px] px-2 text-[10px] text-left bg-muted border border-border rounded-[3px] cursor-pointer flex items-center justify-between gap-1 hover:border-foreground"
+      >
+        <span className="truncate">
+          {selected.size === 0 ? '전체' : `${selected.size}개 선택`}
+        </span>
+        <ChevronDown className="w-2.5 h-2.5 shrink-0 opacity-50" />
+      </button>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
+          <div className="absolute top-full left-0 mt-1 z-40 bg-surface border border-border rounded-[4px] shadow-[0_4px_12px_rgba(0,0,0,0.1)] max-h-[200px] overflow-y-auto min-w-[120px]"
+            style={{ animation: 'slideDown 0.15s ease-out' }}>
+            {origins.length === 0 ? (
+              <p className="text-[9px] text-text-tertiary px-3 py-2">데이터 없음</p>
+            ) : (
+              origins.map(o => (
+                <label key={o} className="flex items-center gap-2 px-3 py-1.5 hover:bg-muted cursor-pointer text-[10px]">
+                  <input
+                    type="checkbox" checked={selected.has(o)}
+                    onChange={() => toggle(o)}
+                    className="w-3 h-3 accent-foreground cursor-pointer"
+                  />
+                  <span>{o}</span>
+                </label>
+              ))
+            )}
           </div>
         </>
       )}
