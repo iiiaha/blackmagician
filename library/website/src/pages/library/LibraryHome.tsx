@@ -367,16 +367,16 @@ export default function LibraryHome() {
             <div className="flex flex-col items-center gap-1.5 px-2 pt-1">
               {filteredVendors.map((v, i) => (
                 <button key={v.id} onClick={() => handleToggleVendor(v)}
-                  className="w-full h-[36px] text-[12px] font-normal tracking-[1px] text-center cursor-pointer rounded-[5px] overflow-hidden relative transition-all duration-200 hover:shadow-[0_2px_8px_rgba(0,0,0,0.12)] group"
+                  className="w-full h-[36px] text-[12px] font-light tracking-normal text-center cursor-pointer rounded-[5px] overflow-hidden relative transition-all duration-200 hover:shadow-[0_2px_8px_rgba(0,0,0,0.12)] group uppercase"
                   style={{ animation: `fadeInUp 0.2s ease-out ${i * 0.04}s both` }}>
                   {v.logo_url ? (
                     <>
                       <img src={v.logo_url} alt="" className="absolute inset-0 w-full h-full object-cover blur-[2px] scale-[1.05]" />
                       <div className="absolute inset-0 vendor-overlay transition-colors duration-200" />
-                      <span className="relative vendor-text font-medium" style={{ fontFamily: "'Noto Serif KR', serif" }}>{v.company_name}</span>
+                      <span className="relative vendor-text">{v.company_name}</span>
                     </>
                   ) : (
-                    <span className="text-text-secondary border border-border rounded-[5px] w-full h-full flex items-center justify-center bg-muted hover:bg-accent" style={{ fontFamily: "'Noto Serif KR', serif" }}>
+                    <span className="text-text-secondary border border-border rounded-[5px] w-full h-full flex items-center justify-center bg-muted hover:bg-accent">
                       {v.company_name}
                     </span>
                   )}
