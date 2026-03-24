@@ -11,6 +11,8 @@ import VendorLayout from '@/pages/vendor/VendorLayout'
 import VendorLogin from '@/pages/vendor/VendorLogin'
 import VendorRegister from '@/pages/vendor/VendorRegister'
 import VendorDashboard from '@/pages/vendor/VendorDashboard'
+import VendorProducts from '@/pages/vendor/VendorProducts'
+import VendorProfile from '@/pages/vendor/VendorProfile'
 
 // Admin pages
 import AdminLayout from '@/pages/admin/AdminLayout'
@@ -31,10 +33,12 @@ export default function App() {
           </Route>
 
           {/* Vendor */}
+          <Route path="/vendor/login" element={<VendorLogin />} />
+          <Route path="/vendor/register" element={<VendorRegister />} />
           <Route path="/vendor" element={<VendorLayout />}>
             <Route index element={<VendorDashboard />} />
-            <Route path="login" element={<VendorLogin />} />
-            <Route path="register" element={<VendorRegister />} />
+            <Route path="products" element={<VendorProducts />} />
+            <Route path="profile" element={<VendorProfile />} />
           </Route>
 
           {/* Admin */}

@@ -16,6 +16,7 @@ export interface Database {
           address: string | null
           website_url: string | null
           instagram: string | null
+          logo_url: string | null
           created_at: string
         }
         Insert: {
@@ -30,6 +31,7 @@ export interface Database {
           address?: string | null
           website_url?: string | null
           instagram?: string | null
+          logo_url?: string | null
           created_at?: string
         }
         Update: {
@@ -44,6 +46,7 @@ export interface Database {
           address?: string | null
           website_url?: string | null
           instagram?: string | null
+          logo_url?: string | null
           created_at?: string
         }
         Relationships: []
