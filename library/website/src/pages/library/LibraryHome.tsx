@@ -367,16 +367,16 @@ export default function LibraryHome() {
             <div className="flex flex-col items-center gap-1.5 px-2 pt-1">
               {filteredVendors.map((v, i) => (
                 <button key={v.id} onClick={() => handleToggleVendor(v)}
-                  className="w-full h-[36px] text-[12px] font-normal tracking-[1px] text-center cursor-pointer rounded-[5px] overflow-hidden relative transition-all duration-200 hover:shadow-[0_2px_8px_rgba(0,0,0,0.12)] group"
-                  style={{ animation: `fadeInUp 0.2s ease-out ${i * 0.04}s both` }}>
+                  className="w-full h-[40px] text-[11px] font-medium tracking-[0.5px] text-center cursor-pointer rounded-[8px] overflow-hidden relative transition-all duration-300 hover:shadow-[0_4px_16px_rgba(0,0,0,0.10)] hover:scale-[1.02] active:scale-[0.98] group border border-white/20 dark:border-white/10"
+                  style={{ animation: `fadeInUp 0.25s ease-out ${i * 0.04}s both` }}>
                   {v.logo_url ? (
                     <>
                       <img src={v.logo_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                      <div className="absolute inset-0 vendor-overlay transition-colors duration-200" />
-                      <span className="relative vendor-text font-medium">{v.company_name}</span>
+                      <div className="absolute inset-0 vendor-overlay transition-all duration-300" />
+                      <span className="relative vendor-text font-semibold drop-shadow-sm">{v.company_name}</span>
                     </>
                   ) : (
-                    <span className="text-text-secondary border border-border rounded-[5px] w-full h-full flex items-center justify-center bg-muted hover:bg-accent">
+                    <span className="w-full h-full flex items-center justify-center text-text-secondary bg-white/50 dark:bg-white/5 backdrop-blur-md border border-white/30 dark:border-white/10 rounded-[8px] transition-all duration-300 group-hover:bg-white/70 dark:group-hover:bg-white/10">
                       {v.company_name}
                     </span>
                   )}
