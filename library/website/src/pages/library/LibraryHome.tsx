@@ -213,14 +213,10 @@ export default function LibraryHome() {
       return
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const w = window as any
-    const pbrSupported = w.__SU_PBR === true
-
-    if (pbrSupported && canvas) {
+    if (canvas) {
       // Generate PBR maps and send as JSON
       import('@/lib/pbr').then(({ generatePBRMaps }) => {
-        const maps = generatePBRMaps(canvas, 2.0, 0.5, 1.0)
+        const maps = generatePBRMaps(canvas, 2.0, 0.5, 0.15)
         const payload = JSON.stringify({
           albedo: dataUrl,
           normal: maps.normal,

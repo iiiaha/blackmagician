@@ -69,6 +69,8 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
   const [allImgs, setAllImgs] = useState<HTMLImageElement[]>([])
   const [showColor, setShowColor] = useState(false)
   const [inserting, setInserting] = useState(false)
+  const [pbrEnabled, setPbrEnabled] = useState(false)
+  const [showPbrInfo, setShowPbrInfo] = useState(false)
 
   const hasMix = allImgs.length > 1
 
@@ -117,7 +119,7 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
     drawCanvas(canvasRef.current, sizeStr, edit, mainImg, false)
     const finalMM = calcFinalSizeMM(sizeStr, edit)
     const finalSizeStr = finalMM ? `${Math.round(finalMM.w)}x${Math.round(finalMM.h)}` : sizeStr
-    onInsertRequest(dataUrl, vendorName, tileName, finalSizeStr, canvasRef.current)
+    onInsertRequest(dataUrl, vendorName, tileName, finalSizeStr, pbrEnabled ? canvasRef.current : undefined)
     setTimeout(() => setInserting(false), 1500)
   }
 
@@ -208,6 +210,51 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
           </tr>
         </tbody>
       </table>
+
+      {/* PBR Toggle */}
+      {loggedIn && (
+        <div className="relative">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => {
+                if (!pbrEnabled) setShowPbrInfo(true)
+                setPbrEnabled(!pbrEnabled)
+              }}
+              className="flex items-center gap-1.5 cursor-pointer group"
+            >
+              <span className={`relative inline-block w-[28px] h-[14px] rounded-full transition-colors duration-200 ${
+                pbrEnabled ? 'bg-[#34d399]' : 'bg-border'
+              }`}>
+                <span className={`absolute top-[2px] w-[10px] h-[10px] rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                  pbrEnabled ? 'translate-x-[16px]' : 'translate-x-[2px]'
+                }`} />
+              </span>
+              <span className="text-[9px] text-text-secondary group-hover:text-foreground">PBR</span>
+            </button>
+            {pbrEnabled && (
+              <span className="text-[8px] text-[#34d399] font-semibold">Normal + Roughness + AO</span>
+            )}
+          </div>
+
+          {/* PBR info popup */}
+          {showPbrInfo && (
+            <div className="absolute bottom-full left-0 mb-1 w-[200px] bg-surface border border-border rounded-[5px] shadow-[0_4px_12px_rgba(0,0,0,0.12)] p-3 z-10"
+              style={{ animation: 'fadeIn 0.15s ease-out' }}>
+              <p className="text-[9px] text-text-secondary leading-[1.6] mb-2">
+                Diffuse 이미지에서 Normal, Roughness, AO 맵을 자동 생성합니다.
+                처리 시간이 다소 걸릴 수 있습니다.
+              </p>
+              <p className="text-[8px] text-text-tertiary mb-2">
+                ※ SketchUp 2025 이상에서만 지원됩니다.
+              </p>
+              <button onClick={() => setShowPbrInfo(false)}
+                className="text-[9px] text-text-tertiary hover:text-foreground cursor-pointer">
+                확인
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Apply / Subscribe */}
       {loggedIn && !isPro && !canApply ? (
