@@ -333,7 +333,7 @@ export default function LibraryHome() {
             <>
               {filteredVendors.map(v => (
                 <button key={v.id} onClick={() => handleToggleVendor(v)}
-                  className="flex items-center w-full text-left px-2.5 py-[6px] text-[10px] text-text-secondary hover:text-foreground cursor-pointer rounded-sm">
+                  className="flex items-center w-full text-left px-2.5 py-[7px] text-[11px] font-semibold text-text-secondary hover:text-foreground cursor-pointer rounded-sm">
                   <span className="truncate">{v.company_name}</span>
                 </button>
               ))}
