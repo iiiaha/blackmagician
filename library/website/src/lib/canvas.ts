@@ -103,8 +103,17 @@ export function calcFinalSizeMM(sizeStr: string, edit: EditState) {
   return { w, h }
 }
 
-// Minimum visual grout as fraction of tile width (ensures visibility after CSS scaling)
-const MIN_VISUAL_GROUT_FRACTION = 0.03 // 3% of tile width
+// Minimum grout in display pixels (guaranteed visible on screen)
+const MIN_DISPLAY_GROUT_PX = 2
+
+function calcMinGroutPx(canvas: HTMLCanvasElement): number {
+  // Canvas display width (CSS px). Canvas internal width will be set later.
+  const displayW = canvas.clientWidth || canvas.parentElement?.clientWidth || 200
+  // We want MIN_DISPLAY_GROUT_PX visible on screen
+  // Estimate: canvas will be ~MAX_CANVAS_PX wide, displayed at displayW
+  const scale = displayW / MAX_CANVAS_PX
+  return Math.ceil(MIN_DISPLAY_GROUT_PX / scale)
+}
 
 export function drawCanvas(
   canvas: HTMLCanvasElement,
@@ -140,7 +149,7 @@ function drawSingle(
   const ppm = calcPxPerMM(totalW_mm, totalH_mm)
   const tileW_px = Math.round(tileW * ppm)
   const tileH_px = Math.round(tileH * ppm)
-  const gPx = gMM > 0 ? Math.max(Math.round(gMM * ppm), Math.round(tileW_px * MIN_VISUAL_GROUT_FRACTION)) : 0
+  const gPx = gMM > 0 ? Math.max(Math.round(gMM * ppm), calcMinGroutPx(canvas)) : 0
   const totalW = tileW_px + gPx
   const totalH = tileH_px + gPx
 
@@ -181,7 +190,7 @@ function drawMixGrid(
   const ppm = calcPxPerMM(totalW_mm, totalH_mm)
   const tileW_px = Math.round(tileW * ppm)
   const tileH_px = Math.round(tileH * ppm)
-  const gPx = gMM > 0 ? Math.max(Math.round(gMM * ppm), Math.round(tileW_px * MIN_VISUAL_GROUT_FRACTION)) : 0
+  const gPx = gMM > 0 ? Math.max(Math.round(gMM * ppm), calcMinGroutPx(canvas)) : 0
   const cellW_px = tileW_px + gPx
   const cellH_px = tileH_px + gPx
   const totalW = cellW_px * cols
@@ -233,7 +242,7 @@ function drawMixStagger(
   const ppm = calcPxPerMM(totalW_mm, totalH_mm)
   const tileW_px = Math.round(tileW * ppm)
   const tileH_px = Math.round(tileH * ppm)
-  const gPx = gMM > 0 ? Math.max(Math.round(gMM * ppm), Math.round(tileW_px * MIN_VISUAL_GROUT_FRACTION)) : 0
+  const gPx = gMM > 0 ? Math.max(Math.round(gMM * ppm), calcMinGroutPx(canvas)) : 0
   const cellW_px = tileW_px + gPx
   const cellH_px = tileH_px + gPx
   const totalW = cellW_px * cols
