@@ -367,9 +367,19 @@ export default function LibraryHome() {
             <div className="flex flex-col items-center gap-1.5 px-2 pt-1">
               {filteredVendors.map((v, i) => (
                 <button key={v.id} onClick={() => handleToggleVendor(v)}
-                  className="w-full px-3 py-[8px] text-[10px] font-semibold text-text-secondary hover:text-foreground text-center cursor-pointer rounded-[5px] border border-border hover:border-foreground/20 hover:bg-muted transition-all duration-200"
+                  className="w-full h-[36px] text-[10px] font-bold text-center cursor-pointer rounded-[5px] overflow-hidden relative transition-all duration-200 hover:shadow-[0_2px_8px_rgba(0,0,0,0.12)] hover:scale-[1.02]"
                   style={{ animation: `fadeInUp 0.2s ease-out ${i * 0.04}s both` }}>
-                  {v.company_name}
+                  {v.logo_url ? (
+                    <>
+                      <img src={v.logo_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/40" />
+                      <span className="relative text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{v.company_name}</span>
+                    </>
+                  ) : (
+                    <span className="text-text-secondary border border-border rounded-[5px] w-full h-full flex items-center justify-center bg-muted">
+                      {v.company_name}
+                    </span>
+                  )}
                 </button>
               ))}
               {filteredVendors.length === 0 && (
