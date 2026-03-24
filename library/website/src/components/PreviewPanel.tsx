@@ -173,20 +173,24 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
       <table className={`w-full text-[9px] border border-border rounded-[3px] overflow-hidden ${isEmpty ? 'opacity-30' : ''}`}>
         <tbody>
           <tr className="border-b border-border">
-            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted w-[40px]">단가</td>
-            <td className="px-2 py-[3px]">{product?.unit_price != null ? `${Number(product.unit_price).toLocaleString()}원` : '-'}</td>
+            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted w-[40px]">크기</td>
+            <td className="px-2 py-[3px]">{product?.size || '-'}</td>
           </tr>
           <tr className="border-b border-border">
-            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted">재고</td>
-            <td className="px-2 py-[3px]">{product?.stock != null ? `${product.stock}` : '-'}</td>
+            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted">단가</td>
+            <td className="px-2 py-[3px]">{product?.unit_price != null ? `${Number(product.unit_price).toLocaleString()}원` : '-'}</td>
           </tr>
           <tr className="border-b border-border">
             <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted">원산지</td>
             <td className="px-2 py-[3px]">{product?.origin || '-'}</td>
           </tr>
+          <tr className="border-b border-border">
+            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted">브랜드</td>
+            <td className="px-2 py-[3px]">{product?.brand || '-'}</td>
+          </tr>
           <tr>
-            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted">담당자</td>
-            <td className="px-2 py-[3px]">{vendor?.contact_name ? `${vendor.contact_name} ${vendor.contact_phone || ''}`.trim() : '-'}</td>
+            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted">재고</td>
+            <td className="px-2 py-[3px]">{product?.stock != null ? `${product.stock}` : '-'}</td>
           </tr>
         </tbody>
       </table>
