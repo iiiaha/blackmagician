@@ -51,34 +51,50 @@ function getMixGrid(mixMode: string, sizeStr?: string) {
 
   const step = mixMode === 'half' ? 2 : 3
 
-  if (!sizeStr) return { cols: 3, rows: step }
+  if (!sizeStr) return { cols: 4, rows: step * 2 }
 
   const base = parseSizeMM(sizeStr)
-  if (!base) return { cols: 3, rows: step }
+  if (!base) return { cols: 4, rows: step * 2 }
 
-  const vertical = base.h > base.w
+  // Goal: make roughly square output
+  // Stagger happens along the LONG side of the tile
+  // Short side stacks to match the long side total
+  const shortSide = Math.min(base.w, base.h)
+  const longSide = Math.max(base.w, base.h)
 
-  // Try increasing cols and rows to find best fit within MAX_ASPECT_RATIO
-  let bestCols = 2, bestRows = step
-  for (let cols = 2; cols <= 6; cols++) {
-    for (let rows = step; rows <= step * 6; rows += step) {
-      let totalW: number, totalH: number
-      if (vertical) {
-        totalW = base.w * rows
-        totalH = base.h * cols
-      } else {
-        totalW = base.w * cols
-        totalH = base.h * rows
-      }
-      const ratio = Math.max(totalW, totalH) / Math.min(totalW, totalH)
-      if (ratio > MAX_ASPECT_RATIO) break
-      if (cols * rows > bestCols * bestRows) {
-        bestCols = cols; bestRows = rows
-      }
+  // rows = tiles along the long side direction (stagger direction)
+  // Start with step and increase until we get a good result
+  let rows = step
+  // cols along the short side: enough to roughly match rows * longSide
+  let cols = Math.round((rows * longSide) / shortSide)
+  if (cols < 2) cols = 2
+
+  // Try increasing rows to get more tiles while staying roughly square
+  for (let r = step; r <= step * 6; r += step) {
+    const c = Math.round((r * longSide) / shortSide)
+    if (c < 2) continue
+    const totalLong = r * longSide
+    const totalShort = c * shortSide
+    const ratio = Math.max(totalLong, totalShort) / Math.min(totalLong, totalShort)
+    if (ratio <= MAX_ASPECT_RATIO) {
+      rows = r; cols = c
     }
   }
 
-  return { cols: bestCols, rows: bestRows }
+  // cols = short side count, rows = long side count (stagger direction)
+  // getStaggerGrid will transpose if vertical
+  // For vertical (h>w): cols=short side horizontal, rows=long side vertical
+  //   → getStaggerGrid transposes → cols becomes rows count, rows becomes cols count
+  //   → so we need to return them in the right order for transpose
+  const vertical = base.h > base.w
+  if (vertical) {
+    // After transpose: { cols: rows, rows: cols }
+    // We want final: cols (horizontal) = cols, rows (vertical) = rows
+    // So return { cols: rows, rows: cols } so transpose gives { cols: cols, rows: rows }
+    return { cols: rows, rows: cols }
+  } else {
+    return { cols, rows }
+  }
 }
 
 function isVerticalStagger(sizeStr: string) {
