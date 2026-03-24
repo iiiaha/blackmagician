@@ -189,22 +189,6 @@ export default function VendorProducts() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [products])
 
-  const toggleCheck = (id: string) => {
-    setCheckedIds(prev => {
-      const n = new Set(prev)
-      if (n.has(id)) n.delete(id); else n.add(id)
-      return n
-    })
-  }
-
-  const toggleCheckAll = () => {
-    if (checkedIds.size === products.length) {
-      setCheckedIds(new Set())
-    } else {
-      setCheckedIds(new Set(products.map(p => p.id)))
-    }
-  }
-
   const handleBulkDelete = async () => {
     for (const id of bulkDeleteTarget.map(p => p.id)) {
       await handleDeleteProduct(id)
@@ -216,63 +200,45 @@ export default function VendorProducts() {
   // AG Grid column definitions
   const columnDefs: ColDef[] = [
     {
-      headerName: '', width: 40, minWidth: 40, maxWidth: 40, sortable: false, filter: false, editable: false, resizable: false,
-      headerComponent: () => (
-        <div className="flex items-center justify-center w-full">
-          <input type="checkbox" checked={products.length > 0 && checkedIds.size === products.length}
-            onChange={toggleCheckAll}
-            className="cursor-pointer w-[14px] h-[14px]" />
-        </div>
-      ),
-      cellRenderer: (p: { data: Product }) => (
-        <div className="flex items-center justify-center w-full h-full">
-          <input type="checkbox" checked={checkedIds.has(p.data.id)}
-            onChange={() => toggleCheck(p.data.id)}
-            onClick={(e) => e.stopPropagation()}
-            className="cursor-pointer w-[14px] h-[14px]" />
-        </div>
-      ),
+      headerCheckboxSelection: true,
+      checkboxSelection: true,
+      width: 40, minWidth: 40, maxWidth: 40,
+      sortable: false, filter: false, editable: false, resizable: false,
+      headerName: '',
     },
     {
-      headerName: '제품명', field: 'name', editable: true, flex: 2, minWidth: 120,
+      headerName: '제품명', field: 'name', editable: true, flex: 1.5, minWidth: 100,
       cellStyle: { fontWeight: 600 },
     },
     {
-      headerName: '단가', field: 'unit_price', editable: true, flex: 1, minWidth: 80,
+      headerName: '단가', field: 'unit_price', editable: true, width: 100,
       valueFormatter: (p) => p.value ? `${Number(p.value).toLocaleString()}원` : '',
       valueParser: (p) => { const n = Number(String(p.newValue).replace(/[^0-9.-]/g, '')); return isNaN(n) ? null : n },
     },
     {
-      headerName: '재고', field: 'stock', editable: true, flex: 0.7, minWidth: 60,
+      headerName: '재고', field: 'stock', editable: true, width: 70,
       valueParser: (p) => { const n = Number(p.newValue); return isNaN(n) ? null : n },
     },
-    { headerName: '원산지', field: 'origin', editable: true, flex: 1, minWidth: 70 },
-    { headerName: '브랜드', field: 'brand', editable: true, flex: 1, minWidth: 70 },
-    { headerName: '크기', field: 'size', editable: true, flex: 1, minWidth: 70 },
+    { headerName: '원산지', field: 'origin', editable: true, width: 90 },
+    { headerName: '브랜드', field: 'brand', editable: true, width: 90 },
+    { headerName: '크기', field: 'size', editable: true, width: 90 },
     {
-      headerName: '이미지', editable: false, flex: 0.5, minWidth: 50,
+      headerName: '이미지', editable: false, width: 60,
       valueGetter: (p) => (productImages[p.data.id] || []).length,
       valueFormatter: (p) => p.value > 0 ? `${p.value}장` : '-',
       sortable: false, filter: false,
     },
     {
-      headerName: '', editable: false, width: 50, sortable: false, filter: false,
-      cellRenderer: (p: { data: Product }) => {
-        return (
-          <button
-            onClick={(e) => { e.stopPropagation(); confirmDelete(p.data) }}
-            className="w-full h-full flex items-center justify-center text-[9px] text-[#bbb] hover:text-[#e53e3e] cursor-pointer"
-          >
-            삭제
-          </button>
-        )
-      },
+      headerName: '', editable: false, width: 52, sortable: false, filter: false, resizable: false,
+      valueGetter: () => '삭제',
+      cellStyle: { color: '#bbb', fontSize: '9px', textAlign: 'center', cursor: 'pointer' },
+      onCellClicked: (e) => confirmDelete(e.data),
     },
   ]
 
   const defaultColDef: ColDef = {
     sortable: true,
-    filter: true,
+    filter: false,
     resizable: true,
   }
 
@@ -499,12 +465,17 @@ export default function VendorProducts() {
                 defaultColDef={defaultColDef}
                 onCellValueChanged={onCellValueChanged}
                 onRowClicked={(e) => setSelectedProductId(e.data.id)}
-                rowSelection="single"
+                rowSelection="multiple"
+                onSelectionChanged={() => {
+                  const selected = gridRef.current?.api.getSelectedRows() || []
+                  setCheckedIds(new Set(selected.map((r: Product) => r.id)))
+                }}
                 getRowId={(p) => p.data.id}
                 headerHeight={32}
                 rowHeight={32}
                 enableCellTextSelection={true}
                 ensureDomOrder={true}
+                suppressRowClickSelection={true}
               />
             </div>
 
