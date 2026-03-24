@@ -15,8 +15,10 @@ export default function VendorLogin() {
     setLoading(true)
 
     try {
+      // Append domain suffix for Supabase Auth (requires email format)
+      const email = loginId.includes('@') ? loginId : `${loginId}@vendor.blackmagician`
       const { error: authError } = await supabase.auth.signInWithPassword({
-        email: loginId,
+        email,
         password,
       })
 

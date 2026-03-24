@@ -26,9 +26,10 @@ export default function AdminVendors() {
   const handleCreate = async () => {
     if (!createForm.login_id || !createForm.password || !createForm.company_name) return
     setCreating(true)
-    const { error } = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (supabase.rpc as any)('admin_create_vendor', {
-      p_login_id: createForm.login_id,
+    const loginEmail = createForm.login_id.includes('@') ? createForm.login_id : `${createForm.login_id}@vendor.blackmagician`
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.rpc as any)('admin_create_vendor', {
+      p_login_id: loginEmail,
       p_password: createForm.password,
       p_company_name: createForm.company_name,
       p_category: createForm.category,
