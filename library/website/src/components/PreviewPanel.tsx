@@ -209,31 +209,29 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
         </tbody>
       </table>
 
-      {/* Apply */}
-      <button
-        className="w-full h-[30px] bg-foreground hover:bg-foreground/85 text-primary-foreground text-[10px] font-semibold tracking-[0.3px] rounded-[4px] cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed transition-colors relative flex items-center justify-center"
-        onClick={loggedIn ? handleInsert : onLoginRequest}
-        disabled={loggedIn && (inserting || !mainImg || isEmpty || !canApply)}
-      >
-        <span className="leading-none">
-          {!loggedIn ? 'Apply to Bucket'
-            : inserting ? 'Applying...'
-            : !canApply ? '오늘 무료 사용을 모두 사용했습니다'
-            : 'Apply to Bucket'}
-        </span>
-        {loggedIn && !isPro && (
-          <span className="absolute right-3 text-[9px] font-normal opacity-50 leading-none">
-            {Math.max(0, maxFreeApplies - todayApplyCount)}/{maxFreeApplies}
-          </span>
-        )}
-        {loggedIn && isPro && (
-          <span className="absolute right-3 text-[9px] font-normal opacity-50 leading-none">PRO</span>
-        )}
-      </button>
-      {loggedIn && !isPro && !canApply && (
-        <p className="text-[9px] text-center text-text-tertiary mt-1">
-          Pro 구독으로 무제한 사용 →
-        </p>
+      {/* Apply / Subscribe */}
+      {loggedIn && !isPro && !canApply ? (
+        <button
+          className="w-full h-[30px] bg-foreground hover:bg-foreground/85 text-primary-foreground text-[10px] font-semibold tracking-[0.3px] rounded-[4px] cursor-pointer transition-colors flex items-center justify-center"
+        >
+          Subscribe
+        </button>
+      ) : (
+        <button
+          className="w-full h-[30px] bg-foreground hover:bg-foreground/85 text-primary-foreground text-[10px] font-semibold tracking-[0.3px] rounded-[4px] cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed transition-colors relative flex items-center justify-center"
+          onClick={loggedIn ? handleInsert : onLoginRequest}
+          disabled={loggedIn && (inserting || !mainImg || isEmpty)}
+        >
+          <span className="leading-none">{inserting ? 'Applying...' : 'Apply to Bucket'}</span>
+          {loggedIn && !isPro && (
+            <span className="absolute right-3 text-[9px] font-normal opacity-50 leading-none">
+              {Math.max(0, maxFreeApplies - todayApplyCount)}/{maxFreeApplies}
+            </span>
+          )}
+          {loggedIn && isPro && (
+            <span className="absolute right-3 text-[9px] font-normal opacity-50 leading-none">PRO</span>
+          )}
+        </button>
       )}
     </div>
   )
