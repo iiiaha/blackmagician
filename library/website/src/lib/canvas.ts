@@ -49,32 +49,37 @@ function getMixGrid(mixMode: string, sizeStr?: string) {
   if (mixMode === 'grid') return { cols: 3, rows: 3 }
   if (mixMode !== 'half' && mixMode !== 'third') return null
 
-  const cols = 4
+  const baseCols = 4
   const step = mixMode === 'half' ? 2 : 3
 
-  // Without size info, use defaults
-  if (!sizeStr) return { cols, rows: mixMode === 'half' ? 4 : 6 }
+  if (!sizeStr) return { cols: baseCols, rows: step * 2 }
 
   const base = parseSizeMM(sizeStr)
-  if (!base) return { cols, rows: mixMode === 'half' ? 4 : 6 }
+  if (!base) return { cols: baseCols, rows: step * 2 }
 
-  // Calculate rows that keep aspect ratio within MAX_ASPECT_RATIO
+  // After getStaggerGrid transpose, actual render dimensions are:
+  // vertical (h>w): totalW = base.w * rows, totalH = base.h * cols
+  // landscape (w>=h): totalW = base.w * cols, totalH = base.h * rows
   const vertical = base.h > base.w
-  const tileW = vertical ? base.h : base.w
-  const tileH = vertical ? base.w : base.h
-  const effectiveCols = vertical ? cols : cols // after stagger transpose handled elsewhere
 
   let rows = step
   while (true) {
     const nextRows = rows + step
-    const totalW = tileW * effectiveCols
-    const totalH = tileH * nextRows
+    // Calculate actual rendered dimensions after transpose
+    let totalW: number, totalH: number
+    if (vertical) {
+      totalW = base.w * nextRows  // rows becomes cols after transpose
+      totalH = base.h * baseCols  // cols becomes rows after transpose
+    } else {
+      totalW = base.w * baseCols
+      totalH = base.h * nextRows
+    }
     const ratio = Math.max(totalW, totalH) / Math.min(totalW, totalH)
     if (ratio > MAX_ASPECT_RATIO) break
     rows = nextRows
   }
 
-  return { cols, rows: Math.max(rows, step) }
+  return { cols: baseCols, rows: Math.max(rows, step) }
 }
 
 function isVerticalStagger(sizeStr: string) {
