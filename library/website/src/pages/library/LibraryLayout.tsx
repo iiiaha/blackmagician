@@ -176,10 +176,17 @@ export default function LibraryLayout() {
                 </span>
               </div>
               {!isPro && (
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">오늘 사용량</span>
-                  <span className="font-semibold">{todayApplyCount} / {maxFreeApplies}회</span>
-                </div>
+                <>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">잔여 횟수</span>
+                    <span className="font-semibold">{Math.max(0, maxFreeApplies - todayApplyCount)} / {maxFreeApplies}회</span>
+                  </div>
+                  {todayApplyCount >= maxFreeApplies && (
+                    <p className="text-[9px] text-text-tertiary text-right">
+                      <TimeUntilMidnightKST /> 후 갱신
+                    </p>
+                  )}
+                </>
               )}
               {userProfile?.trial_expires_at && new Date(userProfile.trial_expires_at) > new Date() && (
                 <div className="flex justify-between items-center">
@@ -273,4 +280,28 @@ export default function LibraryLayout() {
       )}
     </div>
   )
+}
+
+function TimeUntilMidnightKST() {
+  const [text, setText] = useState('')
+
+  useEffect(() => {
+    const calc = () => {
+      const now = new Date()
+      // KST = UTC+9
+      const kstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000)
+      const kstMidnight = new Date(kstNow)
+      kstMidnight.setUTCHours(24, 0, 0, 0) // next KST midnight in UTC terms
+      const diff = kstMidnight.getTime() - kstNow.getTime()
+      const h = Math.floor(diff / (1000 * 60 * 60))
+      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+      const s = Math.floor((diff % (1000 * 60)) / 1000)
+      setText(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`)
+    }
+    calc()
+    const id = setInterval(calc, 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  return <>{text}</>
 }
