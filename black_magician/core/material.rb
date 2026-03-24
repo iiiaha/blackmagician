@@ -1,20 +1,19 @@
 require 'fileutils'
+require 'tmpdir'
 
 module BlackMagician
   module MaterialManager
-    TEMP_DIR = File.join(PLUGIN_DIR, 'black_magician', 'temp')
-
-    # base64 PNG → SketchUp 머티리얼 등록
-    # final_size_str: JS에서 계산된 최종 크기 "WxH" (mm, 회전/줄눈/믹스 반영 완료)
+    # base64 PNG → SketchUp material
+    # final_size_str: final size "WxH" in mm (rotation/grout/mix already applied)
     def self.insert(data_url, vendor, tile_name, final_size_str)
-      FileUtils.mkdir_p(TEMP_DIR) unless File.directory?(TEMP_DIR)
+      temp_dir = Dir.tmpdir
 
       # base64 → 파일
       raw = data_url.sub(/^data:image\/png;base64,/, '')
       bytes = raw.unpack('m')[0]
 
       mat_name = build_name(vendor, tile_name)
-      temp_path = File.join(TEMP_DIR, "#{mat_name}.png")
+      temp_path = File.join(temp_dir, "bm_#{mat_name}.png")
       File.open(temp_path, 'wb') { |f| f.write(bytes) }
 
       # 최종 크기 파싱 (이미 회전/줄눈/믹스 반영된 mm)
