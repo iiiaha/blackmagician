@@ -33,6 +33,9 @@ export default function VendorProducts() {
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
   const [uploadingProductId, setUploadingProductId] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null)
+  const [bulkImporting, setBulkImporting] = useState(false)
+  const [bulkProgress, setBulkProgress] = useState('')
+  const [dragOver, setDragOver] = useState(false)
 
   const fetchFolders = useCallback(async () => {
     if (!vendor) return
@@ -270,6 +273,92 @@ export default function VendorProducts() {
     if (selectedFolder) fetchProducts(selectedFolder.id)
   }
 
+  // Bulk import: drag folders → create products + upload images
+  const handleBulkImport = async (items: DataTransferItemList) => {
+    if (!vendor || !selectedFolder) return
+    setBulkImporting(true)
+
+    // Collect folder→files mapping from drag
+    const folderFiles: Record<string, File[]> = {}
+
+    const traverseEntry = (entry: FileSystemEntry): Promise<void> => {
+      return new Promise((resolve) => {
+        if (entry.isDirectory) {
+          const dirReader = (entry as FileSystemDirectoryEntry).createReader()
+          dirReader.readEntries(async (entries) => {
+            for (const child of entries) {
+              if (child.isFile) {
+                const file = await new Promise<File>((res) => (child as FileSystemFileEntry).file(res))
+                if (['image/jpeg', 'image/png'].includes(file.type)) {
+                  if (!folderFiles[entry.name]) folderFiles[entry.name] = []
+                  folderFiles[entry.name].push(file)
+                }
+              }
+            }
+            resolve()
+          })
+        } else {
+          resolve()
+        }
+      })
+    }
+
+    // Process all dragged items
+    const entries: FileSystemEntry[] = []
+    for (let i = 0; i < items.length; i++) {
+      const entry = items[i].webkitGetAsEntry?.()
+      if (entry?.isDirectory) entries.push(entry)
+    }
+
+    await Promise.all(entries.map(e => traverseEntry(e)))
+
+    const folderNames = Object.keys(folderFiles)
+    if (folderNames.length === 0) {
+      setBulkImporting(false)
+      return
+    }
+
+    for (let fi = 0; fi < folderNames.length; fi++) {
+      const productName = folderNames[fi]
+      const files = folderFiles[productName]
+      setBulkProgress(`${fi + 1}/${folderNames.length} — ${productName}`)
+
+      // Create product
+      const { data: newProduct } = await supabase.from('products')
+        .insert({ vendor_id: vendor.id, folder_id: selectedFolder.id, name: productName })
+        .select().single()
+
+      if (!newProduct) continue
+      const productId = (newProduct as Product).id
+
+      // Upload images
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        const resized = await resizeImage(file, 2048)
+        const ext = file.type === 'image/png' ? 'png' : 'jpg'
+        const fileName = `${String(i + 1).padStart(3, '0')}.${ext}`
+        const storagePath = `${vendor.id}/${productId}/${fileName}`
+
+        const { error } = await supabase.storage.from('product-images')
+          .upload(storagePath, resized, { contentType: file.type, upsert: true })
+        if (error) continue
+
+        const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(storagePath)
+        await supabase.from('product_images').insert({
+          product_id: productId, file_name: fileName,
+          storage_path: storagePath, url: urlData.publicUrl, sort_order: i,
+        })
+        if (i === 0) {
+          await supabase.from('products').update({ thumbnail_url: urlData.publicUrl }).eq('id', productId)
+        }
+      }
+    }
+
+    setBulkImporting(false)
+    setBulkProgress('')
+    fetchProducts(selectedFolder.id)
+  }
+
   const handleDeleteImage = async (image: ProductImage) => {
     await supabase.storage.from('product-images').remove([image.storage_path])
     await supabase.from('product_images').delete().eq('id', image.id)
@@ -337,6 +426,32 @@ export default function VendorProducts() {
                 className="h-[32px] px-4 bg-[#1a1a1a] text-white text-[10px] font-semibold rounded-[4px] cursor-pointer disabled:opacity-30 flex items-center gap-1.5">
                 <Plus className="w-3 h-3" /> 추가
               </button>
+            </div>
+
+            {/* Bulk import drop zone */}
+            <div
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={async (e) => {
+                e.preventDefault()
+                setDragOver(false)
+                if (e.dataTransfer.items) await handleBulkImport(e.dataTransfer.items)
+              }}
+              className={`mb-3 border-2 border-dashed rounded-[6px] py-3 text-center transition-colors ${
+                dragOver
+                  ? 'border-[#1a1a1a] bg-[rgba(0,0,0,0.03)]'
+                  : 'border-[rgba(0,0,0,0.08)] hover:border-[rgba(0,0,0,0.15)]'
+              }`}
+            >
+              {bulkImporting ? (
+                <p className="text-[10px] text-[#666]">
+                  임포트 중... <span className="font-semibold">{bulkProgress}</span>
+                </p>
+              ) : (
+                <p className="text-[10px] text-[#aaa]">
+                  폴더를 여기에 드래그하세요 — 폴더명 = 제품명, 폴더 안 이미지 자동 등록
+                </p>
+              )}
             </div>
 
             {/* AG Grid Table */}
