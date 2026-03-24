@@ -575,7 +575,7 @@ function VendorBanner({ vendor }: { vendor: Vendor }) {
               )}
             </div>
             <button onClick={() => setShowContactPopup(false)}
-              className="w-full h-[28px] mt-4 border border-border rounded-[4px] text-[10px] font-semibold cursor-pointer hover:bg-muted">
+              className="w-full h-[28px] mt-4 border border-[rgba(0,0,0,0.1)] rounded-[4px] text-[10px] font-semibold text-foreground cursor-pointer hover:bg-[rgba(0,0,0,0.03)]">
               닫기
             </button>
           </div>
