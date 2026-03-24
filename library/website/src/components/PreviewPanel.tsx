@@ -233,18 +233,17 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
             <span className="text-[7px] text-[#34d399] shrink-0">Normal + Rough + AO</span>
           )}
 
-          {/* PBR mini popup */}
+          {/* PBR info popup — fixed center */}
           {showPbrInfo && (
             <>
-              <div className="fixed inset-0 z-30" onClick={() => setShowPbrInfo(false)} />
-              <div className="absolute bottom-full left-0 mb-2 w-[180px] bg-surface border border-border rounded-[5px] shadow-[0_4px_12px_rgba(0,0,0,0.1)] p-2.5 z-40"
-                style={{ animation: 'fadeIn 0.15s ease-out' }}>
-                <p className="text-[8px] text-text-secondary leading-[1.5] mb-1">
-                  Normal, Roughness, AO 맵 자동 생성. 처리 시간이 걸릴 수 있습니다.
+              <div className="fixed inset-0 bg-black/20 z-40" onClick={() => setShowPbrInfo(false)} />
+              <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] bg-surface border border-border rounded-[6px] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.15)]">
+                <p className="text-[9px] text-text-secondary leading-[1.6] mb-1.5">
+                  Normal, Roughness, AO 맵을 자동 생성합니다. 처리 시간이 걸릴 수 있습니다.
                 </p>
-                <p className="text-[7px] text-text-tertiary">
-                  ※ SketchUp 2025+ 전용
-                </p>
+                <p className="text-[8px] text-text-tertiary mb-2">※ SketchUp 2025+ 전용</p>
+                <button onClick={() => setShowPbrInfo(false)}
+                  className="w-full h-[24px] border border-border rounded-[4px] text-[9px] font-semibold cursor-pointer hover:bg-muted">확인</button>
               </div>
             </>
           )}
