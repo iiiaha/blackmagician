@@ -129,7 +129,7 @@ export function calcFinalSizeMM(sizeStr: string, edit: EditState) {
 }
 
 // Preview grout: 2% of total image's longer dimension (in mm)
-const PREVIEW_GROUT_RATIO = 0.02
+const PREVIEW_GROUT_RATIO = 0.01
 
 function calcPreviewGroutMM(sizeStr: string, edit: EditState): number {
   const base = parseSizeMM(sizeStr)
