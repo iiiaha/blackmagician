@@ -108,23 +108,33 @@ export default function VendorProducts() {
     {
       headerName: '단가', field: 'unit_price', editable: true, flex: 1, minWidth: 80,
       valueFormatter: (p) => p.value ? `${Number(p.value).toLocaleString()}원` : '',
+      valueParser: (p) => { const n = Number(String(p.newValue).replace(/[^0-9.-]/g, '')); return isNaN(n) ? null : n },
     },
-    { headerName: '재고', field: 'stock', editable: true, flex: 0.7, minWidth: 60 },
+    {
+      headerName: '재고', field: 'stock', editable: true, flex: 0.7, minWidth: 60,
+      valueParser: (p) => { const n = Number(p.newValue); return isNaN(n) ? null : n },
+    },
     { headerName: '원산지', field: 'origin', editable: true, flex: 1, minWidth: 70 },
     { headerName: '브랜드', field: 'brand', editable: true, flex: 1, minWidth: 70 },
     { headerName: '크기', field: 'size', editable: true, flex: 1, minWidth: 70 },
     {
-      headerName: '이미지', field: 'id', editable: false, flex: 0.5, minWidth: 50,
-      cellRenderer: (p: { value: string }) => {
-        const count = (productImages[p.value] || []).length
-        return count > 0 ? `${count}장` : '-'
-      },
+      headerName: '이미지', editable: false, flex: 0.5, minWidth: 50,
+      valueGetter: (p) => (productImages[p.data.id] || []).length,
+      valueFormatter: (p) => p.value > 0 ? `${p.value}장` : '-',
       sortable: false, filter: false,
     },
     {
-      headerName: '', field: 'id', editable: false, width: 40, sortable: false, filter: false,
-      cellRenderer: (p: { value: string }) => {
-        return `<span class="delete-btn" data-id="${p.value}" style="cursor:pointer;color:#ccc;font-size:11px;">✕</span>`
+      headerName: '', editable: false, width: 36, sortable: false, filter: false,
+      cellRenderer: (p: { data: Product }) => {
+        return (
+          <button
+            onClick={(e) => { e.stopPropagation(); handleDeleteProduct(p.data.id) }}
+            className="w-full h-full flex items-center justify-center text-[#ccc] hover:text-[#e53e3e] cursor-pointer"
+            title="삭제"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        )
       },
     },
   ]
@@ -261,12 +271,8 @@ export default function VendorProducts() {
                 getRowId={(p) => p.data.id}
                 headerHeight={32}
                 rowHeight={32}
-                onCellClicked={(e) => {
-                  if (e.column.getColId() === 'id' && (e.event?.target as HTMLElement)?.classList?.contains('delete-btn')) {
-                    const id = (e.event?.target as HTMLElement)?.dataset?.id
-                    if (id) handleDeleteProduct(id)
-                  }
-                }}
+                enableCellTextSelection={true}
+                ensureDomOrder={true}
               />
             </div>
 
