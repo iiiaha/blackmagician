@@ -185,7 +185,6 @@ export default function LibraryHome() {
     const imgs = productImages[product.id] || []
     if (imgs.length === 0) return
     const vName = vendorName || selectedVendor?.company_name || ''
-    const breadcrumb = selectedFolder ? getBreadcrumb(allFoldersForBreadcrumb, selectedFolder.id) : []
     setPreviewProduct(product)
     setPreviewImages(imgs)
     setPreviewVendor(vName)
