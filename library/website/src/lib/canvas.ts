@@ -103,6 +103,9 @@ export function calcFinalSizeMM(sizeStr: string, edit: EditState) {
   return { w, h }
 }
 
+// Minimum visual grout for thumbnail preview (actual value used for insert)
+const MIN_VISUAL_GROUT_MM = 10
+
 export function drawCanvas(
   canvas: HTMLCanvasElement,
   sizeStr: string,
@@ -131,7 +134,7 @@ function drawSingle(
   if (!base) return
 
   const tileW = base.w, tileH = base.h
-  const gMM = edit.groutEnabled ? edit.groutThickness : 0
+  const gMM = edit.groutEnabled ? Math.max(edit.groutThickness, MIN_VISUAL_GROUT_MM) : 0
   const totalW_mm = tileW + gMM, totalH_mm = tileH + gMM
 
   const ppm = calcPxPerMM(totalW_mm, totalH_mm)
@@ -168,7 +171,7 @@ function drawMixGrid(
 
   const imgs = edit.mixSelections
   const tileW = base.w, tileH = base.h
-  const gMM = edit.groutEnabled ? edit.groutThickness : 0
+  const gMM = edit.groutEnabled ? Math.max(edit.groutThickness, MIN_VISUAL_GROUT_MM) : 0
   const { cols, rows } = getMixGrid(edit.mixMode)!
 
   const cellW_mm = tileW + gMM, cellH_mm = tileH + gMM
@@ -218,7 +221,7 @@ function drawMixStagger(
 
   const imgs = edit.mixSelections
   const tileW = base.w, tileH = base.h
-  const gMM = edit.groutEnabled ? edit.groutThickness : 0
+  const gMM = edit.groutEnabled ? Math.max(edit.groutThickness, MIN_VISUAL_GROUT_MM) : 0
   const vertical = isVerticalStagger(sizeStr)
   const sg = getStaggerGrid(edit.mixMode, sizeStr)!
   const { cols, rows } = sg
