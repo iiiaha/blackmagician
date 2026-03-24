@@ -372,7 +372,7 @@ export default function LibraryHome() {
                   {v.logo_url ? (
                     <>
                       <img src={v.logo_url} alt="" className="absolute inset-0 w-full h-full object-cover blur-[2px] scale-[1.05]" />
-                      <div className="absolute inset-0 vendor-overlay transition-colors duration-200" />
+                      <div className="absolute inset-0 vendor-overlay transition-[background] duration-500 ease-in-out" />
                       <span className="relative vendor-text">{v.company_name}</span>
                     </>
                   ) : (
