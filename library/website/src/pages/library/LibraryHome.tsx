@@ -364,15 +364,22 @@ export default function LibraryHome() {
             </>
           ) : (
             /* Vendor list — centered button cards */
-            <div className="flex flex-col w-full">
+            <div className="flex flex-col items-center gap-1.5 px-2 pt-1">
               {filteredVendors.map((v, i) => (
                 <button key={v.id} onClick={() => handleToggleVendor(v)}
-                  className="vendor-card relative w-full h-[38px] text-[11px] font-semibold tracking-[0.5px] text-center cursor-pointer overflow-hidden transition-all duration-200 group"
+                  className="w-full h-[36px] text-[12px] font-normal tracking-[1px] text-center cursor-pointer rounded-[5px] overflow-hidden relative transition-all duration-200 hover:shadow-[0_2px_8px_rgba(0,0,0,0.12)] group"
                   style={{ animation: `fadeInUp 0.2s ease-out ${i * 0.04}s both` }}>
-                  {v.logo_url && (
-                    <img src={v.logo_url} alt="" className="absolute inset-0 w-full h-full object-cover grayscale blur-[20px] scale-110 opacity-40 dark:opacity-25 group-hover:opacity-60 dark:group-hover:opacity-40 group-hover:grayscale-[50%] transition-all duration-300" />
+                  {v.logo_url ? (
+                    <>
+                      <img src={v.logo_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                      <div className="absolute inset-0 vendor-overlay transition-colors duration-200" />
+                      <span className="relative vendor-text font-medium">{v.company_name}</span>
+                    </>
+                  ) : (
+                    <span className="text-text-secondary border border-border rounded-[5px] w-full h-full flex items-center justify-center bg-muted hover:bg-accent">
+                      {v.company_name}
+                    </span>
                   )}
-                  <span className="relative text-text-secondary group-hover:text-foreground transition-colors duration-200">{v.company_name}</span>
                 </button>
               ))}
               {filteredVendors.length === 0 && (

@@ -78,12 +78,26 @@ body {
   height: 100vh;
 }
 
-/* Vendor card — blurred texture */
-.vendor-card + .vendor-card {
-  border-top: 1px solid rgba(0, 0, 0, 0.04);
+/* Vendor button overlay */
+.vendor-overlay {
+  background: rgba(0, 0, 0, 0.15);
 }
-.dark .vendor-card + .vendor-card {
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+.group:hover .vendor-overlay {
+  background: rgba(0, 0, 0, 0.05);
+}
+.vendor-text {
+  color: #ffffff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+.dark .vendor-overlay {
+  background: rgba(0, 0, 0, 0.65);
+}
+.dark .group:hover .vendor-overlay {
+  background: rgba(0, 0, 0, 0.55);
+}
+.dark .vendor-text {
+  color: #ffffff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
 }
 
 /* Scrollbar */
