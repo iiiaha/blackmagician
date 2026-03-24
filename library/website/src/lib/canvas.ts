@@ -103,8 +103,8 @@ export function calcFinalSizeMM(sizeStr: string, edit: EditState) {
   return { w, h }
 }
 
-// Minimum visual grout for thumbnail preview (actual value used for insert)
-const MIN_VISUAL_GROUT_MM = 10
+// Minimum visual grout pixels for thumbnail preview
+const MIN_VISUAL_GROUT_PX = 3
 
 export function drawCanvas(
   canvas: HTMLCanvasElement,
@@ -134,14 +134,15 @@ function drawSingle(
   if (!base) return
 
   const tileW = base.w, tileH = base.h
-  const gMM = edit.groutEnabled ? Math.max(edit.groutThickness, MIN_VISUAL_GROUT_MM) : 0
+  const gMM = edit.groutEnabled ? edit.groutThickness : 0
   const totalW_mm = tileW + gMM, totalH_mm = tileH + gMM
 
   const ppm = calcPxPerMM(totalW_mm, totalH_mm)
-  const totalW = Math.round(totalW_mm * ppm)
-  const totalH = Math.round(totalH_mm * ppm)
+  const gPx = gMM > 0 ? Math.max(Math.round(gMM * ppm), MIN_VISUAL_GROUT_PX) : 0
   const tileW_px = Math.round(tileW * ppm)
   const tileH_px = Math.round(tileH * ppm)
+  const totalW = tileW_px + gPx
+  const totalH = tileH_px + gPx
 
   const rotated = edit.rotation === 90 || edit.rotation === 270
   canvas.width = rotated ? totalH : totalW
@@ -171,7 +172,7 @@ function drawMixGrid(
 
   const imgs = edit.mixSelections
   const tileW = base.w, tileH = base.h
-  const gMM = edit.groutEnabled ? Math.max(edit.groutThickness, MIN_VISUAL_GROUT_MM) : 0
+  const gMM = edit.groutEnabled ? edit.groutThickness : 0
   const { cols, rows } = getMixGrid(edit.mixMode)!
 
   const cellW_mm = tileW + gMM, cellH_mm = tileH + gMM
@@ -184,7 +185,7 @@ function drawMixGrid(
   const tileH_px = Math.round(tileH * ppm)
   const cellW_px = Math.round(cellW_mm * ppm)
   const cellH_px = Math.round(cellH_mm * ppm)
-  const gPx = Math.round(gMM * ppm)
+  const gPx = gMM > 0 ? Math.max(Math.round(gMM * ppm), MIN_VISUAL_GROUT_PX) : 0
 
   const rotated = edit.rotation === 90 || edit.rotation === 270
   canvas.width = rotated ? totalH : totalW
@@ -221,7 +222,7 @@ function drawMixStagger(
 
   const imgs = edit.mixSelections
   const tileW = base.w, tileH = base.h
-  const gMM = edit.groutEnabled ? Math.max(edit.groutThickness, MIN_VISUAL_GROUT_MM) : 0
+  const gMM = edit.groutEnabled ? edit.groutThickness : 0
   const vertical = isVerticalStagger(sizeStr)
   const sg = getStaggerGrid(edit.mixMode, sizeStr)!
   const { cols, rows } = sg
@@ -236,7 +237,7 @@ function drawMixStagger(
   const tileH_px = Math.round(tileH * ppm)
   const cellW_px = Math.round(cellW_mm * ppm)
   const cellH_px = Math.round(cellH_mm * ppm)
-  const gPx = Math.round(gMM * ppm)
+  const gPx = gMM > 0 ? Math.max(Math.round(gMM * ppm), MIN_VISUAL_GROUT_PX) : 0
   const offsetFraction = edit.mixMode === 'half' ? 0.5 : 1.0 / 3.0
 
   const rotated = edit.rotation === 90 || edit.rotation === 270
