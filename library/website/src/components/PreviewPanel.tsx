@@ -213,47 +213,47 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
 
       {/* PBR Toggle */}
       {loggedIn && (
-        <div className="relative">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => {
-                if (!pbrEnabled) setShowPbrInfo(true)
-                setPbrEnabled(!pbrEnabled)
-              }}
-              className="flex items-center gap-1.5 cursor-pointer group"
-            >
-              <span className={`relative inline-block w-[28px] h-[14px] rounded-full transition-colors duration-200 ${
-                pbrEnabled ? 'bg-[#34d399]' : 'bg-border'
-              }`}>
-                <span className={`absolute top-[2px] w-[10px] h-[10px] rounded-full bg-white shadow-sm transition-transform duration-200 ${
-                  pbrEnabled ? 'translate-x-[16px]' : 'translate-x-[2px]'
-                }`} />
-              </span>
-              <span className="text-[9px] text-text-secondary group-hover:text-foreground">PBR</span>
-            </button>
-            {pbrEnabled && (
-              <span className="text-[8px] text-[#34d399] font-semibold">Normal + Roughness + AO</span>
-            )}
-          </div>
-
-          {/* PBR info popup */}
-          {showPbrInfo && (
-            <div className="absolute bottom-full left-0 mb-1 w-[200px] bg-surface border border-border rounded-[5px] shadow-[0_4px_12px_rgba(0,0,0,0.12)] p-3 z-10"
-              style={{ animation: 'fadeIn 0.15s ease-out' }}>
-              <p className="text-[9px] text-text-secondary leading-[1.6] mb-2">
-                Diffuse 이미지에서 Normal, Roughness, AO 맵을 자동 생성합니다.
-                처리 시간이 다소 걸릴 수 있습니다.
-              </p>
-              <p className="text-[8px] text-text-tertiary mb-2">
-                ※ SketchUp 2025 이상에서만 지원됩니다.
-              </p>
-              <button onClick={() => setShowPbrInfo(false)}
-                className="text-[9px] text-text-tertiary hover:text-foreground cursor-pointer">
-                확인
-              </button>
-            </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => {
+              if (!pbrEnabled) setShowPbrInfo(true)
+              setPbrEnabled(!pbrEnabled)
+            }}
+            className="flex items-center gap-1.5 cursor-pointer group shrink-0"
+          >
+            <span className={`relative inline-block w-[24px] h-[12px] rounded-full transition-colors duration-200 ${
+              pbrEnabled ? 'bg-[#34d399]' : 'bg-border'
+            }`}>
+              <span className={`absolute top-[2px] w-[8px] h-[8px] rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                pbrEnabled ? 'translate-x-[14px]' : 'translate-x-[2px]'
+              }`} />
+            </span>
+            <span className="text-[9px] text-text-secondary group-hover:text-foreground">PBR</span>
+          </button>
+          {pbrEnabled && (
+            <span className="text-[7px] text-[#34d399] truncate">Normal + Rough + AO</span>
           )}
         </div>
+      )}
+
+      {/* PBR info popup */}
+      {showPbrInfo && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setShowPbrInfo(false)} />
+          <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[220px] bg-surface border border-border rounded-[8px] p-5 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+            <h3 className="text-[11px] font-bold mb-2">PBR 자동 생성</h3>
+            <p className="text-[9px] text-muted-foreground leading-[1.6] mb-2">
+              Diffuse 이미지에서 Normal, Roughness, AO 맵을 자동 생성하여 SketchUp 재질에 적용합니다.
+            </p>
+            <p className="text-[9px] text-muted-foreground leading-[1.6] mb-3">
+              처리 시간이 다소 걸릴 수 있으며, <strong>SketchUp 2025 이상</strong>에서만 지원됩니다.
+            </p>
+            <button onClick={() => setShowPbrInfo(false)}
+              className="w-full h-[26px] border border-border rounded-[4px] text-[10px] font-semibold cursor-pointer hover:bg-muted transition-colors">
+              확인
+            </button>
+          </div>
+        </>
       )}
 
       {/* Apply / Subscribe */}
