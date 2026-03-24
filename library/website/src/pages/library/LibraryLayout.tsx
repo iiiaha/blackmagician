@@ -134,6 +134,8 @@ export default function LibraryLayout() {
       <footer className="h-[24px] bg-surface border-t border-border flex items-center justify-between px-5 shrink-0 text-[9px] text-muted-foreground">
         <span>&copy; 2026 Black Magician. All rights reserved.</span>
         <div className="flex items-center gap-3">
+          <Link to="/terms" className="hover:text-foreground transition-colors">이용약관</Link>
+          <Link to="/privacy" className="hover:text-foreground transition-colors">개인정보처리방침</Link>
           <a href="https://instagram.com/iiiaha.lab" target="_blank" rel="noopener noreferrer"
             className="hover:text-foreground transition-colors flex items-center gap-1">
             <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

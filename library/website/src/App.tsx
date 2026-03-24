@@ -5,6 +5,8 @@ import { AuthProvider } from '@/contexts/AuthContext'
 import LibraryLayout from '@/pages/library/LibraryLayout'
 import LibraryHome from '@/pages/library/LibraryHome'
 import LibraryLogin from '@/pages/library/LibraryLogin'
+import Terms from '@/pages/library/Terms'
+import Privacy from '@/pages/library/Privacy'
 
 // Vendor pages
 import VendorLayout from '@/pages/vendor/VendorLayout'
@@ -30,6 +32,9 @@ export default function App() {
             <Route index element={<LibraryHome />} />
             <Route path="library/login" element={<LibraryLogin />} />
           </Route>
+
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
 
           {/* Vendor */}
           <Route path="/vendor/login" element={<VendorLogin />} />
