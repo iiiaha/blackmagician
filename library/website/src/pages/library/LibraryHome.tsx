@@ -364,22 +364,12 @@ export default function LibraryHome() {
             </>
           ) : (
             /* Vendor list — centered button cards */
-            <div className="flex flex-col items-center gap-1.5 px-2 pt-1">
+            <div className="flex flex-col items-center gap-0.5 px-2 pt-1">
               {filteredVendors.map((v, i) => (
                 <button key={v.id} onClick={() => handleToggleVendor(v)}
-                  className="w-full h-[40px] text-[11px] font-medium tracking-[0.5px] text-center cursor-pointer rounded-[8px] overflow-hidden relative transition-all duration-300 hover:shadow-[0_4px_16px_rgba(0,0,0,0.10)] hover:scale-[1.02] active:scale-[0.98] group border border-white/20 dark:border-white/10"
-                  style={{ animation: `fadeInUp 0.25s ease-out ${i * 0.04}s both` }}>
-                  {v.logo_url ? (
-                    <>
-                      <img src={v.logo_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                      <div className="absolute inset-0 vendor-overlay transition-all duration-300" />
-                      <span className="relative vendor-text font-semibold drop-shadow-sm">{v.company_name}</span>
-                    </>
-                  ) : (
-                    <span className="w-full h-full flex items-center justify-center text-text-secondary bg-white/50 dark:bg-white/5 backdrop-blur-md border border-white/30 dark:border-white/10 rounded-[8px] transition-all duration-300 group-hover:bg-white/70 dark:group-hover:bg-white/10">
-                      {v.company_name}
-                    </span>
-                  )}
+                  className="w-full h-[32px] text-[11px] font-normal tracking-[0.3px] text-center cursor-pointer rounded-[4px] text-text-secondary hover:text-foreground hover:bg-accent transition-colors duration-150"
+                  style={{ animation: `fadeInUp 0.2s ease-out ${i * 0.04}s both` }}>
+                  {v.company_name}
                 </button>
               ))}
               {filteredVendors.length === 0 && (

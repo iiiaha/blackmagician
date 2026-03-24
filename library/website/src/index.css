@@ -78,31 +78,6 @@ body {
   height: 100vh;
 }
 
-/* Vendor button — glassmorphism */
-.vendor-overlay {
-  background: rgba(255, 255, 255, 0.45);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-.group:hover .vendor-overlay {
-  background: rgba(255, 255, 255, 0.25);
-}
-.vendor-text {
-  color: #1a1a1a;
-  text-shadow: 0 0.5px 1px rgba(255, 255, 255, 0.5);
-}
-.dark .vendor-overlay {
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-.dark .group:hover .vendor-overlay {
-  background: rgba(0, 0, 0, 0.35);
-}
-.dark .vendor-text {
-  color: #f0f0f0;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
-}
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
