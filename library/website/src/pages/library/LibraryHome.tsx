@@ -409,9 +409,7 @@ export default function LibraryHome() {
 
         {/* Filter bar — single row */}
         {selectedVendor && !searchResults && (
-          <div className={`px-5 py-1.5 border-b shrink-0 flex items-center gap-3 transition-colors ${
-            hasActiveFilter ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900' : 'bg-surface'
-          }`}>
+          <div className="px-5 py-1.5 border-b bg-surface shrink-0 flex items-center gap-3">
             {/* Filter indicator — always visible, lights up when active */}
             <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-[3px] whitespace-nowrap transition-colors ${
               hasActiveFilter
