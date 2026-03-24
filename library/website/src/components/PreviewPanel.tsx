@@ -57,7 +57,7 @@ interface Props {
   canApply: boolean
   todayApplyCount: number
   maxFreeApplies: number
-  onInsertRequest?: (dataUrl: string, vendor: string, tileName: string, sizeStr: string, canvas?: HTMLCanvasElement) => void
+  onInsertRequest?: (dataUrl: string, vendor: string, tileName: string, sizeStr: string) => void
   onLoginRequest?: () => void
   onApplyLog?: (productId: string) => Promise<boolean>
 }
@@ -69,8 +69,6 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
   const [allImgs, setAllImgs] = useState<HTMLImageElement[]>([])
   const [showColor, setShowColor] = useState(false)
   const [inserting, setInserting] = useState(false)
-  const [pbrEnabled, setPbrEnabled] = useState(false)
-  const [showPbrInfo, setShowPbrInfo] = useState(false)
 
   const hasMix = allImgs.length > 1
 
@@ -119,7 +117,7 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
     drawCanvas(canvasRef.current, sizeStr, edit, mainImg, false)
     const finalMM = calcFinalSizeMM(sizeStr, edit)
     const finalSizeStr = finalMM ? `${Math.round(finalMM.w)}x${Math.round(finalMM.h)}` : sizeStr
-    onInsertRequest(dataUrl, vendorName, tileName, finalSizeStr, pbrEnabled ? canvasRef.current : undefined)
+    onInsertRequest(dataUrl, vendorName, tileName, finalSizeStr)
     setTimeout(() => setInserting(false), 1500)
   }
 
@@ -210,44 +208,6 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
           </tr>
         </tbody>
       </table>
-
-      {/* PBR Toggle */}
-      {loggedIn && (
-        <div className="relative flex items-center gap-2 shrink-0 h-[16px]">
-          <label className="flex items-center gap-1.5 cursor-pointer shrink-0"
-            onClick={(e) => {
-              e.preventDefault()
-              if (!pbrEnabled) setShowPbrInfo(true)
-              setPbrEnabled(!pbrEnabled)
-            }}>
-            <span className={`relative inline-flex w-[24px] h-[12px] rounded-full transition-colors duration-200 shrink-0 ${
-              pbrEnabled ? 'bg-[#34d399]' : 'bg-border'
-            }`}>
-              <span className={`absolute top-[2px] left-[2px] w-[8px] h-[8px] rounded-full bg-white shadow-sm transition-all duration-200 ${
-                pbrEnabled ? 'translate-x-[12px]' : 'translate-x-0'
-              }`} />
-            </span>
-            <span className="text-[9px] text-text-secondary shrink-0">PBR</span>
-          </label>
-          {pbrEnabled && (
-            <span className="text-[7px] text-[#34d399] shrink-0">Normal + Rough + AO</span>
-          )}
-
-          {/* PBR info tooltip */}
-          {showPbrInfo && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setShowPbrInfo(false)} />
-              <div className="fixed z-50 w-[180px] bg-surface border border-border rounded-[5px] p-2.5 shadow-[0_4px_12px_rgba(0,0,0,0.12)]"
-                style={{ left: 'calc(190px + 8px)', bottom: '68px' }}>
-                <p className="text-[8px] text-text-secondary leading-[1.5] mb-1">
-                  Normal, Roughness, AO 맵 자동 생성. 처리 시간이 걸릴 수 있습니다.
-                </p>
-                <p className="text-[7px] text-text-tertiary">※ SketchUp 2025+ 전용</p>
-              </div>
-            </>
-          )}
-        </div>
-      )}
 
       {/* Apply / Subscribe */}
       {loggedIn && !isPro && !canApply ? (
