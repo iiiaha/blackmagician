@@ -41,6 +41,7 @@ export default function VendorProducts() {
   const [importItems, setImportItems] = useState<{ name: string; files: File[] }[]>([])
   const [importProgress, setImportProgress] = useState({ current: 0, total: 0, name: '' })
   const folderInputRef = useRef<HTMLInputElement>(null)
+  const [showFolderGuide, setShowFolderGuide] = useState(false)
 
   const fetchFolders = useCallback(async () => {
     if (!vendor) return
@@ -438,7 +439,7 @@ export default function VendorProducts() {
                 선택 삭제 ({checkedIds.size})
               </button>
 
-              <button onClick={() => folderInputRef.current?.click()}
+              <button onClick={() => setShowFolderGuide(true)}
                 className="h-[28px] px-3 border border-[rgba(0,0,0,0.1)] text-[10px] font-semibold rounded-[4px] cursor-pointer hover:bg-[rgba(0,0,0,0.02)] flex items-center gap-1.5 shrink-0">
                 <FolderOpen className="w-3 h-3" /> 폴더 등록
               </button>
@@ -514,6 +515,71 @@ export default function VendorProducts() {
           </>
         )}
       </div>
+
+      {/* Folder guide popup */}
+      {showFolderGuide && (
+        <>
+          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setShowFolderGuide(false)} />
+          <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[360px] bg-white rounded-[10px] shadow-[0_12px_40px_rgba(0,0,0,0.15)] overflow-hidden">
+            <div className="px-6 pt-5 pb-4">
+              <h3 className="text-[14px] font-bold mb-4">폴더 등록 가이드</h3>
+
+              {/* Infographic */}
+              <div className="bg-[#f8f8f8] rounded-[8px] p-4 mb-4">
+                <div className="flex flex-col gap-2 text-[11px]">
+                  {/* Selected folder */}
+                  <div className="flex items-center gap-2">
+                    <div className="w-[18px] h-[18px] bg-[#1a1a1a] rounded-[3px] flex items-center justify-center shrink-0">
+                      <FolderOpen className="w-3 h-3 text-white" />
+                    </div>
+                    <span className="font-bold">선택할 폴더</span>
+                    <span className="text-[9px] text-[#999] ml-auto">← 이 폴더를 선택</span>
+                  </div>
+
+                  {/* Product folders */}
+                  <div className="ml-5 border-l-2 border-[#ddd] pl-3 flex flex-col gap-1.5">
+                    {['제품A', '제품B', '제품C'].map((name, i) => (
+                      <div key={i}>
+                        <div className="flex items-center gap-1.5">
+                          <FolderOpen className="w-3 h-3 text-[#f59e0b]" />
+                          <span className="font-semibold text-[#333]">{name}</span>
+                          <span className="text-[8px] text-[#aaa]">→ 제품명이 됩니다</span>
+                        </div>
+                        <div className="ml-5 flex gap-1 mt-0.5">
+                          {[1, 2, 3].map(n => (
+                            <div key={n} className="w-[20px] h-[20px] bg-[#e0e0e0] rounded-[2px] flex items-center justify-center">
+                              <span className="text-[6px] text-[#999]">img</span>
+                            </div>
+                          ))}
+                          {i === 0 && <span className="text-[7px] text-[#aaa] self-center">← 제품 이미지들</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-[10px] text-[#666] leading-[1.6] space-y-1">
+                <p>• <strong>최하위 폴더</strong>를 선택하면 그 안의 <strong>하위 폴더들</strong>이 각각 하나의 제품으로 등록됩니다.</p>
+                <p>• 하위 폴더의 <strong>이름 = 제품명</strong>, 폴더 안의 이미지들이 제품 이미지가 됩니다.</p>
+                <p>• JPG, PNG 이미지만 인식됩니다.</p>
+              </div>
+            </div>
+
+            <div className="flex border-t border-[rgba(0,0,0,0.06)]">
+              <button onClick={() => setShowFolderGuide(false)}
+                className="flex-1 h-[42px] text-[11px] text-[#999] hover:bg-[#f5f5f5] cursor-pointer font-semibold">
+                취소
+              </button>
+              <div className="w-px bg-[rgba(0,0,0,0.06)]" />
+              <button onClick={() => { setShowFolderGuide(false); folderInputRef.current?.click() }}
+                className="flex-1 h-[42px] text-[11px] text-[#1a1a1a] hover:bg-[#f5f5f5] cursor-pointer font-bold">
+                폴더 선택하기
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Import popup */}
       {showImportPopup && (
