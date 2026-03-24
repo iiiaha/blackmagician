@@ -430,13 +430,13 @@ export default function LibraryHome() {
             <input
               placeholder="최소" value={filterMinPrice}
               onChange={e => { const v = e.target.value; if (v === '' || /^\d*$/.test(v)) setFilterMinPrice(v) }}
-              className="w-[60px] h-[20px] text-[10px] px-1.5 bg-muted border border-border rounded-[3px] outline-none focus:border-foreground [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="w-[60px] h-[20px] text-[10px] px-1.5 bg-muted border border-border rounded-[3px] outline-none focus:border-foreground text-foreground placeholder:text-text-tertiary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
             <span className="text-[8px] text-text-tertiary">~</span>
             <input
               placeholder="최대" value={filterMaxPrice}
               onChange={e => { const v = e.target.value; if (v === '' || /^\d*$/.test(v)) setFilterMaxPrice(v) }}
-              className="w-[60px] h-[20px] text-[10px] px-1.5 bg-muted border border-border rounded-[3px] outline-none focus:border-foreground [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="w-[60px] h-[20px] text-[10px] px-1.5 bg-muted border border-border rounded-[3px] outline-none focus:border-foreground text-foreground placeholder:text-text-tertiary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
 
             <div className="w-px h-3 bg-border" />
@@ -446,7 +446,7 @@ export default function LibraryHome() {
             <input
               placeholder="최소" value={filterMinStock}
               onChange={e => { const v = e.target.value; if (v === '' || /^\d*$/.test(v)) setFilterMinStock(v) }}
-              className="w-[50px] h-[20px] text-[10px] px-1.5 bg-muted border border-border rounded-[3px] outline-none focus:border-foreground [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="w-[50px] h-[20px] text-[10px] px-1.5 bg-muted border border-border rounded-[3px] outline-none focus:border-foreground text-foreground placeholder:text-text-tertiary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
             <span className="text-[8px] text-text-tertiary">㎡ 이상</span>
 
