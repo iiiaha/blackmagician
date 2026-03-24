@@ -104,7 +104,7 @@ export function calcFinalSizeMM(sizeStr: string, edit: EditState) {
 }
 
 // Minimum visual grout pixels for thumbnail preview
-const MIN_VISUAL_GROUT_PX = 3
+const MIN_VISUAL_GROUT_PX = 8
 
 export function drawCanvas(
   canvas: HTMLCanvasElement,
