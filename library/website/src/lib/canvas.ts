@@ -103,8 +103,8 @@ export function calcFinalSizeMM(sizeStr: string, edit: EditState) {
   return { w, h }
 }
 
-// Minimum visual grout pixels for thumbnail preview
-const MIN_VISUAL_GROUT_PX = 8
+// Minimum visual grout as fraction of tile width (ensures visibility after CSS scaling)
+const MIN_VISUAL_GROUT_FRACTION = 0.03 // 3% of tile width
 
 export function drawCanvas(
   canvas: HTMLCanvasElement,
@@ -138,7 +138,7 @@ function drawSingle(
   const totalW_mm = tileW + gMM, totalH_mm = tileH + gMM
 
   const ppm = calcPxPerMM(totalW_mm, totalH_mm)
-  const gPx = gMM > 0 ? Math.max(Math.round(gMM * ppm), MIN_VISUAL_GROUT_PX) : 0
+  const gPx = gMM > 0 ? Math.max(Math.round(gMM * ppm), Math.round(tileW_px * MIN_VISUAL_GROUT_FRACTION)) : 0
   const tileW_px = Math.round(tileW * ppm)
   const tileH_px = Math.round(tileH * ppm)
   const totalW = tileW_px + gPx
@@ -181,7 +181,7 @@ function drawMixGrid(
   const ppm = calcPxPerMM(totalW_mm, totalH_mm)
   const tileW_px = Math.round(tileW * ppm)
   const tileH_px = Math.round(tileH * ppm)
-  const gPx = gMM > 0 ? Math.max(Math.round(gMM * ppm), MIN_VISUAL_GROUT_PX) : 0
+  const gPx = gMM > 0 ? Math.max(Math.round(gMM * ppm), Math.round(tileW_px * MIN_VISUAL_GROUT_FRACTION)) : 0
   const cellW_px = tileW_px + gPx
   const cellH_px = tileH_px + gPx
   const totalW = cellW_px * cols
@@ -233,7 +233,7 @@ function drawMixStagger(
   const ppm = calcPxPerMM(totalW_mm, totalH_mm)
   const tileW_px = Math.round(tileW * ppm)
   const tileH_px = Math.round(tileH * ppm)
-  const gPx = gMM > 0 ? Math.max(Math.round(gMM * ppm), MIN_VISUAL_GROUT_PX) : 0
+  const gPx = gMM > 0 ? Math.max(Math.round(gMM * ppm), Math.round(tileW_px * MIN_VISUAL_GROUT_FRACTION)) : 0
   const cellW_px = tileW_px + gPx
   const cellH_px = tileH_px + gPx
   const totalW = cellW_px * cols
