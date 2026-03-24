@@ -89,15 +89,6 @@ export default function LibraryLayout() {
 
           {user ? (
             <>
-              {/* Plan badge */}
-              <span className={`text-[8px] font-bold px-1.5 py-[2px] rounded-[3px] leading-none ${
-                isPro
-                  ? 'bg-[#34d399] text-white'
-                  : 'bg-muted text-text-tertiary'
-              }`}>
-                {isPro ? 'PRO' : 'FREE'}
-              </span>
-
               <div className="relative" ref={userMenuRef}>
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
@@ -109,13 +100,6 @@ export default function LibraryLayout() {
 
               {showUserMenu && (
                 <div className="absolute right-0 top-full mt-1 w-[110px] bg-surface border border-border rounded-[5px] shadow-[0_4px_16px_rgba(0,0,0,0.1)] overflow-hidden z-50 py-1">
-                  <button
-                    onClick={() => { setShowUserMenu(false); setShowPlanInfo(true) }}
-                    className="w-full text-center py-1.5 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"
-                  >
-                    구독 정보
-                  </button>
-                  <div className="border-t border-border mx-2" />
                   <button
                     onClick={() => { signOut(); setShowUserMenu(false) }}
                     className="w-full text-center py-1.5 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground cursor-pointer"

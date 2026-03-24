@@ -94,7 +94,7 @@ async function fetchOrCreateUserProfile(userId: string, email?: string): Promise
   }
 }
 
-const FREE_DAILY_LIMIT = 3
+const FREE_DAILY_LIMIT = 999 // Unlimited for now — free for all users
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({
