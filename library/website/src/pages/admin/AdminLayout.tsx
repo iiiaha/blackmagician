@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
-import { LogOut, Users, LayoutDashboard, FolderTree } from 'lucide-react'
+import { LogOut, Users, UserCircle, LayoutDashboard, FolderTree } from 'lucide-react'
 
 export default function AdminLayout() {
   const navigate = useNavigate()
@@ -20,6 +20,7 @@ export default function AdminLayout() {
   const navItems = [
     { to: '/admin', label: '대시보드', icon: LayoutDashboard, exact: true },
     { to: '/admin/vendors', label: '벤더 관리', icon: Users },
+    { to: '/admin/users', label: '사용자 관리', icon: UserCircle },
     { to: '/admin/folders', label: '폴더 관리', icon: FolderTree },
   ]
 

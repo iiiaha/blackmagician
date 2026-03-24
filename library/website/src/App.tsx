@@ -20,6 +20,7 @@ import AdminLayout from '@/pages/admin/AdminLayout'
 import AdminLogin from '@/pages/admin/AdminLogin'
 import AdminDashboard from '@/pages/admin/AdminDashboard'
 import AdminVendors from '@/pages/admin/AdminVendors'
+import AdminUsers from '@/pages/admin/AdminUsers'
 import AdminFolders from '@/pages/admin/AdminFolders'
 
 export default function App() {
@@ -49,6 +50,7 @@ export default function App() {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="vendors" element={<AdminVendors />} />
+            <Route path="users" element={<AdminUsers />} />
             <Route path="folders" element={<AdminFolders />} />
           </Route>
         </Routes>

@@ -29,7 +29,9 @@ export default function AdminDashboard() {
         <Link to="/admin/vendors">
           <StatCard icon={Users} label="벤더" value={stats.totalVendors} />
         </Link>
-        <StatCard icon={UserCircle} label="사용자" value={stats.totalUsers} />
+        <Link to="/admin/users">
+          <StatCard icon={UserCircle} label="사용자" value={stats.totalUsers} />
+        </Link>
         <StatCard icon={Package} label="전체 제품" value={stats.totalProducts} />
       </div>
     </div>
