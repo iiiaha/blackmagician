@@ -1,7 +1,24 @@
 export interface Database {
   public: {
     Views: Record<string, never>
-    Functions: Record<string, never>
+    Functions: {
+      get_today_apply_count: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
+      get_today_download_count: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
+      soft_delete_account: {
+        Args: Record<string, never>
+        Returns: undefined
+      }
+      check_rejoin_allowed: {
+        Args: { p_email: string }
+        Returns: boolean
+      }
+    }
     Tables: {
       vendors: {
         Row: {
