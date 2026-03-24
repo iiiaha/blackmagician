@@ -49,37 +49,36 @@ function getMixGrid(mixMode: string, sizeStr?: string) {
   if (mixMode === 'grid') return { cols: 3, rows: 3 }
   if (mixMode !== 'half' && mixMode !== 'third') return null
 
-  const baseCols = 4
   const step = mixMode === 'half' ? 2 : 3
 
-  if (!sizeStr) return { cols: baseCols, rows: step * 2 }
+  if (!sizeStr) return { cols: 3, rows: step }
 
   const base = parseSizeMM(sizeStr)
-  if (!base) return { cols: baseCols, rows: step * 2 }
+  if (!base) return { cols: 3, rows: step }
 
-  // After getStaggerGrid transpose, actual render dimensions are:
-  // vertical (h>w): totalW = base.w * rows, totalH = base.h * cols
-  // landscape (w>=h): totalW = base.w * cols, totalH = base.h * rows
   const vertical = base.h > base.w
 
-  let rows = step
-  while (true) {
-    const nextRows = rows + step
-    // Calculate actual rendered dimensions after transpose
-    let totalW: number, totalH: number
-    if (vertical) {
-      totalW = base.w * nextRows  // rows becomes cols after transpose
-      totalH = base.h * baseCols  // cols becomes rows after transpose
-    } else {
-      totalW = base.w * baseCols
-      totalH = base.h * nextRows
+  // Try increasing cols and rows to find best fit within MAX_ASPECT_RATIO
+  let bestCols = 2, bestRows = step
+  for (let cols = 2; cols <= 6; cols++) {
+    for (let rows = step; rows <= step * 6; rows += step) {
+      let totalW: number, totalH: number
+      if (vertical) {
+        totalW = base.w * rows
+        totalH = base.h * cols
+      } else {
+        totalW = base.w * cols
+        totalH = base.h * rows
+      }
+      const ratio = Math.max(totalW, totalH) / Math.min(totalW, totalH)
+      if (ratio > MAX_ASPECT_RATIO) break
+      if (cols * rows > bestCols * bestRows) {
+        bestCols = cols; bestRows = rows
+      }
     }
-    const ratio = Math.max(totalW, totalH) / Math.min(totalW, totalH)
-    if (ratio > MAX_ASPECT_RATIO) break
-    rows = nextRows
   }
 
-  return { cols: baseCols, rows: Math.max(rows, step) }
+  return { cols: bestCols, rows: bestRows }
 }
 
 function isVerticalStagger(sizeStr: string) {
