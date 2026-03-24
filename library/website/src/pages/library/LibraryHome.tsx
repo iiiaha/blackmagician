@@ -413,12 +413,12 @@ export default function LibraryHome() {
             {/* Filter indicator — always visible, lights up when active */}
             <span className={`inline-flex items-center gap-1.5 text-[8px] font-bold px-2 py-[3px] rounded-full whitespace-nowrap transition-all duration-300 ${
               hasActiveFilter
-                ? 'text-emerald-800 bg-emerald-100 dark:text-emerald-300 dark:bg-emerald-900/40'
+                ? 'text-white bg-emerald-500 dark:text-emerald-100 dark:bg-emerald-700'
                 : 'text-text-secondary bg-muted'
             }`}>
               <span className={`inline-block w-[6px] h-[6px] rounded-full transition-all duration-300 ${
                 hasActiveFilter
-                  ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)] dark:shadow-[0_0_6px_rgba(52,211,153,0.5)]'
+                  ? 'bg-white shadow-[0_0_6px_rgba(255,255,255,0.6)] dark:bg-emerald-200 dark:shadow-[0_0_6px_rgba(167,243,208,0.5)]'
                   : 'bg-text-tertiary/30 dark:bg-text-tertiary/50'
               }`} />
               FILTER
