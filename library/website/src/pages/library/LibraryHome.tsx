@@ -517,7 +517,7 @@ function VendorBanner({ vendor }: { vendor: Vendor }) {
           <div className="absolute inset-0 bg-black/50" />
         </>
       )}
-      <div className="relative flex items-center justify-between px-5 py-4">
+      <div className="relative flex items-center justify-between px-6 py-6">
         <div className="flex-1 min-w-0">
           <h2 className="text-[15px] font-bold tracking-[0.3px] mb-1">{vendor.company_name}</h2>
           <p className="text-[10px] text-white/60 leading-[1.6] max-w-[360px]">{desc}</p>

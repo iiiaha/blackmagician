@@ -50,7 +50,7 @@ export default function VendorProfile() {
   return (
     <div className="max-w-[480px]">
       <h1 className="text-[16px] font-bold mb-1">프로필 설정</h1>
-      <p className="text-[11px] text-[#999] mb-6">Library에 표시되는 업체 정보를 관리합니다.</p>
+      <p className="text-[11px] text-[#999] mb-6">스케치업 익스텐션에 표시되는 업체 정보를 관리합니다.</p>
 
       <div className="space-y-4">
         {/* Company name — read only */}
@@ -110,12 +110,12 @@ export default function VendorProfile() {
               </label>
             )}
           </div>
-          <p className="text-[9px] text-[#aaa] mt-1">Library에서 업체 페이지 상단에 표시됩니다.</p>
+          <p className="text-[9px] text-[#aaa] mt-1">스케치업 익스텐션에서 업체 페이지 상단에 표시됩니다.</p>
         </FormField>
 
         <FormField label="소개글">
           <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
-            rows={3} placeholder="업체를 소개하는 2~3줄 문구"
+            rows={3} placeholder="업체를 소개하는 글을 작성해 주세요."
             className="w-full text-[11px] px-3 py-2 bg-white border border-[rgba(0,0,0,0.08)] rounded-[4px] outline-none resize-none focus:border-[#1a1a1a] leading-relaxed" />
         </FormField>
 
