@@ -33,6 +33,8 @@ export default function VendorProducts() {
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
   const [uploadingProductId, setUploadingProductId] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null)
+  const [bulkDeleteTarget, setBulkDeleteTarget] = useState<Product[]>([])
+  const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set())
   const [bulkImporting, setBulkImporting] = useState(false)
   const [bulkProgress, setBulkProgress] = useState('')
   const [dragOver, setDragOver] = useState(false)
@@ -184,8 +186,46 @@ export default function VendorProducts() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [products])
 
+  const toggleCheck = (id: string) => {
+    setCheckedIds(prev => {
+      const n = new Set(prev)
+      if (n.has(id)) n.delete(id); else n.add(id)
+      return n
+    })
+  }
+
+  const toggleCheckAll = () => {
+    if (checkedIds.size === products.length) {
+      setCheckedIds(new Set())
+    } else {
+      setCheckedIds(new Set(products.map(p => p.id)))
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    for (const id of bulkDeleteTarget.map(p => p.id)) {
+      await handleDeleteProduct(id)
+    }
+    setCheckedIds(new Set())
+    setBulkDeleteTarget([])
+  }
+
   // AG Grid column definitions
   const columnDefs: ColDef[] = [
+    {
+      headerName: '', width: 36, sortable: false, filter: false, editable: false, resizable: false,
+      headerComponent: () => (
+        <input type="checkbox" checked={products.length > 0 && checkedIds.size === products.length}
+          onChange={toggleCheckAll}
+          className="cursor-pointer" />
+      ),
+      cellRenderer: (p: { data: Product }) => (
+        <input type="checkbox" checked={checkedIds.has(p.data.id)}
+          onChange={() => toggleCheck(p.data.id)}
+          onClick={(e) => e.stopPropagation()}
+          className="cursor-pointer" />
+      ),
+    },
     {
       headerName: '제품명', field: 'name', editable: true, flex: 2, minWidth: 120,
       cellStyle: { fontWeight: 600 },
@@ -412,8 +452,17 @@ export default function VendorProducts() {
         ) : (
           <>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-[14px] font-bold">{selectedFolder.name}</h2>
-              <span className="text-[10px] text-[#999]">{products.length}개 제품</span>
+              <div className="flex items-center gap-3">
+                <h2 className="text-[14px] font-bold">{selectedFolder.name}</h2>
+                <span className="text-[10px] text-[#999]">{products.length}개 제품</span>
+              </div>
+              {checkedIds.size > 0 && (
+                <button
+                  onClick={() => setBulkDeleteTarget(products.filter(p => checkedIds.has(p.id)))}
+                  className="h-[28px] px-3 text-[10px] font-semibold text-[#e53e3e] border border-[rgba(229,62,62,0.3)] rounded-[4px] cursor-pointer hover:bg-[rgba(229,62,62,0.05)]">
+                  선택 삭제 ({checkedIds.size})
+                </button>
+              )}
             </div>
 
             {/* Add product */}
@@ -504,6 +553,35 @@ export default function VendorProducts() {
           </>
         )}
       </div>
+
+      {/* Bulk delete confirmation popup */}
+      {bulkDeleteTarget.length > 0 && (
+        <>
+          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setBulkDeleteTarget([])} />
+          <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] bg-white border border-[rgba(0,0,0,0.08)] rounded-[8px] p-6 text-center shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+            <h3 className="text-[13px] font-bold mb-2">선택 삭제</h3>
+            <p className="text-[11px] text-[#888] mb-1">
+              <span className="font-semibold text-[#333]">{bulkDeleteTarget.length}개 제품</span>을 삭제합니다.
+            </p>
+            <div className="max-h-[100px] overflow-y-auto text-left my-3 px-2">
+              {bulkDeleteTarget.map(p => (
+                <p key={p.id} className="text-[10px] text-[#666] py-0.5">· {p.name}</p>
+              ))}
+            </div>
+            <p className="text-[10px] text-[#aaa] mb-4">모든 이미지가 함께 삭제됩니다.</p>
+            <div className="flex gap-2">
+              <button onClick={() => setBulkDeleteTarget([])}
+                className="flex-1 h-[34px] text-[11px] font-semibold border border-[rgba(0,0,0,0.08)] rounded-[5px] cursor-pointer hover:bg-[#f5f5f5]">
+                취소
+              </button>
+              <button onClick={handleBulkDelete}
+                className="flex-1 h-[34px] text-[11px] font-semibold border border-[rgba(0,0,0,0.08)] rounded-[5px] cursor-pointer hover:bg-[#f5f5f5]">
+                삭제하기
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Delete confirmation popup */}
       {deleteTarget && (
