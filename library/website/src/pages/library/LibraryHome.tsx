@@ -190,7 +190,7 @@ export default function LibraryHome() {
     setPreviewVendor(vName)
     // Extract WxH from product size (e.g., "600x1200x9" → "600x1200")
     const rawSize = product.size || ''
-    const sizeMatch = rawSize.match(/(\d+)\s*[x×]\s*(\d+)/)
+    const sizeMatch = rawSize.match(/(\d+)\s*[x×*]\s*(\d+)/)
     setPreviewSizeStr(sizeMatch ? `${sizeMatch[1]}x${sizeMatch[2]}` : '600x600')
   }
 

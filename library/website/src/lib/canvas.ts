@@ -28,7 +28,7 @@ const BASE_PX_PER_MM = 4
 const MAX_CANVAS_PX = 4096
 
 export function parseSizeMM(sizeStr: string) {
-  const parts = sizeStr.split(/[x×]/).map(Number)
+  const parts = sizeStr.split(/[x×*]/).map(Number)
   if (parts.length < 2) return null
   return { w: parts[0], h: parts[1] }
 }
