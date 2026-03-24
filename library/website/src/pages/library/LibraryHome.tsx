@@ -30,7 +30,7 @@ function getBreadcrumb(nodes: FolderNode[], folderId: string): FolderNode[] {
 }
 
 export default function LibraryHome() {
-  const { user, userProfile, isPro, canApply, todayApplyCount, maxFreeApplies, logApply } = useAuth()
+  const { user, userProfile } = useAuth()
 
   const { activeCategory } = useOutletContext<{ activeCategory: CategoryId }>()
 
@@ -389,13 +389,8 @@ export default function LibraryHome() {
             tileName={previewProduct?.name || ''}
             product={previewProduct}
             loggedIn={!!user}
-            isPro={isPro}
-            canApply={canApply}
-            todayApplyCount={todayApplyCount}
-            maxFreeApplies={maxFreeApplies}
             onInsertRequest={handleInsert}
             onLoginRequest={() => setShowLoginPopup(true)}
-            onApplyLog={logApply}
           />
         </div>
       </div>

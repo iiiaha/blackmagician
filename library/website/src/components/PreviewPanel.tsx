@@ -53,16 +53,11 @@ interface Props {
   tileName: string
   product?: Product | null
   loggedIn: boolean
-  isPro: boolean
-  canApply: boolean
-  todayApplyCount: number
-  maxFreeApplies: number
   onInsertRequest?: (dataUrl: string, vendor: string, tileName: string, sizeStr: string) => void
   onLoginRequest?: () => void
-  onApplyLog?: (productId: string) => Promise<boolean>
 }
 
-export default function PreviewPanel({ images, sizeStr, vendorName, tileName, product, loggedIn, isPro, canApply, todayApplyCount, maxFreeApplies, onInsertRequest, onLoginRequest, onApplyLog }: Props) {
+export default function PreviewPanel({ images, sizeStr, vendorName, tileName, product, loggedIn, onInsertRequest, onLoginRequest }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [edit, setEdit] = useState<EditState>({ ...defaultEditState })
   const [mainImg, setMainImg] = useState<HTMLImageElement | null>(null)
@@ -99,16 +94,8 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
     updateEdit({ mixMode: mode, mixSelections: picks })
   }
 
-  const handleInsert = async () => {
+  const handleInsert = () => {
     if (!canvasRef.current || !onInsertRequest || !mainImg) return
-    if (!canApply) return
-
-    // Log the apply (checks limit server-side)
-    if (onApplyLog && product) {
-      const ok = await onApplyLog(product.id)
-      if (!ok) return
-    }
-
     setInserting(true)
     // Re-draw at actual grout size for export
     drawCanvas(canvasRef.current, sizeStr, edit, mainImg, true)

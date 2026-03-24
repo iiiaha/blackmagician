@@ -16,12 +16,6 @@ interface AuthContextType extends AuthState {
   signOut: () => Promise<void>
   refreshVendor: () => Promise<void>
   refreshUserProfile: () => Promise<void>
-  isPro: boolean
-  todayApplyCount: number
-  maxFreeApplies: number
-  canApply: boolean
-  refreshApplyCount: () => Promise<void>
-  logApply: (productId: string) => Promise<boolean>
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -94,8 +88,6 @@ async function fetchOrCreateUserProfile(userId: string, email?: string): Promise
   }
 }
 
-const FREE_DAILY_LIMIT = 999 // Unlimited for now — free for all users
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({
     user: null,
@@ -105,7 +97,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAdmin: false,
     loading: true,
   })
-  const [todayApplyCount, setTodayApplyCount] = useState(0)
 
   const loadUserData = async (session: Session | null) => {
     if (session?.user) {
@@ -167,43 +158,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const refreshApplyCount = async () => {
-    if (!state.userProfile) { setTodayApplyCount(0); return }
-    const { data } = await supabase.rpc('get_today_apply_count', { p_user_id: state.userProfile.id })
-    setTodayApplyCount(typeof data === 'number' ? data : 0)
-  }
-
-  // Check if user is on pro plan (active subscription or active trial)
-  const profile = state.userProfile
-  const now = new Date()
-  const isPro = !!profile && (
-    (profile.plan === 'pro' && (!profile.plan_expires_at || new Date(profile.plan_expires_at) > now)) ||
-    (!!profile.trial_expires_at && new Date(profile.trial_expires_at) > now)
-  )
-  const canApply = isPro || todayApplyCount < FREE_DAILY_LIMIT
-
-  const logApply = async (productId: string): Promise<boolean> => {
-    if (!state.userProfile) return false
-    if (!isPro && todayApplyCount >= FREE_DAILY_LIMIT) return false
-
-    await supabase.from('apply_logs').insert({
-      user_id: state.userProfile.id,
-      product_id: productId,
-    })
-    setTodayApplyCount(prev => prev + 1)
-    return true
-  }
-
-  // Fetch apply count when profile loads
-  useEffect(() => {
-    if (state.userProfile) refreshApplyCount()
-  }, [state.userProfile?.id])
-
   return (
     <AuthContext.Provider value={{
       ...state, signOut, refreshVendor, refreshUserProfile,
-      isPro, todayApplyCount, maxFreeApplies: FREE_DAILY_LIMIT, canApply,
-      refreshApplyCount, logApply,
     }}>
       {children}
     </AuthContext.Provider>
