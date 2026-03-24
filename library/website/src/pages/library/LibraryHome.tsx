@@ -321,7 +321,7 @@ export default function LibraryHome() {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-y-auto" style={{ animation: 'slideDown 0.25s ease-out' }}>
                 {vendorTrees[selectedVendor.id] && vendorTrees[selectedVendor.id].length > 0
                   ? vendorTrees[selectedVendor.id].map(n => renderNode(n, 0, selectedVendor!))
                   : <p className="text-[10px] text-text-tertiary px-2 py-4 text-center">No folders</p>
@@ -485,7 +485,7 @@ function VendorBanner({ vendor }: { vendor: Vendor }) {
   const insta = vendor.instagram || 'blackmagician'
 
   return (
-    <div className="shrink-0 text-white relative overflow-hidden" style={{
+    <div className="shrink-0 text-white relative overflow-hidden" style={{ animation: 'fadeIn 0.3s ease-out',
       background: vendor.logo_url
         ? undefined
         : 'linear-gradient(135deg, #2a2a2a, #3a3a3a, #4a4a4a)',
