@@ -413,8 +413,8 @@ export default function LibraryHome() {
             {/* Filter indicator — always visible, lights up when active */}
             <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-[3px] whitespace-nowrap transition-colors ${
               hasActiveFilter
-                ? 'text-blue-500 bg-blue-100 dark:bg-blue-900/50'
-                : 'text-text-tertiary/40 bg-muted'
+                ? 'text-blue-500 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/50'
+                : 'text-text-tertiary opacity-40 bg-muted'
             }`}>
               FILTER
             </span>
@@ -438,11 +438,11 @@ export default function LibraryHome() {
             {/* 재고 */}
             <span className="text-[9px] text-text-tertiary whitespace-nowrap">재고</span>
             <input
-              placeholder="min" value={filterMinStock}
+              placeholder="최소" value={filterMinStock}
               onChange={e => { const v = e.target.value; if (v === '' || /^\d*$/.test(v)) setFilterMinStock(v) }}
               className="w-[50px] h-[20px] text-[10px] px-1.5 bg-muted border border-border rounded-[3px] outline-none focus:border-foreground [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
-            <span className="text-[8px] text-text-tertiary">이상</span>
+            <span className="text-[8px] text-text-tertiary">㎡ 이상</span>
 
             <div className="w-px h-3 bg-border" />
 

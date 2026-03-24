@@ -194,7 +194,7 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
           </tr>
           <tr>
             <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted">재고</td>
-            <td className="px-2 py-[3px]">{product?.stock != null ? `${product.stock}` : '-'}</td>
+            <td className="px-2 py-[3px]">{product?.stock != null ? `${product.stock}㎡` : '-'}</td>
           </tr>
         </tbody>
       </table>
