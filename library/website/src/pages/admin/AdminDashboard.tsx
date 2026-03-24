@@ -1,53 +1,47 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Users, Clock } from 'lucide-react'
+import { Users, Package, UserCircle } from 'lucide-react'
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({ totalVendors: 0, pendingVendors: 0 })
+  const [stats, setStats] = useState({ totalVendors: 0, totalUsers: 0, totalProducts: 0 })
 
   useEffect(() => {
     const fetchStats = async () => {
-      const [totalRes, pendingRes] = await Promise.all([
+      const [vendorRes, userRes, productRes] = await Promise.all([
         supabase.from('vendors').select('id', { count: 'exact', head: true }),
-        supabase.from('vendors').select('id', { count: 'exact', head: true }).eq('approved', false).eq('rejected', false),
+        supabase.from('user_profiles').select('id', { count: 'exact', head: true }),
+        supabase.from('products').select('id', { count: 'exact', head: true }),
       ])
       setStats({
-        totalVendors: totalRes.count || 0,
-        pendingVendors: pendingRes.count || 0,
+        totalVendors: vendorRes.count || 0,
+        totalUsers: userRes.count || 0,
+        totalProducts: productRes.count || 0,
       })
     }
     fetchStats()
   }, [])
 
   return (
-    <div>
-      <h1 className="text-xl font-semibold mb-6">관리자 대시보드</h1>
-      <div className="grid grid-cols-2 gap-4">
+    <div className="max-w-[600px]">
+      <h1 className="text-[16px] font-bold mb-5">관리자 대시보드</h1>
+      <div className="grid grid-cols-3 gap-3">
         <Link to="/admin/vendors">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">전체 벤더</CardTitle>
-              <Users className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalVendors}</div>
-            </CardContent>
-          </Card>
+          <StatCard icon={Users} label="벤더" value={stats.totalVendors} />
         </Link>
-        <Link to="/admin/vendors">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">승인 대기</CardTitle>
-              <Clock className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.pendingVendors}</div>
-            </CardContent>
-          </Card>
-        </Link>
+        <StatCard icon={UserCircle} label="사용자" value={stats.totalUsers} />
+        <StatCard icon={Package} label="전체 제품" value={stats.totalProducts} />
       </div>
+    </div>
+  )
+}
+
+function StatCard({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: number }) {
+  return (
+    <div className="bg-white border border-[rgba(0,0,0,0.06)] rounded-[6px] p-4 hover:shadow-sm transition-shadow">
+      <Icon className="w-4 h-4 text-[#aaa] mb-2" />
+      <p className="text-[18px] font-bold">{value}</p>
+      <p className="text-[10px] text-[#999]">{label}</p>
     </div>
   )
 }

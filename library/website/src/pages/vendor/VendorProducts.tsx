@@ -71,7 +71,9 @@ export default function VendorProducts() {
   }, [vendor])
 
   const handleSelectFolder = (node: FolderNode) => {
-    if (node.is_leaf) { setSelectedFolder(node); setSelectedProductId(null); fetchProducts(node.id) }
+    // Leaf = no children = product folder
+    const isLeaf = !folders.some(f => f.parent_id === node.id)
+    if (isLeaf) { setSelectedFolder(node); setSelectedProductId(null); fetchProducts(node.id) }
     toggleExpand(node.id)
   }
 
@@ -384,10 +386,10 @@ export default function VendorProducts() {
           className={`flex items-center gap-1.5 py-[5px] w-full text-left text-[11px] cursor-pointer rounded-[3px] ${
             isSelected ? 'bg-[rgba(0,0,0,0.05)] font-semibold text-[#1a1a1a]' : 'text-[#888] hover:text-[#1a1a1a]'
           }`} style={{ paddingLeft: `${level * 16 + 8}px`, paddingRight: '8px' }}>
-          {node.children.length > 0 || !node.is_leaf
+          {node.children.length > 0
             ? isExpanded ? <ChevronDown className="w-3 h-3 shrink-0 opacity-30" /> : <ChevronRight className="w-3 h-3 shrink-0 opacity-30" />
             : <span className="w-3 shrink-0" />}
-          {node.is_leaf ? <FolderOpen className="w-3.5 h-3.5 shrink-0 opacity-50" /> : <Folder className="w-3.5 h-3.5 shrink-0 opacity-50" />}
+          {node.children.length === 0 ? <FolderOpen className="w-3.5 h-3.5 shrink-0 opacity-50" /> : <Folder className="w-3.5 h-3.5 shrink-0 opacity-50" />}
           <span className="truncate">{node.name}</span>
         </button>
         {isExpanded && node.children.map(child => renderNode(child, level + 1))}

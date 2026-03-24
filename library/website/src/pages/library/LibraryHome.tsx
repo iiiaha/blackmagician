@@ -142,7 +142,9 @@ export default function LibraryHome() {
   }, [])
 
   const handleSelectFolder = (node: FolderNode, vendor: Vendor) => {
-    if (node.is_leaf) {
+    const allFolders = vendorFolders[vendor.id] || []
+    const isLeaf = !allFolders.some(f => f.parent_id === node.id)
+    if (isLeaf) {
       setSelectedFolder(node)
       setSelectedVendor(vendor)
       setAllFoldersForBreadcrumb(vendorFolders[vendor.id] || [])
@@ -262,7 +264,7 @@ export default function LibraryHome() {
           }`}
           style={{ paddingLeft: `${level * 12 + 24}px`, paddingRight: '8px' }}
         >
-          {node.children.length > 0 || !node.is_leaf ? (
+          {node.children.length > 0 ? (
             isExpanded ? <ChevronDown className="w-2.5 h-2.5 shrink-0 opacity-30" />
               : <ChevronRight className="w-2.5 h-2.5 shrink-0 opacity-30" />
           ) : <span className="w-2.5 shrink-0" />}
