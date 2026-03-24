@@ -521,7 +521,7 @@ export default function LibraryHome() {
                     onToggleFavorite={() => toggleFavorite(p.id)}
                     loggedIn={!!user}
                     vendorPrefix={showFavorites ? (selectedVendor?.company_name || '') : undefined}
-                    animationDelay={i * 0.03} />
+                    animationDelay={0} />
                 ))}
               </div>
             )
