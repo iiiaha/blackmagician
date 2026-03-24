@@ -90,11 +90,11 @@ export interface Database {
           vendor_id: string
           folder_id: string
           name: string
-          stock: number | null
           unit_price: number | null
-          lead_time: string | null
-          moq: number | null
-          notes: string | null
+          stock: number | null
+          origin: string | null
+          brand: string | null
+          size: string | null
           thumbnail_url: string | null
           created_at: string
           updated_at: string
@@ -104,11 +104,11 @@ export interface Database {
           vendor_id: string
           folder_id: string
           name: string
-          stock?: number | null
           unit_price?: number | null
-          lead_time?: string | null
-          moq?: number | null
-          notes?: string | null
+          stock?: number | null
+          origin?: string | null
+          brand?: string | null
+          size?: string | null
           thumbnail_url?: string | null
           created_at?: string
           updated_at?: string
@@ -118,11 +118,11 @@ export interface Database {
           vendor_id?: string
           folder_id?: string
           name?: string
-          stock?: number | null
           unit_price?: number | null
-          lead_time?: string | null
-          moq?: number | null
-          notes?: string | null
+          stock?: number | null
+          origin?: string | null
+          brand?: string | null
+          size?: string | null
           thumbnail_url?: string | null
           created_at?: string
           updated_at?: string

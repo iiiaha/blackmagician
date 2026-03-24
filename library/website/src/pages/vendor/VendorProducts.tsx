@@ -1,11 +1,15 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
+import { AgGridReact } from 'ag-grid-react'
+import { AllCommunityModule, ModuleRegistry, type ColDef, type CellValueChangedEvent } from 'ag-grid-community'
 import {
   ChevronRight, ChevronDown, Folder, FolderOpen,
-  Plus, Trash2, Package, ImagePlus, X, Save,
+  Plus, Package, ImagePlus, X,
 } from 'lucide-react'
 import type { FolderNode, Product, ProductImage } from '@/types/database'
+
+ModuleRegistry.registerModules([AllCommunityModule])
 
 interface TreeNode extends FolderNode { children: TreeNode[] }
 
@@ -18,6 +22,7 @@ function buildTree(nodes: FolderNode[], parentId: string | null): TreeNode[] {
 
 export default function VendorProducts() {
   const { vendor } = useAuth()
+  const gridRef = useRef<AgGridReact>(null)
   const [folders, setFolders] = useState<FolderNode[]>([])
   const [tree, setTree] = useState<TreeNode[]>([])
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
@@ -25,8 +30,7 @@ export default function VendorProducts() {
   const [products, setProducts] = useState<Product[]>([])
   const [productImages, setProductImages] = useState<Record<string, ProductImage[]>>({})
   const [newProductName, setNewProductName] = useState('')
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
-  const [editForm, setEditForm] = useState({ stock: '', unit_price: '', lead_time: '', moq: '', notes: '' })
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
   const [uploadingProductId, setUploadingProductId] = useState<string | null>(null)
 
   const fetchFolders = useCallback(async () => {
@@ -58,7 +62,7 @@ export default function VendorProducts() {
   }, [vendor])
 
   const handleSelectFolder = (node: FolderNode) => {
-    if (node.is_leaf) { setSelectedFolder(node); setEditingProduct(null); fetchProducts(node.id) }
+    if (node.is_leaf) { setSelectedFolder(node); setSelectedProductId(null); fetchProducts(node.id) }
     toggleExpand(node.id)
   }
 
@@ -77,29 +81,61 @@ export default function VendorProducts() {
     const imgs = productImages[productId] || []
     if (imgs.length > 0) await supabase.storage.from('product-images').remove(imgs.map(img => img.storage_path))
     await supabase.from('products').delete().eq('id', productId)
+    setSelectedProductId(null)
     if (selectedFolder) fetchProducts(selectedFolder.id)
   }
 
-  const startEdit = (product: Product) => {
-    setEditingProduct(product)
-    setEditForm({
-      stock: product.stock?.toString() || '', unit_price: product.unit_price?.toString() || '',
-      lead_time: product.lead_time || '', moq: product.moq?.toString() || '', notes: product.notes || '',
-    })
+  // AG Grid cell edit → save to DB
+  const onCellValueChanged = useCallback(async (event: CellValueChangedEvent) => {
+    const { data, colDef } = event
+    const field = colDef.field
+    if (!field) return
+    const update: Record<string, unknown> = {}
+    if (field === 'unit_price' || field === 'stock') {
+      update[field] = data[field] !== null && data[field] !== '' ? Number(data[field]) : null
+    } else {
+      update[field] = data[field] || null
+    }
+    await supabase.from('products').update(update).eq('id', data.id)
+  }, [])
+
+  // AG Grid column definitions
+  const columnDefs: ColDef[] = [
+    {
+      headerName: '제품명', field: 'name', editable: true, flex: 2, minWidth: 120,
+      cellStyle: { fontWeight: 600 },
+    },
+    {
+      headerName: '단가', field: 'unit_price', editable: true, flex: 1, minWidth: 80,
+      valueFormatter: (p) => p.value ? `${Number(p.value).toLocaleString()}원` : '',
+    },
+    { headerName: '재고', field: 'stock', editable: true, flex: 0.7, minWidth: 60 },
+    { headerName: '원산지', field: 'origin', editable: true, flex: 1, minWidth: 70 },
+    { headerName: '브랜드', field: 'brand', editable: true, flex: 1, minWidth: 70 },
+    { headerName: '크기', field: 'size', editable: true, flex: 1, minWidth: 70 },
+    {
+      headerName: '이미지', field: 'id', editable: false, flex: 0.5, minWidth: 50,
+      cellRenderer: (p: { value: string }) => {
+        const count = (productImages[p.value] || []).length
+        return count > 0 ? `${count}장` : '-'
+      },
+      sortable: false, filter: false,
+    },
+    {
+      headerName: '', field: 'id', editable: false, width: 40, sortable: false, filter: false,
+      cellRenderer: (p: { value: string }) => {
+        return `<span class="delete-btn" data-id="${p.value}" style="cursor:pointer;color:#ccc;font-size:11px;">✕</span>`
+      },
+    },
+  ]
+
+  const defaultColDef: ColDef = {
+    sortable: true,
+    filter: true,
+    resizable: true,
   }
 
-  const handleSaveProduct = async () => {
-    if (!editingProduct) return
-    await supabase.from('products').update({
-      stock: editForm.stock ? parseInt(editForm.stock) : null,
-      unit_price: editForm.unit_price ? parseFloat(editForm.unit_price) : null,
-      lead_time: editForm.lead_time || null, moq: editForm.moq ? parseInt(editForm.moq) : null,
-      notes: editForm.notes || null,
-    }).eq('id', editingProduct.id)
-    setEditingProduct(null)
-    if (selectedFolder) fetchProducts(selectedFolder.id)
-  }
-
+  // Image handling
   const resizeImage = (file: File, maxSize: number): Promise<Blob> => {
     return new Promise((resolve) => {
       const img = new Image()
@@ -123,20 +159,22 @@ export default function VendorProducts() {
     if (!vendor) return
     setUploadingProductId(productId)
     const existingCount = (productImages[productId] || []).length
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i]
-      if (!['image/jpeg', 'image/png'].includes(file.type)) continue
+
+    const uploadPromises = Array.from(files).map(async (file, i) => {
+      if (!['image/jpeg', 'image/png'].includes(file.type)) return
       const resized = await resizeImage(file, 2048)
       const ext = file.type === 'image/png' ? 'png' : 'jpg'
       const sortOrder = existingCount + i
       const fileName = `${String(sortOrder + 1).padStart(3, '0')}.${ext}`
       const storagePath = `${vendor.id}/${productId}/${fileName}`
       const { error } = await supabase.storage.from('product-images').upload(storagePath, resized, { contentType: file.type, upsert: true })
-      if (error) continue
+      if (error) return
       const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(storagePath)
       await supabase.from('product_images').insert({ product_id: productId, file_name: fileName, storage_path: storagePath, url: urlData.publicUrl, sort_order: sortOrder })
       if (sortOrder === 0) await supabase.from('products').update({ thumbnail_url: urlData.publicUrl }).eq('id', productId)
-    }
+    })
+
+    await Promise.all(uploadPromises)
     setUploadingProductId(null)
     if (selectedFolder) fetchProducts(selectedFolder.id)
   }
@@ -146,6 +184,9 @@ export default function VendorProducts() {
     await supabase.from('product_images').delete().eq('id', image.id)
     if (selectedFolder) fetchProducts(selectedFolder.id)
   }
+
+  const selectedProduct = products.find(p => p.id === selectedProductId)
+  const selectedImages = selectedProductId ? (productImages[selectedProductId] || []) : []
 
   const renderNode = (node: TreeNode, level: number) => {
     const isExpanded = expandedIds.has(node.id)
@@ -179,8 +220,8 @@ export default function VendorProducts() {
           : tree.map(n => renderNode(n, 0))}
       </div>
 
-      {/* Products */}
-      <div className="flex-1 min-w-0">
+      {/* Main area */}
+      <div className="flex-1 flex flex-col min-w-0">
         {!selectedFolder ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
@@ -189,14 +230,14 @@ export default function VendorProducts() {
             </div>
           </div>
         ) : (
-          <div>
-            <div className="flex items-center justify-between mb-4">
+          <>
+            <div className="flex items-center justify-between mb-3">
               <h2 className="text-[14px] font-bold">{selectedFolder.name}</h2>
               <span className="text-[10px] text-[#999]">{products.length}개 제품</span>
             </div>
 
             {/* Add product */}
-            <div className="flex gap-2 mb-4">
+            <div className="flex gap-2 mb-3">
               <input value={newProductName} onChange={e => setNewProductName(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleAddProduct()}
                 placeholder="새 제품명"
@@ -207,95 +248,58 @@ export default function VendorProducts() {
               </button>
             </div>
 
-            {/* Product list */}
-            <div className="space-y-3">
-              {products.map(product => {
-                const images = productImages[product.id] || []
-                const isEditing = editingProduct?.id === product.id
-                return (
-                  <div key={product.id} className="bg-white border border-[rgba(0,0,0,0.06)] rounded-[6px] p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-[12px] font-bold">{product.name}</h3>
-                      <div className="flex items-center gap-2">
-                        {!isEditing && (
-                          <button onClick={() => startEdit(product)} className="text-[10px] text-[#999] hover:text-[#333] cursor-pointer">편집</button>
-                        )}
-                        <button onClick={() => handleDeleteProduct(product.id)} className="text-[10px] text-[#ccc] hover:text-[#e53e3e] cursor-pointer">
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Edit form */}
-                    {isEditing && (
-                      <div className="grid grid-cols-2 gap-2 mb-3 p-3 bg-[#fafafa] rounded-[4px]">
-                        {[
-                          { label: '재고', key: 'stock', type: 'number', placeholder: '수량' },
-                          { label: '단가 (원)', key: 'unit_price', type: 'number', placeholder: '가격' },
-                          { label: '리드타임', key: 'lead_time', type: 'text', placeholder: '예: 2주' },
-                          { label: 'MOQ', key: 'moq', type: 'number', placeholder: '최소주문수량' },
-                        ].map(f => (
-                          <div key={f.key}>
-                            <label className="text-[9px] text-[#999] font-semibold mb-1 block">{f.label}</label>
-                            <input type={f.type} value={editForm[f.key as keyof typeof editForm]}
-                              onChange={e => setEditForm(prev => ({ ...prev, [f.key]: e.target.value }))}
-                              placeholder={f.placeholder}
-                              className="w-full h-[28px] text-[10px] px-2 bg-white border border-[rgba(0,0,0,0.08)] rounded-[3px] outline-none" />
-                          </div>
-                        ))}
-                        <div className="col-span-2">
-                          <label className="text-[9px] text-[#999] font-semibold mb-1 block">비고</label>
-                          <input value={editForm.notes} onChange={e => setEditForm(prev => ({ ...prev, notes: e.target.value }))}
-                            placeholder="참고 사항"
-                            className="w-full h-[28px] text-[10px] px-2 bg-white border border-[rgba(0,0,0,0.08)] rounded-[3px] outline-none" />
-                        </div>
-                        <div className="col-span-2 flex justify-end gap-2 mt-1">
-                          <button onClick={handleSaveProduct} className="h-[26px] px-3 bg-[#1a1a1a] text-white text-[10px] font-semibold rounded-[3px] cursor-pointer flex items-center gap-1">
-                            <Save className="w-3 h-3" /> 저장
-                          </button>
-                          <button onClick={() => setEditingProduct(null)} className="h-[26px] px-3 text-[10px] text-[#999] hover:text-[#333] cursor-pointer">취소</button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Product info */}
-                    {!isEditing && (product.stock !== null || product.unit_price !== null || product.lead_time || product.moq !== null) && (
-                      <div className="flex gap-4 mb-3 text-[10px] text-[#999]">
-                        {product.stock !== null && <span>재고: {product.stock}</span>}
-                        {product.unit_price !== null && <span>단가: {Number(product.unit_price).toLocaleString()}원</span>}
-                        {product.lead_time && <span>LT: {product.lead_time}</span>}
-                        {product.moq !== null && <span>MOQ: {product.moq}</span>}
-                      </div>
-                    )}
-
-                    {/* Images */}
-                    <div className="flex flex-wrap gap-2">
-                      {images.map(img => (
-                        <div key={img.id} className="relative group w-[64px] h-[64px] rounded-[3px] border border-[rgba(0,0,0,0.06)] overflow-hidden">
-                          <img src={img.url} alt={img.file_name} className="w-full h-full object-cover" />
-                          <button onClick={() => handleDeleteImage(img)}
-                            className="absolute top-0.5 right-0.5 hidden group-hover:flex items-center justify-center w-4 h-4 bg-black/60 rounded-full cursor-pointer">
-                            <X className="w-2.5 h-2.5 text-white" />
-                          </button>
-                        </div>
-                      ))}
-                      <label className="w-[64px] h-[64px] rounded-[3px] border-2 border-dashed border-[rgba(0,0,0,0.1)] flex flex-col items-center justify-center cursor-pointer hover:bg-[rgba(0,0,0,0.02)]">
-                        {uploadingProductId === product.id
-                          ? <span className="text-[8px] text-[#aaa]">업로드중</span>
-                          : <><ImagePlus className="w-4 h-4 text-[#ccc] mb-0.5" /><span className="text-[8px] text-[#aaa]">추가</span></>}
-                        <input type="file" accept="image/jpeg,image/png" multiple className="hidden"
-                          onChange={e => { if (e.target.files?.length) { handleImageUpload(product.id, e.target.files); e.target.value = '' } }}
-                          disabled={uploadingProductId === product.id} />
-                      </label>
-                    </div>
-                  </div>
-                )
-              })}
-              {products.length === 0 && (
-                <p className="text-center py-8 text-[11px] text-[#aaa]">이 폴더에 제품이 없습니다.</p>
-              )}
+            {/* AG Grid Table */}
+            <div className="flex-1 bg-white border border-[rgba(0,0,0,0.06)] rounded-[6px] overflow-hidden" style={{ minHeight: '200px' }}>
+              <AgGridReact
+                ref={gridRef}
+                rowData={products}
+                columnDefs={columnDefs}
+                defaultColDef={defaultColDef}
+                onCellValueChanged={onCellValueChanged}
+                onRowClicked={(e) => setSelectedProductId(e.data.id)}
+                rowSelection="single"
+                getRowId={(p) => p.data.id}
+                headerHeight={32}
+                rowHeight={32}
+                onCellClicked={(e) => {
+                  if (e.column.getColId() === 'id' && (e.event?.target as HTMLElement)?.classList?.contains('delete-btn')) {
+                    const id = (e.event?.target as HTMLElement)?.dataset?.id
+                    if (id) handleDeleteProduct(id)
+                  }
+                }}
+              />
             </div>
-          </div>
+
+            {/* Image panel for selected product */}
+            {selectedProduct && (
+              <div className="mt-3 bg-white border border-[rgba(0,0,0,0.06)] rounded-[6px] p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-[12px] font-bold">{selectedProduct.name} — 이미지</h3>
+                  <button onClick={() => setSelectedProductId(null)} className="text-[10px] text-[#aaa] hover:text-[#333] cursor-pointer">닫기</button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {selectedImages.map(img => (
+                    <div key={img.id} className="relative group w-[72px] h-[72px] rounded-[3px] border border-[rgba(0,0,0,0.06)] overflow-hidden">
+                      <img src={img.url} alt={img.file_name} className="w-full h-full object-cover" />
+                      <button onClick={() => handleDeleteImage(img)}
+                        className="absolute top-0.5 right-0.5 hidden group-hover:flex items-center justify-center w-4 h-4 bg-black/60 rounded-full cursor-pointer">
+                        <X className="w-2.5 h-2.5 text-white" />
+                      </button>
+                      <span className="absolute bottom-0 left-0 right-0 bg-black/40 text-white text-[8px] text-center py-[1px]">{img.file_name}</span>
+                    </div>
+                  ))}
+                  <label className="w-[72px] h-[72px] rounded-[3px] border-2 border-dashed border-[rgba(0,0,0,0.1)] flex flex-col items-center justify-center cursor-pointer hover:bg-[rgba(0,0,0,0.02)]">
+                    {uploadingProductId === selectedProduct.id
+                      ? <span className="text-[8px] text-[#aaa]">업로드중</span>
+                      : <><ImagePlus className="w-4 h-4 text-[#ccc] mb-0.5" /><span className="text-[8px] text-[#aaa]">추가</span></>}
+                    <input type="file" accept="image/jpeg,image/png" multiple className="hidden"
+                      onChange={e => { if (e.target.files?.length) { handleImageUpload(selectedProduct.id, e.target.files); e.target.value = '' } }}
+                      disabled={uploadingProductId === selectedProduct.id} />
+                  </label>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

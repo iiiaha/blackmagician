@@ -169,7 +169,7 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
         </div>
       </div>
 
-      {/* Product Info — 4 fields only */}
+      {/* Product Info */}
       <table className={`w-full text-[9px] border border-border rounded-[3px] overflow-hidden ${isEmpty ? 'opacity-30' : ''}`}>
         <tbody>
           <tr className="border-b border-border">
@@ -178,15 +178,15 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
           </tr>
           <tr className="border-b border-border">
             <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted">재고</td>
-            <td className="px-2 py-[3px]">{product?.stock != null ? `${product.stock}개` : '-'}</td>
+            <td className="px-2 py-[3px]">{product?.stock != null ? `${product.stock}` : '-'}</td>
           </tr>
           <tr className="border-b border-border">
-            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted">담당자</td>
-            <td className="px-2 py-[3px]">{vendor?.contact_name ? `${vendor.contact_name} ${vendor.contact_phone || ''}`.trim() : '-'}</td>
+            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted">원산지</td>
+            <td className="px-2 py-[3px]">{product?.origin || '-'}</td>
           </tr>
           <tr>
-            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted">비고</td>
-            <td className="px-2 py-[3px]">{product?.notes || '-'}</td>
+            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted">담당자</td>
+            <td className="px-2 py-[3px]">{vendor?.contact_name ? `${vendor.contact_name} ${vendor.contact_phone || ''}`.trim() : '-'}</td>
           </tr>
         </tbody>
       </table>
