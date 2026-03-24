@@ -138,9 +138,9 @@ function drawSingle(
   const totalW_mm = tileW + gMM, totalH_mm = tileH + gMM
 
   const ppm = calcPxPerMM(totalW_mm, totalH_mm)
-  const gPx = gMM > 0 ? Math.max(Math.round(gMM * ppm), Math.round(tileW_px * MIN_VISUAL_GROUT_FRACTION)) : 0
   const tileW_px = Math.round(tileW * ppm)
   const tileH_px = Math.round(tileH * ppm)
+  const gPx = gMM > 0 ? Math.max(Math.round(gMM * ppm), Math.round(tileW_px * MIN_VISUAL_GROUT_FRACTION)) : 0
   const totalW = tileW_px + gPx
   const totalH = tileH_px + gPx
 
