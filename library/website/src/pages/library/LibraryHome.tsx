@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { CATEGORIES, type CategoryId } from '@/lib/categories'
+import type { CategoryId } from '@/lib/categories'
 import PreviewPanel from '@/components/PreviewPanel'
 import {
   Search, ChevronRight, ChevronDown, ImageIcon, Heart,
@@ -34,7 +34,6 @@ export default function LibraryHome() {
   const { activeCategory } = useOutletContext<{ activeCategory: CategoryId }>()
 
   const [allVendors, setAllVendors] = useState<Vendor[]>([])
-  const [allFolderRoots, setAllFolderRoots] = useState<FolderNode[]>([])
   const [filteredVendors, setFilteredVendors] = useState<Vendor[]>([])
 
   // Vendor expand state (inline, no drill-down)
@@ -71,12 +70,8 @@ export default function LibraryHome() {
   // Fetch vendors + roots
   useEffect(() => {
     const fetchAll = async () => {
-      const [vendorsRes, rootsRes] = await Promise.all([
-        supabase.from('vendors').select('*').eq('approved', true).order('company_name'),
-        supabase.from('folder_nodes').select('*').eq('depth', 0),
-      ])
-      setAllVendors((vendorsRes.data as Vendor[]) || [])
-      setAllFolderRoots((rootsRes.data as FolderNode[]) || [])
+      const { data } = await supabase.from('vendors').select('*').eq('approved', true).order('company_name')
+      setAllVendors((data as Vendor[]) || [])
     }
     fetchAll()
   }, [])
@@ -94,16 +89,9 @@ export default function LibraryHome() {
     fetchFavs()
   }, [userProfile, activeCategory])
 
-  // Filter vendors by category
+  // Filter vendors by category (direct match on vendor.category)
   useEffect(() => {
-    const cat = CATEGORIES.find(c => c.id === activeCategory)
-    if (!cat) { setFilteredVendors(allVendors); return }
-    const matchingVendorIds = new Set(
-      allFolderRoots
-        .filter(f => cat.folderNames.some(name => f.name.toLowerCase().includes(name.toLowerCase())))
-        .map(f => f.vendor_id)
-    )
-    setFilteredVendors(allVendors.filter(v => matchingVendorIds.has(v.id)))
+    setFilteredVendors(allVendors.filter(v => v.category === activeCategory))
     setExpandedVendorId(null)
     setSelectedVendor(null)
     setSelectedFolder(null)
@@ -111,7 +99,7 @@ export default function LibraryHome() {
     setProductImages({})
     setSearchResults(null)
     setShowFavorites(false)
-  }, [activeCategory, allVendors, allFolderRoots])
+  }, [activeCategory, allVendors])
 
   // Toggle vendor expand
   const handleToggleVendor = async (vendor: Vendor) => {
@@ -125,26 +113,12 @@ export default function LibraryHome() {
     if (!vendorFolders[vendor.id]) {
       const { data } = await supabase.from('folder_nodes').select('*').eq('vendor_id', vendor.id).order('sort_order')
       const f = (data as FolderNode[]) || []
-      const cat = CATEGORIES.find(c => c.id === activeCategory)
-      let filtered = f
-      if (cat) {
-        const categoryRoot = f.find(node =>
-          node.depth === 0 && cat.folderNames.some(name => node.name.toLowerCase().includes(name.toLowerCase()))
-        )
-        if (categoryRoot) {
-          const getDescendants = (parentId: string): FolderNode[] => {
-            const children = f.filter(n => n.parent_id === parentId)
-            return children.flatMap(c => [c, ...getDescendants(c.id)])
-          }
-          filtered = getDescendants(categoryRoot.id)
-        }
-      }
       setVendorFolders(prev => ({ ...prev, [vendor.id]: f }))
       setVendorTrees(prev => ({
         ...prev,
-        [vendor.id]: buildTree(filtered, filtered[0]?.parent_id ?? null)
+        [vendor.id]: buildTree(f, null)
       }))
-      setExpandedIds(new Set(filtered.map(n => n.id)))
+      setExpandedIds(new Set(f.map(n => n.id)))
     }
   }
 

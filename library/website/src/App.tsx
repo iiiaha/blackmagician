@@ -9,7 +9,6 @@ import LibraryLogin from '@/pages/library/LibraryLogin'
 // Vendor pages
 import VendorLayout from '@/pages/vendor/VendorLayout'
 import VendorLogin from '@/pages/vendor/VendorLogin'
-import VendorRegister from '@/pages/vendor/VendorRegister'
 import VendorDashboard from '@/pages/vendor/VendorDashboard'
 import VendorProducts from '@/pages/vendor/VendorProducts'
 import VendorProfile from '@/pages/vendor/VendorProfile'
@@ -34,7 +33,6 @@ export default function App() {
 
           {/* Vendor */}
           <Route path="/vendor/login" element={<VendorLogin />} />
-          <Route path="/vendor/register" element={<VendorRegister />} />
           <Route path="/vendor" element={<VendorLayout />}>
             <Route index element={<VendorDashboard />} />
             <Route path="products" element={<VendorProducts />} />
@@ -46,7 +44,7 @@ export default function App() {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="vendors" element={<AdminVendors />} />
-            <Route path="folders/:vendorId" element={<AdminFolders />} />
+            <Route path="folders" element={<AdminFolders />} />
           </Route>
         </Routes>
       </BrowserRouter>

@@ -8,6 +8,8 @@ export interface Database {
           id: string
           auth_user_id: string
           company_name: string
+          category: string | null
+          login_id: string | null
           contact_name: string
           contact_phone: string
           approved: boolean
@@ -23,6 +25,8 @@ export interface Database {
           id?: string
           auth_user_id: string
           company_name: string
+          category?: string | null
+          login_id?: string | null
           contact_name: string
           contact_phone: string
           approved?: boolean
@@ -38,6 +42,8 @@ export interface Database {
           id?: string
           auth_user_id?: string
           company_name?: string
+          category?: string | null
+          login_id?: string | null
           contact_name?: string
           contact_phone?: string
           approved?: boolean

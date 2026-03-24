@@ -1,126 +1,252 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Check, X, FolderTree } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { CATEGORIES } from '@/lib/categories'
+import { Plus, Trash2, KeyRound, ChevronDown, ChevronRight } from 'lucide-react'
 import type { Vendor } from '@/types/database'
 
 export default function AdminVendors() {
   const [vendors, setVendors] = useState<Vendor[]>([])
   const [loading, setLoading] = useState(true)
+  const [showCreate, setShowCreate] = useState(false)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [createForm, setCreateForm] = useState({ login_id: '', password: '', company_name: '', category: 'tile' })
+  const [creating, setCreating] = useState(false)
+  const [resetPwVendorId, setResetPwVendorId] = useState<string | null>(null)
+  const [newPassword, setNewPassword] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState<Vendor | null>(null)
 
   const fetchVendors = async () => {
-    const { data } = await supabase
-      .from('vendors')
-      .select('*')
-      .order('created_at', { ascending: false })
+    const { data } = await supabase.from('vendors').select('*').order('category').order('company_name')
     setVendors((data as Vendor[]) || [])
     setLoading(false)
   }
 
-  useEffect(() => {
-    fetchVendors()
-  }, [])
+  useEffect(() => { fetchVendors() }, [])
 
-  const handleApprove = async (vendorId: string) => {
-    await supabase
-      .from('vendors')
-      .update({ approved: true, rejected: false })
-      .eq('id', vendorId)
+  const handleCreate = async () => {
+    if (!createForm.login_id || !createForm.password || !createForm.company_name) return
+    setCreating(true)
+    const { error } = await // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase.rpc as any)('admin_create_vendor', {
+      p_login_id: createForm.login_id,
+      p_password: createForm.password,
+      p_company_name: createForm.company_name,
+      p_category: createForm.category,
+    })
+    if (error) { alert('생성 실패: ' + error.message); setCreating(false); return }
+    setCreateForm({ login_id: '', password: '', company_name: '', category: 'tile' })
+    setShowCreate(false)
+    setCreating(false)
     fetchVendors()
   }
 
-  const handleReject = async (vendorId: string) => {
-    await supabase
-      .from('vendors')
-      .update({ approved: false, rejected: true })
-      .eq('id', vendorId)
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    await // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase.rpc as any)('admin_delete_vendor', { p_vendor_id: deleteTarget.id })
+    setDeleteTarget(null)
     fetchVendors()
   }
 
-  if (loading) {
-    return <div className="text-center py-12 text-muted-foreground">로딩 중...</div>
+  const handleResetPw = async () => {
+    if (!resetPwVendorId || !newPassword) return
+    await // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase.rpc as any)('admin_reset_vendor_password', { p_vendor_id: resetPwVendorId, p_new_password: newPassword })
+    setResetPwVendorId(null)
+    setNewPassword('')
+    alert('비밀번호가 변경되었습니다.')
+  }
+
+  const handleUpdateField = async (vendorId: string, field: string, value: string) => {
+    await supabase.from('vendors').update({ [field]: value || null }).eq('id', vendorId)
+    fetchVendors()
+  }
+
+  if (loading) return <div className="text-[11px] text-[#999] py-8 text-center">로딩 중...</div>
+
+  // Group by category
+  const grouped: Record<string, Vendor[]> = {}
+  for (const v of vendors) {
+    const cat = v.category || 'uncategorized'
+    if (!grouped[cat]) grouped[cat] = []
+    grouped[cat].push(v)
+  }
+
+  return (
+    <div className="max-w-[700px]">
+      <div className="flex items-center justify-between mb-5">
+        <h1 className="text-[16px] font-bold">벤더 관리</h1>
+        <button onClick={() => setShowCreate(!showCreate)}
+          className="h-[30px] px-4 bg-[#1a1a1a] text-white text-[10px] font-semibold rounded-[4px] cursor-pointer flex items-center gap-1.5">
+          <Plus className="w-3 h-3" /> 벤더 추가
+        </button>
+      </div>
+
+      {/* Create form */}
+      {showCreate && (
+        <div className="bg-white border border-[rgba(0,0,0,0.06)] rounded-[6px] p-4 mb-5">
+          <h3 className="text-[12px] font-bold mb-3">새 벤더 생성</h3>
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <div>
+              <label className="text-[9px] text-[#999] font-semibold mb-1 block">카테고리</label>
+              <select value={createForm.category} onChange={e => setCreateForm(p => ({ ...p, category: e.target.value }))}
+                className="w-full h-[32px] text-[11px] px-2 bg-white border border-[rgba(0,0,0,0.08)] rounded-[4px] outline-none">
+                {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-[9px] text-[#999] font-semibold mb-1 block">업체명</label>
+              <input value={createForm.company_name} onChange={e => setCreateForm(p => ({ ...p, company_name: e.target.value }))}
+                placeholder="(주)마벨로"
+                className="w-full h-[32px] text-[11px] px-3 bg-white border border-[rgba(0,0,0,0.08)] rounded-[4px] outline-none" />
+            </div>
+            <div>
+              <label className="text-[9px] text-[#999] font-semibold mb-1 block">로그인 ID (이메일 형식)</label>
+              <input value={createForm.login_id} onChange={e => setCreateForm(p => ({ ...p, login_id: e.target.value }))}
+                placeholder="vendor@company.com"
+                className="w-full h-[32px] text-[11px] px-3 bg-white border border-[rgba(0,0,0,0.08)] rounded-[4px] outline-none" />
+            </div>
+            <div>
+              <label className="text-[9px] text-[#999] font-semibold mb-1 block">비밀번호</label>
+              <input value={createForm.password} onChange={e => setCreateForm(p => ({ ...p, password: e.target.value }))}
+                placeholder="6자 이상"
+                className="w-full h-[32px] text-[11px] px-3 bg-white border border-[rgba(0,0,0,0.08)] rounded-[4px] outline-none" />
+            </div>
+          </div>
+          <div className="flex gap-2 justify-end">
+            <button onClick={() => setShowCreate(false)} className="h-[30px] px-3 text-[10px] text-[#999] cursor-pointer">취소</button>
+            <button onClick={handleCreate} disabled={creating || !createForm.login_id || !createForm.password || !createForm.company_name}
+              className="h-[30px] px-4 bg-[#1a1a1a] text-white text-[10px] font-semibold rounded-[4px] cursor-pointer disabled:opacity-30">
+              {creating ? '생성 중...' : '생성'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Vendor list grouped by category */}
+      {Object.entries(grouped).map(([catId, catVendors]) => {
+        const catLabel = CATEGORIES.find(c => c.id === catId)?.label || catId
+        return (
+          <div key={catId} className="mb-4">
+            <p className="text-[9px] font-semibold text-[#999] uppercase tracking-[0.5px] mb-2">{catLabel}</p>
+            <div className="bg-white border border-[rgba(0,0,0,0.06)] rounded-[6px] overflow-hidden">
+              {catVendors.map(vendor => {
+                const isExpanded = expandedId === vendor.id
+                return (
+                  <div key={vendor.id} className="border-b border-[rgba(0,0,0,0.04)] last:border-0">
+                    {/* Header row */}
+                    <button onClick={() => setExpandedId(isExpanded ? null : vendor.id)}
+                      className="w-full flex items-center justify-between px-4 py-3 text-left cursor-pointer hover:bg-[rgba(0,0,0,0.01)]">
+                      <div className="flex items-center gap-2">
+                        {isExpanded ? <ChevronDown className="w-3 h-3 text-[#aaa]" /> : <ChevronRight className="w-3 h-3 text-[#aaa]" />}
+                        <span className="text-[12px] font-semibold">{vendor.company_name}</span>
+                        <span className="text-[9px] text-[#aaa]">{vendor.login_id}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button onClick={(e) => { e.stopPropagation(); setResetPwVendorId(vendor.id); setNewPassword('') }}
+                          className="text-[#bbb] hover:text-[#333] cursor-pointer" title="비밀번호 변경">
+                          <KeyRound className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); setDeleteTarget(vendor) }}
+                          className="text-[#bbb] hover:text-[#e53e3e] cursor-pointer" title="삭제">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </button>
+
+                    {/* Expanded detail */}
+                    {isExpanded && (
+                      <div className="px-4 pb-4 pt-1">
+                        <div className="grid grid-cols-2 gap-3">
+                          <EditField label="담당자" value={vendor.contact_name} onSave={v => handleUpdateField(vendor.id, 'contact_name', v)} />
+                          <EditField label="연락처" value={vendor.contact_phone} onSave={v => handleUpdateField(vendor.id, 'contact_phone', v)} />
+                          <EditField label="주소" value={vendor.address || ''} onSave={v => handleUpdateField(vendor.id, 'address', v)} />
+                          <EditField label="홈페이지" value={vendor.website_url || ''} onSave={v => handleUpdateField(vendor.id, 'website_url', v)} />
+                          <EditField label="인스타그램" value={vendor.instagram || ''} onSave={v => handleUpdateField(vendor.id, 'instagram', v)} />
+                        </div>
+                        <div className="mt-3">
+                          <EditField label="소개글" value={vendor.description || ''} onSave={v => handleUpdateField(vendor.id, 'description', v)} multiline />
+                        </div>
+                        <p className="text-[9px] text-[#aaa] mt-3">등록일: {new Date(vendor.created_at).toLocaleDateString('ko-KR')}</p>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })}
+
+      {vendors.length === 0 && !showCreate && (
+        <p className="text-[11px] text-[#aaa] text-center py-12">등록된 벤더가 없습니다.</p>
+      )}
+
+      {/* Reset password popup */}
+      {resetPwVendorId && (
+        <>
+          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setResetPwVendorId(null)} />
+          <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] bg-white border border-[rgba(0,0,0,0.08)] rounded-[8px] p-5 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+            <h3 className="text-[13px] font-bold mb-3">비밀번호 변경</h3>
+            <input type="text" value={newPassword} onChange={e => setNewPassword(e.target.value)}
+              placeholder="새 비밀번호 (6자 이상)"
+              className="w-full h-[32px] text-[11px] px-3 border border-[rgba(0,0,0,0.08)] rounded-[4px] outline-none mb-3" />
+            <div className="flex gap-2">
+              <button onClick={() => setResetPwVendorId(null)}
+                className="flex-1 h-[32px] text-[11px] font-semibold border border-[rgba(0,0,0,0.08)] rounded-[4px] cursor-pointer hover:bg-[#f5f5f5]">취소</button>
+              <button onClick={handleResetPw} disabled={newPassword.length < 6}
+                className="flex-1 h-[32px] text-[11px] font-semibold bg-[#1a1a1a] text-white rounded-[4px] cursor-pointer disabled:opacity-30">변경</button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Delete popup */}
+      {deleteTarget && (
+        <>
+          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setDeleteTarget(null)} />
+          <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] bg-white border border-[rgba(0,0,0,0.08)] rounded-[8px] p-5 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+            <h3 className="text-[13px] font-bold mb-2">벤더 삭제</h3>
+            <p className="text-[11px] text-[#888] mb-4"><span className="font-semibold text-[#333]">{deleteTarget.company_name}</span>을(를) 삭제합니다. 모든 제품과 이미지도 삭제됩니다.</p>
+            <div className="flex gap-2">
+              <button onClick={() => setDeleteTarget(null)}
+                className="flex-1 h-[32px] text-[11px] font-semibold border border-[rgba(0,0,0,0.08)] rounded-[4px] cursor-pointer hover:bg-[#f5f5f5]">취소</button>
+              <button onClick={handleDelete}
+                className="flex-1 h-[32px] text-[11px] font-semibold border border-[rgba(0,0,0,0.08)] rounded-[4px] cursor-pointer hover:bg-[#f5f5f5]">삭제</button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function EditField({ label, value, onSave, multiline }: { label: string; value: string; onSave: (v: string) => void; multiline?: boolean }) {
+  const [editing, setEditing] = useState(false)
+  const [val, setVal] = useState(value)
+
+  useEffect(() => { setVal(value) }, [value])
+
+  const save = () => {
+    if (val !== value) onSave(val)
+    setEditing(false)
   }
 
   return (
     <div>
-      <h1 className="text-xl font-semibold mb-6">벤더 관리</h1>
-
-      {vendors.length === 0 ? (
-        <p className="text-center py-12 text-muted-foreground">등록된 벤더가 없습니다.</p>
+      <label className="text-[9px] text-[#999] font-semibold mb-1 block">{label}</label>
+      {editing ? (
+        multiline ? (
+          <textarea value={val} onChange={e => setVal(e.target.value)} onBlur={save} autoFocus rows={2}
+            className="w-full text-[11px] px-2 py-1.5 border border-[rgba(0,0,0,0.1)] rounded-[3px] outline-none resize-none focus:border-[#1a1a1a]" />
+        ) : (
+          <input value={val} onChange={e => setVal(e.target.value)} onBlur={save} onKeyDown={e => e.key === 'Enter' && save()} autoFocus
+            className="w-full h-[28px] text-[11px] px-2 border border-[rgba(0,0,0,0.1)] rounded-[3px] outline-none focus:border-[#1a1a1a]" />
+        )
       ) : (
-        <div className="border rounded-lg overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-secondary">
-              <tr>
-                <th className="text-left px-4 py-3 font-medium">업체명</th>
-                <th className="text-left px-4 py-3 font-medium">담당자</th>
-                <th className="text-left px-4 py-3 font-medium">연락처</th>
-                <th className="text-left px-4 py-3 font-medium">상태</th>
-                <th className="text-left px-4 py-3 font-medium">등록일</th>
-                <th className="text-right px-4 py-3 font-medium">작업</th>
-              </tr>
-            </thead>
-            <tbody>
-              {vendors.map(vendor => (
-                <tr key={vendor.id} className="border-t hover:bg-secondary/30">
-                  <td className="px-4 py-3 font-medium">{vendor.company_name}</td>
-                  <td className="px-4 py-3">{vendor.contact_name}</td>
-                  <td className="px-4 py-3">{vendor.contact_phone}</td>
-                  <td className="px-4 py-3">
-                    {vendor.approved ? (
-                      <Badge variant="success">승인</Badge>
-                    ) : vendor.rejected ? (
-                      <Badge variant="destructive">거절</Badge>
-                    ) : (
-                      <Badge variant="warning">대기</Badge>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {new Date(vendor.created_at).toLocaleDateString('ko-KR')}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      {vendor.approved && (
-                        <Link to={`/admin/folders/${vendor.id}`}>
-                          <Button size="sm" variant="outline" title="폴더 관리">
-                            <FolderTree className="w-3 h-3 mr-1" />
-                            폴더 관리
-                          </Button>
-                        </Link>
-                      )}
-                      {!vendor.approved && (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleApprove(vendor.id)}
-                            title="승인"
-                          >
-                            <Check className="w-3 h-3 mr-1" />
-                            승인
-                          </Button>
-                          {!vendor.rejected && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleReject(vendor.id)}
-                              title="거절"
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <X className="w-3 h-3 mr-1" />
-                              거절
-                            </Button>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div onClick={() => setEditing(true)}
+          className="min-h-[28px] flex items-center text-[11px] px-2 bg-[#fafafa] rounded-[3px] cursor-text hover:bg-[#f0f0f0]">
+          {val || <span className="text-[#ccc]">-</span>}
         </div>
       )}
     </div>
