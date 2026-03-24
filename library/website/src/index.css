@@ -78,18 +78,12 @@ body {
   height: 100vh;
 }
 
-/* Vendor card — Subtle Glass */
-.vendor-card {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+/* Vendor card — blurred texture */
+.vendor-card + .vendor-card {
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
 }
-.vendor-card:hover {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-}
-.dark .vendor-card {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.04);
-}
-.dark .vendor-card:hover {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+.dark .vendor-card + .vendor-card {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 /* Scrollbar */

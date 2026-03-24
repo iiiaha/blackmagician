@@ -364,12 +364,15 @@ export default function LibraryHome() {
             </>
           ) : (
             /* Vendor list — centered button cards */
-            <div className="flex flex-col items-center gap-[3px] px-2 pt-1">
+            <div className="flex flex-col w-full">
               {filteredVendors.map((v, i) => (
                 <button key={v.id} onClick={() => handleToggleVendor(v)}
-                  className="vendor-card w-full h-[34px] text-[11px] font-medium tracking-[0.3px] text-center cursor-pointer rounded-[6px] border border-black/[0.06] dark:border-white/[0.08] bg-white/40 dark:bg-white/[0.04] backdrop-blur-[6px] text-text-secondary hover:text-foreground hover:bg-white/70 dark:hover:bg-white/[0.08] transition-all duration-200"
+                  className="vendor-card relative w-full h-[38px] text-[11px] font-semibold tracking-[0.5px] text-center cursor-pointer overflow-hidden transition-all duration-200 group"
                   style={{ animation: `fadeInUp 0.2s ease-out ${i * 0.04}s both` }}>
-                  {v.company_name}
+                  {v.logo_url && (
+                    <img src={v.logo_url} alt="" className="absolute inset-0 w-full h-full object-cover grayscale blur-[20px] scale-110 opacity-40 dark:opacity-25 group-hover:opacity-60 dark:group-hover:opacity-40 group-hover:grayscale-[50%] transition-all duration-300" />
+                  )}
+                  <span className="relative text-text-secondary group-hover:text-foreground transition-colors duration-200">{v.company_name}</span>
                 </button>
               ))}
               {filteredVendors.length === 0 && (
