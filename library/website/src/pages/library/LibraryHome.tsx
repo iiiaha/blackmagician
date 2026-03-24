@@ -373,10 +373,10 @@ export default function LibraryHome() {
                     <>
                       <img src={v.logo_url} alt="" className="absolute inset-0 w-full h-full object-cover blur-[2px] scale-[1.05]" />
                       <div className="absolute inset-0 vendor-overlay transition-colors duration-200" />
-                      <span className="relative vendor-text font-medium">{v.company_name}</span>
+                      <span className="relative vendor-text font-medium" style={{ fontFamily: "'Noto Serif KR', serif" }}>{v.company_name}</span>
                     </>
                   ) : (
-                    <span className="text-text-secondary border border-border rounded-[5px] w-full h-full flex items-center justify-center bg-muted hover:bg-accent">
+                    <span className="text-text-secondary border border-border rounded-[5px] w-full h-full flex items-center justify-center bg-muted hover:bg-accent" style={{ fontFamily: "'Noto Serif KR', serif" }}>
                       {v.company_name}
                     </span>
                   )}
