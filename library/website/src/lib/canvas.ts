@@ -120,24 +120,25 @@ export function drawCanvas(
   sizeStr: string,
   edit: EditState,
   mainImage: HTMLImageElement,
+  forExport = false,
 ) {
   const ctx = canvas.getContext('2d')!
   const grid = getMixGrid(edit.mixMode)
 
   if (grid && edit.mixSelections.length >= getMixTileCount(edit.mixMode, sizeStr)) {
     if (edit.mixMode === 'grid') {
-      drawMixGrid(canvas, ctx, sizeStr, edit)
+      drawMixGrid(canvas, ctx, sizeStr, edit, forExport)
     } else {
-      drawMixStagger(canvas, ctx, sizeStr, edit)
+      drawMixStagger(canvas, ctx, sizeStr, edit, forExport)
     }
   } else {
-    drawSingle(canvas, ctx, sizeStr, edit, mainImage)
+    drawSingle(canvas, ctx, sizeStr, edit, mainImage, forExport)
   }
 }
 
 function drawSingle(
   canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D,
-  sizeStr: string, edit: EditState, img: HTMLImageElement
+  sizeStr: string, edit: EditState, img: HTMLImageElement, forExport: boolean
 ) {
   const base = parseSizeMM(sizeStr)
   if (!base) return
@@ -149,7 +150,7 @@ function drawSingle(
   const ppm = calcPxPerMM(totalW_mm, totalH_mm)
   const tileW_px = Math.round(tileW * ppm)
   const tileH_px = Math.round(tileH * ppm)
-  const gPx = gMM > 0 ? Math.max(Math.round(gMM * ppm), calcMinGroutPx(canvas)) : 0
+  const gPx = gMM > 0 ? (forExport ? Math.round(gMM * ppm) : Math.max(Math.round(gMM * ppm), calcMinGroutPx(canvas))) : 0
   const totalW = tileW_px + gPx
   const totalH = tileH_px + gPx
 
@@ -174,7 +175,7 @@ function drawSingle(
 
 function drawMixGrid(
   canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D,
-  sizeStr: string, edit: EditState
+  sizeStr: string, edit: EditState, forExport: boolean
 ) {
   const base = parseSizeMM(sizeStr)
   if (!base) return
@@ -190,7 +191,7 @@ function drawMixGrid(
   const ppm = calcPxPerMM(totalW_mm, totalH_mm)
   const tileW_px = Math.round(tileW * ppm)
   const tileH_px = Math.round(tileH * ppm)
-  const gPx = gMM > 0 ? Math.max(Math.round(gMM * ppm), calcMinGroutPx(canvas)) : 0
+  const gPx = gMM > 0 ? (forExport ? Math.round(gMM * ppm) : Math.max(Math.round(gMM * ppm), calcMinGroutPx(canvas))) : 0
   const cellW_px = tileW_px + gPx
   const cellH_px = tileH_px + gPx
   const totalW = cellW_px * cols
@@ -224,7 +225,7 @@ function drawMixGrid(
 
 function drawMixStagger(
   canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D,
-  sizeStr: string, edit: EditState
+  sizeStr: string, edit: EditState, forExport: boolean
 ) {
   const base = parseSizeMM(sizeStr)
   if (!base) return
@@ -242,7 +243,7 @@ function drawMixStagger(
   const ppm = calcPxPerMM(totalW_mm, totalH_mm)
   const tileW_px = Math.round(tileW * ppm)
   const tileH_px = Math.round(tileH * ppm)
-  const gPx = gMM > 0 ? Math.max(Math.round(gMM * ppm), calcMinGroutPx(canvas)) : 0
+  const gPx = gMM > 0 ? (forExport ? Math.round(gMM * ppm) : Math.max(Math.round(gMM * ppm), calcMinGroutPx(canvas))) : 0
   const cellW_px = tileW_px + gPx
   const cellH_px = tileH_px + gPx
   const totalW = cellW_px * cols

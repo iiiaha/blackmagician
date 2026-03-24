@@ -98,9 +98,13 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
   }
 
   const handleInsert = () => {
-    if (!canvasRef.current || !onInsertRequest) return
+    if (!canvasRef.current || !onInsertRequest || !mainImg) return
     setInserting(true)
+    // Re-draw at actual grout size for export
+    drawCanvas(canvasRef.current, sizeStr, edit, mainImg, true)
     const dataUrl = canvasRef.current.toDataURL('image/png')
+    // Re-draw preview version
+    drawCanvas(canvasRef.current, sizeStr, edit, mainImg, false)
     const finalMM = calcFinalSizeMM(sizeStr, edit)
     const finalSizeStr = finalMM ? `${Math.round(finalMM.w)}x${Math.round(finalMM.h)}` : sizeStr
     onInsertRequest(dataUrl, vendorName, tileName, finalSizeStr)
