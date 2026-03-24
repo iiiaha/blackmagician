@@ -372,8 +372,8 @@ export default function LibraryHome() {
                   {v.logo_url ? (
                     <>
                       <img src={v.logo_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-white/50 group-hover:bg-white/35 dark:bg-black/50 dark:group-hover:bg-black/35 transition-colors duration-200" />
-                      <span className="relative text-[#1a1a1a] dark:text-white font-medium drop-shadow-[0_0_4px_rgba(255,255,255,0.5)] dark:drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)]">{v.company_name}</span>
+                      <div className="absolute inset-0 vendor-overlay transition-colors duration-200" />
+                      <span className="relative vendor-text font-medium">{v.company_name}</span>
                     </>
                   ) : (
                     <span className="text-text-secondary border border-border rounded-[5px] w-full h-full flex items-center justify-center bg-muted hover:bg-accent">
