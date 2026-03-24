@@ -409,19 +409,28 @@ export default function LibraryHome() {
 
         {/* Filter bar — single row */}
         {selectedVendor && !searchResults && (
-          <div className="px-5 py-1.5 border-b bg-surface shrink-0 flex items-center gap-3">
+          <div className={`px-5 py-1.5 border-b shrink-0 flex items-center gap-3 transition-colors ${
+            hasActiveFilter ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900' : 'bg-surface'
+          }`}>
+            {/* Filter ON indicator */}
+            {hasActiveFilter && (
+              <span className="text-[8px] font-bold text-blue-500 bg-blue-100 dark:bg-blue-900/50 px-1.5 py-0.5 rounded-[3px] whitespace-nowrap">
+                FILTER ON
+              </span>
+            )}
+
             {/* 단가 */}
             <span className="text-[9px] text-text-tertiary whitespace-nowrap">단가</span>
             <input
-              type="number" placeholder="최소" value={filterMinPrice}
-              onChange={e => setFilterMinPrice(e.target.value)}
-              className="w-[60px] h-[20px] text-[10px] px-1.5 bg-muted border border-border rounded-[3px] outline-none focus:border-foreground"
+              placeholder="최소" value={filterMinPrice}
+              onChange={e => { const v = e.target.value; if (v === '' || /^\d*$/.test(v)) setFilterMinPrice(v) }}
+              className="w-[60px] h-[20px] text-[10px] px-1.5 bg-muted border border-border rounded-[3px] outline-none focus:border-foreground [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
             <span className="text-[8px] text-text-tertiary">~</span>
             <input
-              type="number" placeholder="최대" value={filterMaxPrice}
-              onChange={e => setFilterMaxPrice(e.target.value)}
-              className="w-[60px] h-[20px] text-[10px] px-1.5 bg-muted border border-border rounded-[3px] outline-none focus:border-foreground"
+              placeholder="최대" value={filterMaxPrice}
+              onChange={e => { const v = e.target.value; if (v === '' || /^\d*$/.test(v)) setFilterMaxPrice(v) }}
+              className="w-[60px] h-[20px] text-[10px] px-1.5 bg-muted border border-border rounded-[3px] outline-none focus:border-foreground [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
 
             <div className="w-px h-3 bg-border" />
@@ -429,9 +438,9 @@ export default function LibraryHome() {
             {/* 재고 */}
             <span className="text-[9px] text-text-tertiary whitespace-nowrap">재고</span>
             <input
-              type="number" placeholder="min" value={filterMinStock}
-              onChange={e => setFilterMinStock(e.target.value)}
-              className="w-[50px] h-[20px] text-[10px] px-1.5 bg-muted border border-border rounded-[3px] outline-none focus:border-foreground"
+              placeholder="min" value={filterMinStock}
+              onChange={e => { const v = e.target.value; if (v === '' || /^\d*$/.test(v)) setFilterMinStock(v) }}
+              className="w-[50px] h-[20px] text-[10px] px-1.5 bg-muted border border-border rounded-[3px] outline-none focus:border-foreground [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
             <span className="text-[8px] text-text-tertiary">이상</span>
 
@@ -444,21 +453,16 @@ export default function LibraryHome() {
               onChange={setFilterOrigins}
             />
 
-            {/* 토글 ON/OFF */}
-            <button
-              onClick={() => { if (hasActiveFilter) clearFilters() }}
-              className={`ml-auto flex items-center gap-1 cursor-pointer transition-colors ${
-                hasActiveFilter ? 'text-foreground' : 'text-text-tertiary'
-              }`}
-              title={hasActiveFilter ? '필터 초기화' : ''}
-            >
-              {hasActiveFilter && (
-                <>
-                  <span className="text-[9px]">{displayProducts.length}개</span>
-                  <X className="w-3 h-3 hover:text-foreground" />
-                </>
-              )}
-            </button>
+            {/* 초기화 + 결과 수 */}
+            {hasActiveFilter && (
+              <div className="ml-auto flex items-center gap-2">
+                <span className="text-[9px] text-text-tertiary">{displayProducts.length}개</span>
+                <button onClick={clearFilters}
+                  className="text-[9px] text-text-tertiary hover:text-foreground cursor-pointer flex items-center gap-0.5 px-1.5 py-0.5 rounded-[3px] border border-border hover:bg-muted">
+                  <X className="w-2.5 h-2.5" /> 초기화
+                </button>
+              </div>
+            )}
           </div>
         )}
 
