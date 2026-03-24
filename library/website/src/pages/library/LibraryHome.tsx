@@ -500,6 +500,7 @@ function LoginPopup({ onClose }: { onClose: () => void }) {
 }
 
 function VendorBanner({ vendor }: { vendor: Vendor }) {
+  const [showContactPopup, setShowContactPopup] = useState(false)
   const desc = vendor.description || `${vendor.company_name}은(는) 고품질 마감재를 공급하는 전문 업체입니다.`
   const website = vendor.website_url || 'https://example.com'
   const address = vendor.address || '서울특별시 강남구'
@@ -525,10 +526,10 @@ function VendorBanner({ vendor }: { vendor: Vendor }) {
             <p className="text-[9px] text-white/40 mt-1.5">{address}</p>
           )}
         </div>
-        <div className="shrink-0 flex items-center gap-2">
+        <div className="shrink-0 flex flex-col gap-1.5">
           {website && (
             <a href={website} target="_blank" rel="noopener noreferrer"
-              className="h-[26px] px-3 flex items-center gap-1.5 bg-white/10 hover:bg-white/20 rounded-[4px] text-[9px] text-white/80 hover:text-white transition-colors cursor-pointer">
+              className="h-[24px] px-3 flex items-center gap-1.5 bg-white/10 hover:bg-white/20 rounded-[4px] text-[9px] text-white/70 hover:text-white transition-colors cursor-pointer">
               <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
               </svg>
@@ -537,15 +538,53 @@ function VendorBanner({ vendor }: { vendor: Vendor }) {
           )}
           {insta && (
             <a href={`https://instagram.com/${insta.replace('@', '')}`} target="_blank" rel="noopener noreferrer"
-              className="h-[26px] px-3 flex items-center gap-1.5 bg-white/10 hover:bg-white/20 rounded-[4px] text-[9px] text-white/80 hover:text-white transition-colors cursor-pointer">
+              className="h-[24px] px-3 flex items-center gap-1.5 bg-white/10 hover:bg-white/20 rounded-[4px] text-[9px] text-white/70 hover:text-white transition-colors cursor-pointer">
               <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="5"/><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"/>
               </svg>
               Instagram
             </a>
           )}
+          <button
+            onClick={() => setShowContactPopup(true)}
+            className="h-[24px] px-3 flex items-center gap-1.5 bg-white/10 hover:bg-white/20 rounded-[4px] text-[9px] text-white/70 hover:text-white transition-colors cursor-pointer">
+            <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            Contact
+          </button>
         </div>
       </div>
+
+      {/* Contact popup */}
+      {showContactPopup && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setShowContactPopup(false)} />
+          <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[240px] bg-surface border border-border rounded-[8px] p-5 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+            <h3 className="text-[12px] font-bold mb-3">{vendor.company_name}</h3>
+            <div className="space-y-2 text-[11px]">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">담당자</span>
+                <span className="font-medium">{vendor.contact_name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">연락처</span>
+                <span className="font-medium">{vendor.contact_phone}</span>
+              </div>
+              {vendor.address && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">주소</span>
+                  <span className="font-medium text-right max-w-[140px]">{vendor.address}</span>
+                </div>
+              )}
+            </div>
+            <button onClick={() => setShowContactPopup(false)}
+              className="w-full h-[28px] mt-4 border border-border rounded-[4px] text-[10px] font-semibold cursor-pointer hover:bg-muted">
+              닫기
+            </button>
+          </div>
+        </>
+      )}
     </div>
   )
 }
