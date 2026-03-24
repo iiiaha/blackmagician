@@ -88,15 +88,22 @@ export default function LibraryLayout() {
           </button>
 
           {user ? (
-            <div className="relative" ref={userMenuRef}>
+            <>
+              {/* Plan badge */}
+              <span className={`text-[8px] font-bold px-1.5 py-[2px] rounded-[3px] leading-none ${
+                isPro
+                  ? 'bg-foreground text-primary-foreground'
+                  : 'bg-muted text-text-tertiary'
+              }`}>
+                {isPro ? 'PRO' : 'FREE'}
+              </span>
+
+              <div className="relative" ref={userMenuRef}>
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
                 className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground cursor-pointer"
               >
                 <span>{userProfile?.display_name || user.email}</span>
-                {isPro && (
-                  <span className="text-[7px] font-bold bg-foreground text-primary-foreground px-1 py-[1px] rounded-[3px] leading-none">PRO</span>
-                )}
                 <ChevronDown className="w-3 h-3" />
               </button>
 
@@ -128,6 +135,7 @@ export default function LibraryLayout() {
                 </div>
               )}
             </div>
+            </>
           ) : (
             <button onClick={() => setShowLoginPopup(true)}
               className="h-6 flex items-center gap-1 text-[10px] font-semibold text-muted-foreground hover:text-foreground cursor-pointer px-2">
