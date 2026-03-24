@@ -188,11 +188,11 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
         <tbody>
           <tr className="border-b border-border">
             <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted w-[40px]">크기</td>
-            <td className="px-2 py-[3px]">{product?.size || '-'}</td>
+            <td className="px-2 py-[3px]">{product?.size ? `${product.size} mm` : '-'}</td>
           </tr>
           <tr className="border-b border-border">
             <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted">단가</td>
-            <td className="px-2 py-[3px]">{product?.unit_price != null ? `${Number(product.unit_price).toLocaleString()}원` : '-'}</td>
+            <td className="px-2 py-[3px]">{product?.unit_price != null ? `${Number(product.unit_price).toLocaleString()}원/㎡` : '-'}</td>
           </tr>
           <tr className="border-b border-border">
             <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted">원산지</td>
