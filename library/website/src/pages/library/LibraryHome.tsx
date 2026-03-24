@@ -446,7 +446,7 @@ export default function LibraryHome() {
 
             {/* 토글 ON/OFF */}
             <button
-              onClick={() => { if (hasActiveFilter) clearFilters(); else setShowFilters(prev => !prev) }}
+              onClick={() => { if (hasActiveFilter) clearFilters() }}
               className={`ml-auto flex items-center gap-1 cursor-pointer transition-colors ${
                 hasActiveFilter ? 'text-foreground' : 'text-text-tertiary'
               }`}
