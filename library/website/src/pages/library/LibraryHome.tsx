@@ -520,11 +520,8 @@ function VendorBanner({ vendor }: { vendor: Vendor }) {
       )}
       <div className="relative flex items-center justify-between px-6 py-6">
         <div className="flex-1 min-w-0">
-          <h2 className="text-[15px] font-bold tracking-[0.3px] mb-1">{vendor.company_name}</h2>
-          <p className="text-[10px] text-white/60 leading-[1.6] max-w-[360px]">{desc}</p>
-          {address && (
-            <p className="text-[9px] text-white/40 mt-1.5">{address}</p>
-          )}
+          <h2 className="text-[20px] font-bold tracking-[0.3px] mb-2">{vendor.company_name}</h2>
+          <p className="text-[11px] text-white/60 leading-[1.7] max-w-[400px]">{desc}</p>
         </div>
         <div className="shrink-0 flex flex-col gap-1.5">
           {website && (
@@ -561,20 +558,20 @@ function VendorBanner({ vendor }: { vendor: Vendor }) {
         <>
           <div className="fixed inset-0 z-40" onClick={() => setShowContactPopup(false)} />
           <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[240px] bg-surface border border-border rounded-[8px] p-5 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
-            <h3 className="text-[12px] font-bold mb-3">{vendor.company_name}</h3>
+            <h3 className="text-[12px] font-bold mb-3 text-foreground">{vendor.company_name}</h3>
             <div className="space-y-2 text-[11px]">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">담당자</span>
-                <span className="font-medium">{vendor.contact_name}</span>
+                <span className="text-[#999]">담당자</span>
+                <span className="font-medium text-foreground">{vendor.contact_name}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">연락처</span>
-                <span className="font-medium">{vendor.contact_phone}</span>
+                <span className="text-[#999]">연락처</span>
+                <span className="font-medium text-foreground">{vendor.contact_phone}</span>
               </div>
               {vendor.address && (
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">주소</span>
-                  <span className="font-medium text-right max-w-[140px]">{vendor.address}</span>
+                  <span className="text-[#999]">주소</span>
+                  <span className="font-medium text-foreground text-right max-w-[140px]">{vendor.address}</span>
                 </div>
               )}
             </div>
