@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 export default function Privacy() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="h-screen overflow-y-auto bg-background text-foreground">
       <div className="max-w-[640px] mx-auto px-6 py-12">
         <Link to="/" className="text-[10px] text-text-tertiary hover:text-foreground mb-6 inline-block">← 돌아가기</Link>
 
