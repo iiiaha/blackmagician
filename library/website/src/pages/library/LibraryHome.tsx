@@ -413,8 +413,8 @@ export default function LibraryHome() {
             {/* Filter indicator — always visible, lights up when active */}
             <span className={`inline-flex items-center gap-1.5 text-[8px] font-bold px-2 py-[3px] rounded-full whitespace-nowrap transition-all duration-300 ${
               hasActiveFilter
-                ? 'text-emerald-700 bg-emerald-100 dark:text-emerald-300 dark:bg-emerald-900/40'
-                : 'text-text-tertiary/50 bg-muted dark:text-text-tertiary'
+                ? 'text-emerald-800 bg-emerald-100 dark:text-emerald-300 dark:bg-emerald-900/40'
+                : 'text-text-secondary bg-muted'
             }`}>
               <span className={`inline-block w-[6px] h-[6px] rounded-full transition-all duration-300 ${
                 hasActiveFilter
