@@ -367,7 +367,7 @@ export default function LibraryHome() {
             <div className="flex flex-col items-center gap-1.5 px-2 pt-1">
               {filteredVendors.map((v, i) => (
                 <button key={v.id} onClick={() => handleToggleVendor(v)}
-                  className="w-full h-[36px] text-[12px] font-light tracking-normal text-center cursor-pointer rounded-[5px] overflow-hidden relative transition-all duration-200 hover:shadow-[0_2px_8px_rgba(0,0,0,0.12)] group uppercase"
+                  className="w-full h-[36px] text-[12px] font-medium tracking-normal text-center cursor-pointer rounded-[5px] overflow-hidden relative transition-all duration-200 hover:shadow-[0_2px_8px_rgba(0,0,0,0.12)] group uppercase"
                   style={{ animation: `fadeInUp 0.2s ease-out ${i * 0.04}s both` }}>
                   {v.logo_url ? (
                     <>
