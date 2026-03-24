@@ -80,20 +80,20 @@ body {
 
 /* Vendor button overlay */
 .vendor-overlay {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.15);
 }
 .group:hover .vendor-overlay {
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.05);
 }
 .vendor-text {
   color: #ffffff;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
 }
 .dark .vendor-overlay {
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.65);
 }
 .dark .group:hover .vendor-overlay {
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.55);
 }
 .dark .vendor-text {
   color: #ffffff;
