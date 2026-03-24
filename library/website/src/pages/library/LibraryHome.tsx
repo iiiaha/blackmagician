@@ -366,18 +366,19 @@ export default function LibraryHome() {
               </div>
             </>
           ) : (
-            /* Vendor list */
-            <>
-              {filteredVendors.map(v => (
+            /* Vendor list — centered button cards */
+            <div className="flex flex-col items-center gap-1.5 px-2 pt-1">
+              {filteredVendors.map((v, i) => (
                 <button key={v.id} onClick={() => handleToggleVendor(v)}
-                  className="flex items-center w-full text-left px-2.5 py-[7px] text-[11px] font-semibold text-text-secondary hover:text-foreground cursor-pointer rounded-sm">
-                  <span className="truncate">{v.company_name}</span>
+                  className="w-full px-3 py-[8px] text-[10px] font-semibold text-text-secondary hover:text-foreground text-center cursor-pointer rounded-[5px] border border-border hover:border-foreground/20 hover:bg-muted transition-all duration-200"
+                  style={{ animation: `fadeInUp 0.2s ease-out ${i * 0.04}s both` }}>
+                  {v.company_name}
                 </button>
               ))}
               {filteredVendors.length === 0 && (
-                <p className="text-[10px] text-text-tertiary px-2 py-4 text-center">No vendors</p>
+                <p className="text-[10px] text-text-tertiary py-4 text-center">No vendors</p>
               )}
-            </>
+            </div>
           )}
         </div>
 
