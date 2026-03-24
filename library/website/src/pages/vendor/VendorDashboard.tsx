@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { useAuth } from '@/contexts/AuthContext'
+import { Link, useOutletContext } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
+import type { Vendor } from '@/types/database'
 import { Package, Image, FolderOpen, ArrowRight } from 'lucide-react'
 
 export default function VendorDashboard() {
-  const { vendor } = useAuth()
+  const { vendor } = useOutletContext<{ vendor: Vendor }>()
   const [stats, setStats] = useState({ products: 0, images: 0, folders: 0 })
   const [recentProducts, setRecentProducts] = useState<{ id: string; name: string; created_at: string }[]>([])
 

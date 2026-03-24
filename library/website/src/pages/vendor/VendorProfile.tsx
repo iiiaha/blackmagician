@@ -1,10 +1,16 @@
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useOutletContext } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { Save, Check, Upload, X } from 'lucide-react'
+import type { Vendor } from '@/types/database'
 
 export default function VendorProfile() {
-  const { vendor, refreshVendor } = useAuth()
+  const { vendor } = useOutletContext<{ vendor: Vendor }>()
+
+  const refreshVendor = async () => {
+    // Reload page to refresh vendor data from layout
+    window.location.reload()
+  }
   const [form, setForm] = useState({
     contact_name: '',
     contact_phone: '',

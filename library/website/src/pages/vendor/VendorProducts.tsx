@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useOutletContext } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { AgGridReact } from 'ag-grid-react'
 import { AllCommunityModule, ModuleRegistry, type ColDef, type CellValueChangedEvent } from 'ag-grid-community'
@@ -7,7 +7,7 @@ import {
   ChevronRight, ChevronDown, Folder, FolderOpen,
   Plus, Package, ImagePlus, X,
 } from 'lucide-react'
-import type { FolderNode, Product, ProductImage } from '@/types/database'
+import type { Vendor, FolderNode, Product, ProductImage } from '@/types/database'
 
 ModuleRegistry.registerModules([AllCommunityModule])
 
@@ -21,7 +21,7 @@ function buildTree(nodes: FolderNode[], parentId: string | null): TreeNode[] {
 }
 
 export default function VendorProducts() {
-  const { vendor } = useAuth()
+  const { vendor } = useOutletContext<{ vendor: Vendor }>()
   const gridRef = useRef<AgGridReact>(null)
   const [folders, setFolders] = useState<FolderNode[]>([])
   const [tree, setTree] = useState<TreeNode[]>([])

@@ -15,18 +15,19 @@ export default function VendorLogin() {
     setLoading(true)
 
     try {
-      // Append domain suffix for Supabase Auth (requires email format)
-      const email = loginId.includes('@') ? loginId : `${loginId}@vendor.blackmagician`
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error: rpcError } = await (supabase.rpc as any)('verify_vendor_login', {
+        p_login_id: loginId,
+        p_password: password,
       })
 
-      if (authError) {
+      if (rpcError || !data) {
         setError('ID 또는 비밀번호가 올바르지 않습니다.')
         return
       }
 
+      // Store vendor ID in session
+      sessionStorage.setItem('bm-vendor-id', data)
       navigate('/vendor')
     } catch {
       setError('로그인 중 오류가 발생했습니다.')
