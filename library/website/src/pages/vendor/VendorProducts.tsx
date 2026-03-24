@@ -210,9 +210,9 @@ export default function VendorProducts() {
       headerName: '제품명', field: 'name', editable: true, flex: 1, minWidth: 120,
       cellStyle: { fontWeight: 600 },
     },
-    { headerName: '크기', field: 'size', editable: true, width: 100 },
+    { headerName: '크기', field: 'size', editable: true, width: 200 },
     {
-      headerName: '단가', field: 'unit_price', editable: true, width: 100,
+      headerName: '단가', field: 'unit_price', editable: true, width: 200,
       valueFormatter: (p) => p.value ? `${Number(p.value).toLocaleString()}원` : '',
       valueParser: (p) => { const n = Number(String(p.newValue).replace(/[^0-9.-]/g, '')); return isNaN(n) ? null : n },
     },

@@ -96,11 +96,15 @@ export default function VendorProfile() {
                   onChange={async (e) => {
                     const file = e.target.files?.[0]
                     if (!file) return
-                    const storagePath = `banners/${vendor.id}/banner.${file.type === 'image/png' ? 'png' : 'jpg'}`
-                    await supabase.storage.from('product-images').upload(storagePath, file, { contentType: file.type, upsert: true })
-                    const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(storagePath)
-                    await supabase.from('vendors').update({ logo_url: urlData.publicUrl }).eq('id', vendor.id)
-                    await refreshVendor()
+                    try {
+                      const storagePath = `banners/${vendor.id}/banner.${file.type === 'image/png' ? 'png' : 'jpg'}`
+                      const { error: uploadErr } = await supabase.storage.from('product-images').upload(storagePath, file, { contentType: file.type, upsert: true })
+                      if (uploadErr) { console.error('Storage upload error:', uploadErr); alert('이미지 업로드 실패'); return }
+                      const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(storagePath)
+                      const { error: updateErr } = await supabase.from('vendors').update({ logo_url: urlData.publicUrl }).eq('id', vendor.id)
+                      if (updateErr) { console.error('Vendor update error:', updateErr); alert('프로필 업데이트 실패: ' + updateErr.message); return }
+                      await refreshVendor()
+                    } catch (err) { console.error(err); alert('오류가 발생했습니다.') }
                     e.target.value = ''
                   }} />
               </label>
