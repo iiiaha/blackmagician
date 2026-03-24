@@ -54,12 +54,17 @@ async function fetchOrCreateUserProfile(userId: string, email?: string): Promise
       .maybeSingle()
     if (data) return data as UserProfile
 
-    // Auto-create profile if it doesn't exist
+    // Auto-create profile with 3-day Pro trial
+    const trialEnd = new Date()
+    trialEnd.setDate(trialEnd.getDate() + 3)
+
     const { data: newProfile } = await supabase
       .from('user_profiles')
       .insert({
         auth_user_id: userId,
         display_name: email?.split('@')[0] || null,
+        trial_used: true,
+        trial_expires_at: trialEnd.toISOString(),
       })
       .select()
       .single()
