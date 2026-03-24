@@ -92,7 +92,7 @@ export default function LibraryLayout() {
               {/* Plan badge */}
               <span className={`text-[8px] font-bold px-1.5 py-[2px] rounded-[3px] leading-none ${
                 isPro
-                  ? 'bg-foreground text-primary-foreground'
+                  ? 'bg-[#34d399] text-white'
                   : 'bg-muted text-text-tertiary'
               }`}>
                 {isPro ? 'PRO' : 'FREE'}
