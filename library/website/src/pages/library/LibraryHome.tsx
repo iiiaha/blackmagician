@@ -503,7 +503,6 @@ function VendorBanner({ vendor }: { vendor: Vendor }) {
   const [showContactPopup, setShowContactPopup] = useState(false)
   const desc = vendor.description || `${vendor.company_name}은(는) 고품질 마감재를 공급하는 전문 업체입니다.`
   const website = vendor.website_url || 'https://example.com'
-  const address = vendor.address || '서울특별시 강남구'
   const insta = vendor.instagram || 'blackmagician'
 
   return (
