@@ -207,26 +207,26 @@ export default function VendorProducts() {
       headerName: '',
     },
     {
-      headerName: '제품명', field: 'name', editable: true, flex: 1.5, minWidth: 100,
+      headerName: '제품명', field: 'name', editable: true, flex: 1, minWidth: 120,
       cellStyle: { fontWeight: 600 },
     },
+    { headerName: '크기', field: 'size', editable: true, width: 100 },
     {
       headerName: '단가', field: 'unit_price', editable: true, width: 100,
       valueFormatter: (p) => p.value ? `${Number(p.value).toLocaleString()}원` : '',
       valueParser: (p) => { const n = Number(String(p.newValue).replace(/[^0-9.-]/g, '')); return isNaN(n) ? null : n },
     },
+    { headerName: '원산지', field: 'origin', editable: true, width: 100 },
+    { headerName: '브랜드', field: 'brand', editable: true, width: 100 },
     {
-      headerName: '재고', field: 'stock', editable: true, width: 70,
+      headerName: '재고', field: 'stock', editable: true, width: 100,
       valueParser: (p) => { const n = Number(p.newValue); return isNaN(n) ? null : n },
     },
-    { headerName: '원산지', field: 'origin', editable: true, width: 90 },
-    { headerName: '브랜드', field: 'brand', editable: true, width: 90 },
-    { headerName: '크기', field: 'size', editable: true, width: 90 },
     {
-      headerName: '이미지', editable: false, width: 60,
+      headerName: '이미지', editable: false, width: 100,
       valueGetter: (p) => (productImages[p.data.id] || []).length,
       valueFormatter: (p) => p.value > 0 ? `${p.value}장` : '-',
-      sortable: false, filter: false,
+      sortable: false,
     },
     {
       headerName: '', editable: false, width: 52, sortable: false, filter: false, resizable: false,
@@ -238,6 +238,7 @@ export default function VendorProducts() {
 
   const defaultColDef: ColDef = {
     sortable: true,
+    unSortIcon: true,
     filter: false,
     resizable: true,
   }
