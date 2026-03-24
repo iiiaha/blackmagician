@@ -12,6 +12,20 @@ export default function LibraryLayout() {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
+  const navRef = useRef<HTMLElement>(null)
+  const [indicatorStyle, setIndicatorStyle] = useState<{ left: number; width: number }>({ left: 0, width: 0 })
+
+  // Update sliding indicator position
+  useEffect(() => {
+    if (!navRef.current) return
+    const activeBtn = navRef.current.querySelector('[data-active="true"]') as HTMLElement | null
+    if (activeBtn) {
+      setIndicatorStyle({
+        left: activeBtn.offsetLeft,
+        width: activeBtn.offsetWidth,
+      })
+    }
+  }, [activeCategory])
 
   // Close user menu on outside click
   useEffect(() => {
@@ -39,20 +53,26 @@ export default function LibraryLayout() {
             <img src="/logotext.png" alt="Black Magician" className="h-[25px] w-auto" style={dark ? { filter: 'invert(1)' } : undefined} />
           </Link>
 
-          <nav className="flex items-center gap-0.5">
+          <nav ref={navRef} className="relative flex items-center gap-0.5">
             {CATEGORIES.map(cat => (
               <button
                 key={cat.id}
+                data-active={activeCategory === cat.id}
                 onClick={() => setActiveCategory(cat.id)}
-                className={`px-2.5 py-1 text-[10px] tracking-[0.5px] font-semibold cursor-pointer transition-colors ${
+                className={`px-2.5 py-1 text-[10px] tracking-[0.5px] font-semibold cursor-pointer transition-colors duration-200 ${
                   activeCategory === cat.id
-                    ? 'text-foreground underline underline-offset-[3px] decoration-[1.5px]'
+                    ? 'text-foreground'
                     : 'text-muted-foreground hover:text-foreground/70'
                 }`}
               >
                 {cat.label}
               </button>
             ))}
+            {/* Sliding underline indicator */}
+            <span
+              className="absolute bottom-0 h-[1.5px] bg-foreground rounded-full transition-all duration-300 ease-in-out"
+              style={{ left: indicatorStyle.left, width: indicatorStyle.width }}
+            />
           </nav>
         </div>
 
