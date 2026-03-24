@@ -151,7 +151,8 @@ export default function LibraryLayout() {
           <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] bg-surface border border-border rounded-[8px] p-6 text-center shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
             <h3 className="text-[13px] font-bold mb-2">회원탈퇴</h3>
             <p className="text-[10px] text-muted-foreground mb-5 leading-relaxed">
-              정말 탈퇴하시겠습니까?<br />모든 데이터가 삭제됩니다.
+              정말 탈퇴하시겠습니까?<br />
+              탈퇴 후 <strong>30일간 재가입이 불가</strong>합니다.
             </p>
             <div className="flex gap-2">
               <button
@@ -162,11 +163,11 @@ export default function LibraryLayout() {
               </button>
               <button
                 onClick={async () => {
-                  await supabase.rpc('delete_own_account')
+                  await supabase.rpc('soft_delete_account')
                   await supabase.auth.signOut({ scope: 'global' })
                   window.location.href = '/'
                 }}
-                className="flex-1 h-[34px] text-[11px] font-semibold border border-border rounded-[5px] bg-surface hover:bg-muted cursor-pointer transition-colors"
+                className="flex-1 h-[34px] text-[11px] font-semibold border border-border rounded-[5px] bg-destructive/10 text-destructive hover:bg-destructive/20 cursor-pointer transition-colors"
               >
                 탈퇴하기
               </button>

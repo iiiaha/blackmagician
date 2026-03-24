@@ -52,7 +52,27 @@ async function fetchOrCreateUserProfile(userId: string, email?: string): Promise
       .select('*')
       .eq('auth_user_id', userId)
       .maybeSingle()
-    if (data) return data as UserProfile
+    if (data) {
+      const profile = data as UserProfile
+      // Soft-deleted account: check rejoin ban
+      if (profile.deleted_at) {
+        if (profile.rejoin_available_at && new Date(profile.rejoin_available_at) > new Date()) {
+          // Still banned — sign out and return null
+          await supabase.auth.signOut()
+          const daysLeft = Math.ceil((new Date(profile.rejoin_available_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+          alert(`탈퇴 후 재가입 제한 기간입니다.\n${daysLeft}일 후에 다시 가입할 수 있습니다.`)
+          return null
+        }
+        // Ban expired — reactivate account
+        await supabase.from('user_profiles').update({
+          deleted_at: null,
+          rejoin_available_at: null,
+        }).eq('id', profile.id)
+        profile.deleted_at = null
+        profile.rejoin_available_at = null
+      }
+      return profile
+    }
 
     // Auto-create profile with 3-day Pro trial
     const trialEnd = new Date()
