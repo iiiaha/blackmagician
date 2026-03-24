@@ -364,10 +364,10 @@ export default function LibraryHome() {
             </>
           ) : (
             /* Vendor list — centered button cards */
-            <div className="flex flex-col items-center gap-0.5 px-2 pt-1">
+            <div className="flex flex-col items-center gap-[3px] px-2 pt-1">
               {filteredVendors.map((v, i) => (
                 <button key={v.id} onClick={() => handleToggleVendor(v)}
-                  className="w-full h-[32px] text-[11px] font-normal tracking-[0.3px] text-center cursor-pointer rounded-[4px] text-text-secondary hover:text-foreground hover:bg-accent transition-colors duration-150"
+                  className="vendor-card w-full h-[34px] text-[11px] font-medium tracking-[0.3px] text-center cursor-pointer rounded-[6px] border border-border/60 text-text-secondary hover:text-foreground hover:border-foreground/20 hover:bg-accent/60 transition-all duration-200 relative overflow-hidden"
                   style={{ animation: `fadeInUp 0.2s ease-out ${i * 0.04}s both` }}>
                   {v.company_name}
                 </button>
