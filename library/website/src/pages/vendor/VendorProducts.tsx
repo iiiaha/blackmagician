@@ -32,6 +32,7 @@ export default function VendorProducts() {
   const [newProductName, setNewProductName] = useState('')
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null)
   const [uploadingProductId, setUploadingProductId] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null)
 
   const fetchFolders = useCallback(async () => {
     if (!vendor) return
@@ -75,6 +76,10 @@ export default function VendorProducts() {
     await supabase.from('products').insert({ vendor_id: vendor.id, folder_id: selectedFolder.id, name: newProductName.trim() })
     setNewProductName('')
     fetchProducts(selectedFolder.id)
+  }
+
+  const confirmDelete = (product: Product) => {
+    setDeleteTarget(product)
   }
 
   const handleDeleteProduct = async (productId: string) => {
@@ -124,15 +129,15 @@ export default function VendorProducts() {
       sortable: false, filter: false,
     },
     {
-      headerName: '', editable: false, width: 36, sortable: false, filter: false,
+      headerName: '', editable: false, width: 44, sortable: false, filter: false,
       cellRenderer: (p: { data: Product }) => {
         return (
           <button
-            onClick={(e) => { e.stopPropagation(); handleDeleteProduct(p.data.id) }}
-            className="w-full h-full flex items-center justify-center text-[#ccc] hover:text-[#e53e3e] cursor-pointer"
+            onClick={(e) => { e.stopPropagation(); confirmDelete(p.data) }}
+            className="w-full h-full flex items-center justify-center text-[#bbb] hover:text-[#e53e3e] cursor-pointer"
             title="삭제"
           >
-            <X className="w-3 h-3" />
+            <X className="w-4 h-4" />
           </button>
         )
       },
@@ -308,6 +313,33 @@ export default function VendorProducts() {
           </>
         )}
       </div>
+
+      {/* Delete confirmation popup */}
+      {deleteTarget && (
+        <>
+          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setDeleteTarget(null)} />
+          <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] bg-white border border-[rgba(0,0,0,0.08)] rounded-[8px] p-6 text-center shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+            <h3 className="text-[13px] font-bold mb-2">제품 삭제</h3>
+            <p className="text-[11px] text-[#888] mb-1">
+              <span className="font-semibold text-[#333]">{deleteTarget.name}</span>
+            </p>
+            <p className="text-[10px] text-[#aaa] mb-5">이 제품과 모든 이미지가 삭제됩니다.</p>
+            <div className="flex gap-2">
+              <button onClick={() => setDeleteTarget(null)}
+                className="flex-1 h-[34px] text-[11px] font-semibold border border-[rgba(0,0,0,0.08)] rounded-[5px] cursor-pointer hover:bg-[#f5f5f5]">
+                취소
+              </button>
+              <button onClick={async () => {
+                await handleDeleteProduct(deleteTarget.id)
+                setDeleteTarget(null)
+              }}
+                className="flex-1 h-[34px] text-[11px] font-semibold border border-[rgba(0,0,0,0.08)] rounded-[5px] cursor-pointer hover:bg-[#f5f5f5]">
+                삭제하기
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
