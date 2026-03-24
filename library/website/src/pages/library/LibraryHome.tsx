@@ -418,7 +418,7 @@ export default function LibraryHome() {
             }`}>
               <span className={`inline-block w-[6px] h-[6px] rounded-full transition-all duration-300 ${
                 hasActiveFilter
-                  ? 'bg-[#18a0fb] shadow-[0_0_5px_rgba(24,160,251,0.5)]'
+                  ? 'bg-[#34d399] shadow-[0_0_5px_rgba(52,211,153,0.5)]'
                   : 'bg-text-tertiary/30 dark:bg-text-tertiary/50'
               }`} />
               FILTER
@@ -750,7 +750,7 @@ function MaterialItem({ product, onClick, selected, isFavorite, onToggleFavorite
             onClick={e => { e.stopPropagation(); onToggleFavorite() }}
             className={`absolute top-1.5 left-1.5 cursor-pointer transition-all drop-shadow-sm ${
               isFavorite
-                ? 'text-[#FF6B8A] opacity-100'
+                ? 'text-[#34d399] opacity-100'
                 : 'text-white opacity-0 group-hover:opacity-70 hover:!opacity-100'
             }`}
           >
