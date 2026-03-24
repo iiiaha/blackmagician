@@ -104,6 +104,86 @@ export default function VendorProducts() {
     await supabase.from('products').update(update).eq('id', data.id)
   }, [])
 
+  // Editable fields in column order (for paste mapping)
+  const editableFields = ['name', 'unit_price', 'stock', 'origin', 'brand', 'size'] as const
+
+  // Custom clipboard: Ctrl+C copies focused row(s), Ctrl+V pastes into rows
+  useEffect(() => {
+    const handleKeyDown = async (e: KeyboardEvent) => {
+      if (!gridRef.current?.api) return
+      const api = gridRef.current.api
+
+      // Ctrl+C: copy selected rows as tab-separated text
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+        const focusedCell = api.getFocusedCell()
+        if (!focusedCell) return
+        // Check if we're in edit mode — if so, let browser handle it
+        if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return
+
+        e.preventDefault()
+        const selectedRows = api.getSelectedRows()
+        const rows = selectedRows.length > 0 ? selectedRows : (focusedCell ? [api.getDisplayedRowAtIndex(focusedCell.rowIndex)?.data] : [])
+
+        const text = rows.filter(Boolean).map((row: Record<string, unknown>) =>
+          editableFields.map(f => row[f] ?? '').join('\t')
+        ).join('\n')
+
+        await navigator.clipboard.writeText(text)
+      }
+
+      // Ctrl+V: paste tab-separated text starting from focused cell
+      if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+        const focusedCell = api.getFocusedCell()
+        if (!focusedCell) return
+        if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return
+
+        e.preventDefault()
+        const text = await navigator.clipboard.readText()
+        if (!text.trim()) return
+
+        const pasteRows = text.trim().split('\n').map(line => line.split('\t'))
+        const startColId = focusedCell.column.getColId()
+        const startColIndex = editableFields.indexOf(startColId as typeof editableFields[number])
+        if (startColIndex === -1) return
+
+        const startRowIndex = focusedCell.rowIndex
+        const updates: { id: string; data: Record<string, unknown> }[] = []
+
+        for (let r = 0; r < pasteRows.length; r++) {
+          const rowNode = api.getDisplayedRowAtIndex(startRowIndex + r)
+          if (!rowNode?.data) continue
+
+          const rowUpdate: Record<string, unknown> = {}
+          for (let c = 0; c < pasteRows[r].length; c++) {
+            const fieldIndex = startColIndex + c
+            if (fieldIndex >= editableFields.length) break
+            const field = editableFields[fieldIndex]
+            let value: unknown = pasteRows[r][c]
+
+            if (field === 'unit_price' || field === 'stock') {
+              const n = Number(String(value).replace(/[^0-9.-]/g, ''))
+              value = isNaN(n) ? null : n
+            }
+            if (value === '') value = null
+
+            rowUpdate[field] = value
+            rowNode.setDataValue(field, value)
+          }
+
+          updates.push({ id: rowNode.data.id, data: rowUpdate })
+        }
+
+        // Save all to DB
+        await Promise.all(updates.map(u =>
+          supabase.from('products').update(u.data).eq('id', u.id)
+        ))
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [products])
+
   // AG Grid column definitions
   const columnDefs: ColDef[] = [
     {
