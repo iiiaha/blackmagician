@@ -107,28 +107,25 @@ export default function VendorProducts() {
   // Editable fields in column order (for paste mapping)
   const editableFields = ['name', 'unit_price', 'stock', 'origin', 'brand', 'size'] as const
 
-  // Custom clipboard: Ctrl+C copies focused row(s), Ctrl+V pastes into rows
+  // Custom clipboard: Ctrl+C copies focused cell value, Ctrl+V pastes into cells
   useEffect(() => {
     const handleKeyDown = async (e: KeyboardEvent) => {
       if (!gridRef.current?.api) return
       const api = gridRef.current.api
 
-      // Ctrl+C: copy selected rows as tab-separated text
+      // Ctrl+C: copy focused cell value
       if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
         const focusedCell = api.getFocusedCell()
         if (!focusedCell) return
-        // Check if we're in edit mode — if so, let browser handle it
         if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') return
 
         e.preventDefault()
-        const selectedRows = api.getSelectedRows()
-        const rows = selectedRows.length > 0 ? selectedRows : (focusedCell ? [api.getDisplayedRowAtIndex(focusedCell.rowIndex)?.data] : [])
+        const rowNode = api.getDisplayedRowAtIndex(focusedCell.rowIndex)
+        if (!rowNode?.data) return
 
-        const text = rows.filter(Boolean).map((row: Record<string, unknown>) =>
-          editableFields.map(f => row[f] ?? '').join('\t')
-        ).join('\n')
-
-        await navigator.clipboard.writeText(text)
+        const colId = focusedCell.column.getColId()
+        const value = rowNode.data[colId]
+        await navigator.clipboard.writeText(value != null ? String(value) : '')
       }
 
       // Ctrl+V: paste tab-separated text starting from focused cell
