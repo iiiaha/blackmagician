@@ -179,13 +179,13 @@ function drawMixGrid(
   const totalW_mm = cellW_mm * cols, totalH_mm = cellH_mm * rows
 
   const ppm = calcPxPerMM(totalW_mm, totalH_mm)
-  const totalW = Math.round(totalW_mm * ppm)
-  const totalH = Math.round(totalH_mm * ppm)
   const tileW_px = Math.round(tileW * ppm)
   const tileH_px = Math.round(tileH * ppm)
-  const cellW_px = Math.round(cellW_mm * ppm)
-  const cellH_px = Math.round(cellH_mm * ppm)
   const gPx = gMM > 0 ? Math.max(Math.round(gMM * ppm), MIN_VISUAL_GROUT_PX) : 0
+  const cellW_px = tileW_px + gPx
+  const cellH_px = tileH_px + gPx
+  const totalW = cellW_px * cols
+  const totalH = cellH_px * rows
 
   const rotated = edit.rotation === 90 || edit.rotation === 270
   canvas.width = rotated ? totalH : totalW
@@ -231,13 +231,13 @@ function drawMixStagger(
   const totalW_mm = cellW_mm * cols, totalH_mm = cellH_mm * rows
 
   const ppm = calcPxPerMM(totalW_mm, totalH_mm)
-  const totalW = Math.round(totalW_mm * ppm)
-  const totalH = Math.round(totalH_mm * ppm)
   const tileW_px = Math.round(tileW * ppm)
   const tileH_px = Math.round(tileH * ppm)
-  const cellW_px = Math.round(cellW_mm * ppm)
-  const cellH_px = Math.round(cellH_mm * ppm)
   const gPx = gMM > 0 ? Math.max(Math.round(gMM * ppm), MIN_VISUAL_GROUT_PX) : 0
+  const cellW_px = tileW_px + gPx
+  const cellH_px = tileH_px + gPx
+  const totalW = cellW_px * cols
+  const totalH = cellH_px * rows
   const offsetFraction = edit.mixMode === 'half' ? 0.5 : 1.0 / 3.0
 
   const rotated = edit.rotation === 90 || edit.rotation === 270
