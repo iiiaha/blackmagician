@@ -513,7 +513,7 @@ export default function LibraryHome() {
               </div>
             ) : (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-4">
-                {(searchResults || displayProducts).map((p, i) => (
+                {(searchResults || displayProducts).map((p) => (
                   <MaterialItem key={p.id} product={p}
                     onClick={() => handleSelectProduct(p, 'vendor_name' in p ? (p as Product & { vendor_name: string }).vendor_name : undefined)}
                     selected={previewProduct?.id === p.id}
