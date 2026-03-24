@@ -411,11 +411,16 @@ export default function LibraryHome() {
         {selectedVendor && !searchResults && (
           <div className="px-5 py-1.5 border-b bg-surface shrink-0 flex items-center gap-3">
             {/* Filter indicator — always visible, lights up when active */}
-            <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded-[3px] whitespace-nowrap transition-colors ${
+            <span className={`inline-flex items-center gap-1.5 text-[8px] font-bold px-2 py-[3px] rounded-full whitespace-nowrap transition-all duration-300 ${
               hasActiveFilter
-                ? 'text-blue-500 bg-blue-100 dark:text-blue-400 dark:bg-blue-900/50'
-                : 'text-text-tertiary opacity-40 bg-muted'
+                ? 'text-emerald-700 bg-emerald-100 dark:text-emerald-300 dark:bg-emerald-900/40'
+                : 'text-text-tertiary/50 bg-muted dark:text-text-tertiary'
             }`}>
+              <span className={`inline-block w-[6px] h-[6px] rounded-full transition-all duration-300 ${
+                hasActiveFilter
+                  ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)] dark:shadow-[0_0_6px_rgba(52,211,153,0.5)]'
+                  : 'bg-text-tertiary/30 dark:bg-text-tertiary/50'
+              }`} />
               FILTER
             </span>
 
