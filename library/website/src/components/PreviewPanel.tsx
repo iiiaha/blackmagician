@@ -192,7 +192,7 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
           </tr>
           <tr className="border-b border-border">
             <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted">단가</td>
-            <td className="px-2 py-[3px]">{product?.unit_price != null ? `${Number(product.unit_price).toLocaleString()}원/㎡` : '-'}</td>
+            <td className="px-2 py-[3px]">{product?.unit_price ? `${Number(product.unit_price).toLocaleString()}원/㎡` : '별도문의'}</td>
           </tr>
           <tr className="border-b border-border">
             <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted">원산지</td>
@@ -204,7 +204,7 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
           </tr>
           <tr>
             <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted">재고</td>
-            <td className="px-2 py-[3px]">{product?.stock != null ? `${product.stock}㎡` : '-'}</td>
+            <td className="px-2 py-[3px]">{product?.stock ? `${product.stock}㎡` : '별도문의'}</td>
           </tr>
         </tbody>
       </table>
