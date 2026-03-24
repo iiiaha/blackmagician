@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Plus, Trash2, ChevronRight, ChevronDown, Folder } from 'lucide-react'
+import { Plus, Trash2, ChevronRight, ChevronDown, Folder, Pencil, ArrowUp, ArrowDown } from 'lucide-react'
 import type { Vendor, FolderNode } from '@/types/database'
 
 interface TreeNode extends FolderNode { children: TreeNode[] }
@@ -20,6 +20,8 @@ export default function AdminFolders() {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   const [addingTo, setAddingTo] = useState<string | null>(null)
   const [newName, setNewName] = useState('')
+  const [renamingId, setRenamingId] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -65,6 +67,31 @@ export default function AdminFolders() {
     if (selectedVendor) fetchFolders(selectedVendor.id)
   }
 
+  const handleRename = async (nodeId: string) => {
+    if (!renameValue.trim()) return
+    await supabase.from('folder_nodes').update({ name: renameValue.trim() }).eq('id', nodeId)
+    setRenamingId(null)
+    setRenameValue('')
+    if (selectedVendor) fetchFolders(selectedVendor.id)
+  }
+
+  const handleMove = async (nodeId: string, direction: 'up' | 'down') => {
+    const node = nodes.find(n => n.id === nodeId)
+    if (!node) return
+    const siblings = nodes.filter(n => n.parent_id === node.parent_id).sort((a, b) => a.sort_order - b.sort_order)
+    const idx = siblings.findIndex(s => s.id === nodeId)
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1
+    if (swapIdx < 0 || swapIdx >= siblings.length) return
+
+    const current = siblings[idx]
+    const swap = siblings[swapIdx]
+    await Promise.all([
+      supabase.from('folder_nodes').update({ sort_order: swap.sort_order }).eq('id', current.id),
+      supabase.from('folder_nodes').update({ sort_order: current.sort_order }).eq('id', swap.id),
+    ])
+    if (selectedVendor) fetchFolders(selectedVendor.id)
+  }
+
   const renderNode = (node: TreeNode, level: number) => {
     const isExpanded = expandedIds.has(node.id)
     return (
@@ -77,14 +104,33 @@ export default function AdminFolders() {
               : <span className="w-3" />}
           </button>
           <Folder className="w-3.5 h-3.5 text-[#bbb] mx-1.5 shrink-0" />
-          <span className="text-[11px] flex-1">{node.name}</span>
-          <div className="hidden group-hover:flex items-center gap-1 mr-2">
+          {renamingId === node.id ? (
+            <input value={renameValue} onChange={e => setRenameValue(e.target.value)} autoFocus
+              onKeyDown={e => { if (e.key === 'Enter') handleRename(node.id); if (e.key === 'Escape') setRenamingId(null) }}
+              onBlur={() => handleRename(node.id)}
+              className="flex-1 h-[22px] text-[11px] px-1.5 border border-[rgba(0,0,0,0.15)] rounded-[2px] outline-none" />
+          ) : (
+            <span className="text-[11px] flex-1">{node.name}</span>
+          )}
+          <div className="hidden group-hover:flex items-center gap-0.5 mr-2">
+            <button onClick={() => handleMove(node.id, 'up')}
+              className="text-[#ccc] hover:text-[#333] cursor-pointer" title="위로">
+              <ArrowUp className="w-3 h-3" />
+            </button>
+            <button onClick={() => handleMove(node.id, 'down')}
+              className="text-[#ccc] hover:text-[#333] cursor-pointer" title="아래로">
+              <ArrowDown className="w-3 h-3" />
+            </button>
+            <button onClick={() => { setRenamingId(node.id); setRenameValue(node.name) }}
+              className="text-[#ccc] hover:text-[#333] cursor-pointer" title="이름 변경">
+              <Pencil className="w-3 h-3" />
+            </button>
             <button onClick={() => { setAddingTo(node.id); setNewName(''); setExpandedIds(prev => new Set(prev).add(node.id)) }}
-              className="text-[#bbb] hover:text-[#333] cursor-pointer" title="하위 폴더 추가">
+              className="text-[#ccc] hover:text-[#333] cursor-pointer" title="하위 폴더 추가">
               <Plus className="w-3 h-3" />
             </button>
             <button onClick={() => handleDelete(node.id)}
-              className="text-[#bbb] hover:text-[#e53e3e] cursor-pointer" title="삭제">
+              className="text-[#ccc] hover:text-[#e53e3e] cursor-pointer" title="삭제">
               <Trash2 className="w-3 h-3" />
             </button>
           </div>

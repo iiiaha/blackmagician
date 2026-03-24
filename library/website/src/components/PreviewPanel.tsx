@@ -60,7 +60,7 @@ interface Props {
   onLoginRequest?: () => void
 }
 
-export default function PreviewPanel({ images, sizeStr, vendorName, tileName, product, vendor, remaining, maxDownloads, loggedIn, onInsertRequest, onLoginRequest }: Props) {
+export default function PreviewPanel({ images, sizeStr, vendorName, tileName, product, remaining, maxDownloads, loggedIn, onInsertRequest, onLoginRequest }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [edit, setEdit] = useState<EditState>({ ...defaultEditState })
   const [mainImg, setMainImg] = useState<HTMLImageElement | null>(null)
