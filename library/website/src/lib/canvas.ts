@@ -43,13 +43,38 @@ function buildFilter(edit: EditState) {
   return `hue-rotate(${edit.hue}deg) saturate(${edit.saturation}%) brightness(${edit.brightness / 100})`
 }
 
-function getMixGrid(mixMode: string) {
-  switch (mixMode) {
-    case 'grid': return { cols: 3, rows: 3 }
-    case 'half': return { cols: 4, rows: 8 }
-    case 'third': return { cols: 4, rows: 9 }
-    default: return null
+const MAX_ASPECT_RATIO = 1.2
+
+function getMixGrid(mixMode: string, sizeStr?: string) {
+  if (mixMode === 'grid') return { cols: 3, rows: 3 }
+  if (mixMode !== 'half' && mixMode !== 'third') return null
+
+  const cols = 4
+  const step = mixMode === 'half' ? 2 : 3
+
+  // Without size info, use defaults
+  if (!sizeStr) return { cols, rows: mixMode === 'half' ? 4 : 6 }
+
+  const base = parseSizeMM(sizeStr)
+  if (!base) return { cols, rows: mixMode === 'half' ? 4 : 6 }
+
+  // Calculate rows that keep aspect ratio within MAX_ASPECT_RATIO
+  const vertical = base.h > base.w
+  const tileW = vertical ? base.h : base.w
+  const tileH = vertical ? base.w : base.h
+  const effectiveCols = vertical ? cols : cols // after stagger transpose handled elsewhere
+
+  let rows = step
+  while (true) {
+    const nextRows = rows + step
+    const totalW = tileW * effectiveCols
+    const totalH = tileH * nextRows
+    const ratio = Math.max(totalW, totalH) / Math.min(totalW, totalH)
+    if (ratio > MAX_ASPECT_RATIO) break
+    rows = nextRows
   }
+
+  return { cols, rows: Math.max(rows, step) }
 }
 
 function isVerticalStagger(sizeStr: string) {
@@ -58,7 +83,7 @@ function isVerticalStagger(sizeStr: string) {
 }
 
 function getStaggerGrid(mixMode: string, sizeStr: string) {
-  const grid = getMixGrid(mixMode)
+  const grid = getMixGrid(mixMode, sizeStr)
   if (!grid) return null
   if (isVerticalStagger(sizeStr)) return { cols: grid.rows, rows: grid.cols }
   return grid
@@ -70,7 +95,7 @@ export function getMixTileCount(mixMode: string, sizeStr: string) {
     const sg = getStaggerGrid(mixMode, sizeStr)
     return sg ? sg.cols * sg.rows : 0
   }
-  const g = getMixGrid(mixMode)
+  const g = getMixGrid(mixMode, sizeStr)
   return g ? g.cols * g.rows : 0
 }
 
@@ -88,7 +113,7 @@ export function calcFinalSizeMM(sizeStr: string, edit: EditState) {
     w = (tw + gMM) * sg.cols
     h = (th + gMM) * sg.rows
   } else {
-    const grid = getMixGrid(edit.mixMode)
+    const grid = getMixGrid(edit.mixMode, sizeStr)
     if (grid) {
       w = (tw + gMM) * grid.cols
       h = (th + gMM) * grid.rows
@@ -103,16 +128,27 @@ export function calcFinalSizeMM(sizeStr: string, edit: EditState) {
   return { w, h }
 }
 
-// Minimum grout in display pixels (guaranteed visible on screen)
-const MIN_DISPLAY_GROUT_PX = 2
+// Preview grout: 2% of total image's longer dimension (in mm)
+const PREVIEW_GROUT_RATIO = 0.02
 
-function calcMinGroutPx(canvas: HTMLCanvasElement): number {
-  // Canvas display width (CSS px). Canvas internal width will be set later.
-  const displayW = canvas.clientWidth || canvas.parentElement?.clientWidth || 200
-  // We want MIN_DISPLAY_GROUT_PX visible on screen
-  // Estimate: canvas will be ~MAX_CANVAS_PX wide, displayed at displayW
-  const scale = displayW / MAX_CANVAS_PX
-  return Math.ceil(MIN_DISPLAY_GROUT_PX / scale)
+function calcPreviewGroutMM(sizeStr: string, edit: EditState): number {
+  const base = parseSizeMM(sizeStr)
+  if (!base) return 10
+  const tileW = base.w, tileH = base.h
+  const grid = getMixGrid(edit.mixMode, sizeStr)
+  const isStagger = edit.mixMode === 'half' || edit.mixMode === 'third'
+  let totalW: number, totalH: number
+  if (isStagger) {
+    const sg = getStaggerGrid(edit.mixMode, sizeStr)
+    if (sg) { totalW = tileW * sg.cols; totalH = tileH * sg.rows }
+    else { totalW = tileW; totalH = tileH }
+  } else if (grid) {
+    totalW = tileW * grid.cols; totalH = tileH * grid.rows
+  } else {
+    totalW = tileW; totalH = tileH
+  }
+  const longerSide = Math.max(totalW, totalH)
+  return longerSide * PREVIEW_GROUT_RATIO
 }
 
 export function drawCanvas(
@@ -123,7 +159,7 @@ export function drawCanvas(
   forExport = false,
 ) {
   const ctx = canvas.getContext('2d')!
-  const grid = getMixGrid(edit.mixMode)
+  const grid = getMixGrid(edit.mixMode, sizeStr)
 
   if (grid && edit.mixSelections.length >= getMixTileCount(edit.mixMode, sizeStr)) {
     if (edit.mixMode === 'grid') {
@@ -150,7 +186,7 @@ function drawSingle(
   const ppm = calcPxPerMM(totalW_mm, totalH_mm)
   const tileW_px = Math.round(tileW * ppm)
   const tileH_px = Math.round(tileH * ppm)
-  const gPx = gMM > 0 ? (forExport ? Math.round(gMM * ppm) : Math.max(Math.round(gMM * ppm), calcMinGroutPx(canvas))) : 0
+  const gPx = gMM > 0 ? Math.round((forExport ? gMM : Math.max(gMM, calcPreviewGroutMM(sizeStr, edit))) * ppm) : 0
   const totalW = tileW_px + gPx
   const totalH = tileH_px + gPx
 
@@ -183,7 +219,7 @@ function drawMixGrid(
   const imgs = edit.mixSelections
   const tileW = base.w, tileH = base.h
   const gMM = edit.groutEnabled ? edit.groutThickness : 0
-  const { cols, rows } = getMixGrid(edit.mixMode)!
+  const { cols, rows } = getMixGrid(edit.mixMode, sizeStr)!
 
   const cellW_mm = tileW + gMM, cellH_mm = tileH + gMM
   const totalW_mm = cellW_mm * cols, totalH_mm = cellH_mm * rows
@@ -191,7 +227,7 @@ function drawMixGrid(
   const ppm = calcPxPerMM(totalW_mm, totalH_mm)
   const tileW_px = Math.round(tileW * ppm)
   const tileH_px = Math.round(tileH * ppm)
-  const gPx = gMM > 0 ? (forExport ? Math.round(gMM * ppm) : Math.max(Math.round(gMM * ppm), calcMinGroutPx(canvas))) : 0
+  const gPx = gMM > 0 ? Math.round((forExport ? gMM : Math.max(gMM, calcPreviewGroutMM(sizeStr, edit))) * ppm) : 0
   const cellW_px = tileW_px + gPx
   const cellH_px = tileH_px + gPx
   const totalW = cellW_px * cols
@@ -243,7 +279,7 @@ function drawMixStagger(
   const ppm = calcPxPerMM(totalW_mm, totalH_mm)
   const tileW_px = Math.round(tileW * ppm)
   const tileH_px = Math.round(tileH * ppm)
-  const gPx = gMM > 0 ? (forExport ? Math.round(gMM * ppm) : Math.max(Math.round(gMM * ppm), calcMinGroutPx(canvas))) : 0
+  const gPx = gMM > 0 ? Math.round((forExport ? gMM : Math.max(gMM, calcPreviewGroutMM(sizeStr, edit))) * ppm) : 0
   const cellW_px = tileW_px + gPx
   const cellH_px = tileH_px + gPx
   const totalW = cellW_px * cols
