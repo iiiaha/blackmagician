@@ -119,7 +119,7 @@ export default function Privacy() {
             <h2 className="text-[13px] font-bold text-foreground mb-2">9. 개인정보 보호책임자</h2>
             <p>개인정보 관련 문의는 아래로 연락해 주시기 바랍니다.</p>
             <ul className="list-disc pl-4 space-y-1 mt-1">
-              <li>이메일: iiiaha.lab@gmail.com</li>
+              <li>이메일: iiiaha@naver.com</li>
               <li>인스타그램: @iiiaha.lab</li>
             </ul>
           </section>
