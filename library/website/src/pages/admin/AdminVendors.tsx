@@ -101,9 +101,9 @@ export default function AdminVendors() {
                 className="w-full h-[32px] text-[11px] px-3 bg-white border border-[rgba(0,0,0,0.08)] rounded-[4px] outline-none" />
             </div>
             <div>
-              <label className="text-[9px] text-[#999] font-semibold mb-1 block">로그인 ID (이메일 형식)</label>
+              <label className="text-[9px] text-[#999] font-semibold mb-1 block">로그인 ID</label>
               <input value={createForm.login_id} onChange={e => setCreateForm(p => ({ ...p, login_id: e.target.value }))}
-                placeholder="vendor@company.com"
+                placeholder="marbello_tile"
                 className="w-full h-[32px] text-[11px] px-3 bg-white border border-[rgba(0,0,0,0.08)] rounded-[4px] outline-none" />
             </div>
             <div>
