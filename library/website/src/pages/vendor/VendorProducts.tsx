@@ -206,15 +206,14 @@ export default function VendorProducts() {
       sortable: false, filter: false,
     },
     {
-      headerName: '', editable: false, width: 44, sortable: false, filter: false,
+      headerName: '', editable: false, width: 50, sortable: false, filter: false,
       cellRenderer: (p: { data: Product }) => {
         return (
           <button
             onClick={(e) => { e.stopPropagation(); confirmDelete(p.data) }}
-            className="w-full h-full flex items-center justify-center text-[#bbb] hover:text-[#e53e3e] cursor-pointer"
-            title="삭제"
+            className="w-full h-full flex items-center justify-center text-[9px] text-[#bbb] hover:text-[#e53e3e] cursor-pointer"
           >
-            <X className="w-4 h-4" />
+            삭제
           </button>
         )
       },
