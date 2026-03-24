@@ -1,110 +1,50 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '@/contexts/AuthContext'
-import { supabase } from '@/lib/supabase'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'admin1234'
 
 export default function AdminLogin() {
   const navigate = useNavigate()
-  const { user, isAdmin, loading: authLoading } = useAuth()
-
-  useEffect(() => {
-    if (!authLoading && user && isAdmin) {
-      navigate('/admin')
-    }
-  }, [user, isAdmin, authLoading, navigate])
-
-  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [isSignUp, setIsSignUp] = useState(false)
 
-  const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS || '').split(',').map((e: string) => e.trim())
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
-
-    if (!adminEmails.includes(email)) {
-      setError('관리자 권한이 없는 이메일입니다.')
-      setLoading(false)
-      return
-    }
-
-    try {
-      if (isSignUp) {
-        const { error: authError } = await supabase.auth.signUp({ email, password })
-        if (authError) {
-          setError('가입 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
-          return
-        }
-      } else {
-        const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
-        if (authError) {
-          setError('이메일 또는 비밀번호가 올바르지 않습니다.')
-          return
-        }
-      }
+  // Already authenticated
+  useEffect(() => {
+    if (sessionStorage.getItem('bm-admin') === 'true') {
       navigate('/admin')
-    } catch {
-      setError('오류가 발생했습니다.')
-    } finally {
-      setLoading(false)
+    }
+  }, [navigate])
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (password === ADMIN_PASSWORD) {
+      sessionStorage.setItem('bm-admin', 'true')
+      navigate('/admin')
+    } else {
+      setError('비밀번호가 올바르지 않습니다.')
     }
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
-          <CardTitle>Admin</CardTitle>
-          <CardDescription>관리자 로그인</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">이메일</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">비밀번호</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="6자 이상"
-                required
-              />
-            </div>
-
-            {error && <p className="text-sm text-destructive">{error}</p>}
-
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? '처리 중...' : isSignUp ? '관리자 계정 생성' : '로그인'}
-            </Button>
-          </form>
-
-          <button
-            type="button"
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="mt-3 w-full text-center text-sm text-muted-foreground hover:text-foreground cursor-pointer"
-          >
-            {isSignUp ? '이미 계정이 있습니다 → 로그인' : '최초 접속 → 계정 생성'}
+    <div className="flex items-center justify-center min-h-screen bg-[#fafafa]">
+      <div className="w-[280px] bg-white border border-[rgba(0,0,0,0.06)] rounded-[8px] p-6">
+        <h2 className="text-[14px] font-bold text-center mb-4">Admin</h2>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="password"
+            value={password}
+            onChange={e => { setPassword(e.target.value); setError('') }}
+            placeholder="Password"
+            autoFocus
+            className="w-full h-[36px] text-[11px] px-3 bg-[#fafafa] border border-[rgba(0,0,0,0.08)] rounded-[5px] outline-none focus:border-[#1a1a1a] mb-3"
+          />
+          {error && <p className="text-[10px] text-[#e53e3e] mb-3">{error}</p>}
+          <button type="submit"
+            className="w-full h-[36px] bg-[#1a1a1a] text-white text-[11px] font-semibold rounded-[5px] cursor-pointer hover:opacity-90">
+            Enter
           </button>
-        </CardContent>
-      </Card>
+        </form>
+      </div>
     </div>
   )
 }

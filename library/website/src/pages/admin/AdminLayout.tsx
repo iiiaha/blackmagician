@@ -1,30 +1,20 @@
 import { useEffect } from 'react'
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
-import { useAuth } from '@/contexts/AuthContext'
-import { Button } from '@/components/ui/button'
 import { LogOut, Users, LayoutDashboard } from 'lucide-react'
-import { cn } from '@/lib/utils'
 
 export default function AdminLayout() {
-  const { user, isAdmin, loading, signOut } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
   useEffect(() => {
-    if (!loading && (!user || !isAdmin)) {
+    if (sessionStorage.getItem('bm-admin') !== 'true') {
       navigate('/admin/login')
     }
-  }, [user, isAdmin, loading, navigate])
+  }, [navigate])
 
-  if (loading) {
-    return <div className="text-center py-20 text-muted-foreground">로딩 중...</div>
-  }
-
-  if (!isAdmin) return null
-
-  const handleSignOut = async () => {
-    await signOut()
-    navigate('/vendor/login')
+  const handleLogout = () => {
+    sessionStorage.removeItem('bm-admin')
+    navigate('/admin/login')
   }
 
   const navItems = [
@@ -33,44 +23,39 @@ export default function AdminLayout() {
   ]
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="h-12 border-b flex items-center px-4 justify-between">
-        <Link to="/admin" className="font-semibold text-sm hover:opacity-80">
-          Black Magician — Admin
-        </Link>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">{user?.email}</span>
-          <Button variant="ghost" size="icon" onClick={handleSignOut} title="로그아웃">
-            <LogOut className="w-4 h-4" />
-          </Button>
+    <div className="h-screen flex flex-col bg-[#fafafa]">
+      <header className="h-[48px] bg-white border-b border-[rgba(0,0,0,0.06)] flex items-center px-5 justify-between shrink-0">
+        <div className="flex items-center gap-3">
+          <span className="text-[13px] font-bold tracking-[0.3px]">BLACK MAGICIAN</span>
+          <span className="text-[10px] text-[#aaa] font-medium">Admin</span>
         </div>
+        <button onClick={handleLogout}
+          className="text-[#aaa] hover:text-[#333] cursor-pointer" title="로그아웃">
+          <LogOut className="w-3.5 h-3.5" />
+        </button>
       </header>
 
-      <div className="flex">
-        <nav className="w-48 border-r min-h-[calc(100vh-48px)] p-3 space-y-1">
+      <div className="flex flex-1 overflow-hidden">
+        <nav className="w-[180px] bg-white border-r border-[rgba(0,0,0,0.06)] py-3 px-2 shrink-0">
           {navItems.map(item => {
             const isActive = item.exact
               ? location.pathname === item.to
               : location.pathname.startsWith(item.to)
             return (
-              <Link
-                key={item.to}
-                to={item.to}
-                className={cn(
-                  'flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors',
+              <Link key={item.to} to={item.to}
+                className={`flex items-center gap-2.5 px-3 py-[7px] rounded-[4px] text-[11px] mb-0.5 transition-colors ${
                   isActive
-                    ? 'bg-secondary text-foreground font-medium'
-                    : 'text-muted-foreground hover:bg-secondary/50'
-                )}
-              >
-                <item.icon className="w-4 h-4" />
+                    ? 'bg-[rgba(0,0,0,0.04)] text-[#1a1a1a] font-semibold'
+                    : 'text-[#888] hover:text-[#1a1a1a] hover:bg-[rgba(0,0,0,0.02)]'
+                }`}>
+                <item.icon className="w-3.5 h-3.5" />
                 {item.label}
               </Link>
             )
           })}
         </nav>
 
-        <main className="flex-1 p-6">
+        <main className="flex-1 overflow-y-auto p-6">
           <Outlet />
         </main>
       </div>
