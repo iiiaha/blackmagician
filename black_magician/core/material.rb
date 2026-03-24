@@ -1,40 +1,73 @@
 require 'fileutils'
 require 'tmpdir'
+require 'json'
 
 module BlackMagician
   module MaterialManager
-    # base64 PNG → SketchUp material
-    # final_size_str: final size "WxH" in mm (rotation/grout/mix already applied)
-    def self.insert(data_url, vendor, tile_name, final_size_str)
+    # Insert material from JSON data
+    # data keys: albedo, normal, roughness, ao, vendor, tileName, sizeStr, roughnessFactor
+    def self.insert(data, pbr_enabled)
       temp_dir = Dir.tmpdir
 
-      # base64 → 파일
-      raw = data_url.sub(/^data:image\/png;base64,/, '')
-      bytes = raw.unpack('m')[0]
+      # Support legacy call format (plain string args) and new JSON format
+      if data.is_a?(String)
+        # Legacy: insert(data_url, vendor, tile_name, size_str)
+        return insert_legacy(data, pbr_enabled)
+      end
+
+      vendor = data['vendor'] || ''
+      tile_name = data['tileName'] || ''
+      size_str = data['sizeStr'] || ''
+      roughness_factor = (data['roughnessFactor'] || 0.5).to_f
 
       mat_name = build_name(vendor, tile_name)
-      temp_path = File.join(temp_dir, "bm_#{mat_name}.png")
-      File.open(temp_path, 'wb') { |f| f.write(bytes) }
 
-      # 최종 크기 파싱 (이미 회전/줄눈/믹스 반영된 mm)
-      dims = parse_size(final_size_str)
+      # Write albedo
+      albedo_path = write_base64(temp_dir, "bm_#{mat_name}_albedo.png", data['albedo'])
 
-      # 머티리얼 등록
+      dims = parse_size(size_str)
+
+      # Create material
       model = Sketchup.active_model
       materials = model.materials
       final_name = unique_name(materials, mat_name)
 
       material = materials.add(final_name)
-      material.texture = temp_path
+      material.texture = albedo_path
 
-      # 텍스처 실제 크기 설정 (mm)
       if dims && material.texture
         material.texture.size = [dims[:w].mm, dims[:h].mm]
       end
 
-      File.delete(temp_path) if File.exist?(temp_path)
+      # PBR maps (SketchUp 2025+)
+      if pbr_enabled
+        material.metalness_enabled = true
+        material.metallic_factor = 0.0
+        material.roughness_factor = roughness_factor
 
-      # 페인트 버킷 활성화 + 머티리얼 선택
+        if data['normal']
+          normal_path = write_base64(temp_dir, "bm_#{mat_name}_normal.png", data['normal'])
+          material.normal_texture = normal_path
+          material.normal_scale = 1.0
+          File.delete(normal_path) if File.exist?(normal_path)
+        end
+
+        if data['roughness']
+          rough_path = write_base64(temp_dir, "bm_#{mat_name}_rough.png", data['roughness'])
+          material.roughness_texture = rough_path
+          File.delete(rough_path) if File.exist?(rough_path)
+        end
+
+        if data['ao']
+          ao_path = write_base64(temp_dir, "bm_#{mat_name}_ao.png", data['ao'])
+          material.ao_texture = ao_path
+          File.delete(ao_path) if File.exist?(ao_path)
+        end
+      end
+
+      File.delete(albedo_path) if File.exist?(albedo_path)
+
+      # Activate paint bucket
       Sketchup.send_action("selectPaintTool:")
       model.materials.current = material
 
@@ -42,6 +75,14 @@ module BlackMagician
     end
 
     private
+
+    def self.write_base64(dir, filename, data_url)
+      raw = data_url.sub(/^data:image\/\w+;base64,/, '')
+      bytes = raw.unpack('m')[0]
+      path = File.join(dir, filename)
+      File.open(path, 'wb') { |f| f.write(bytes) }
+      path
+    end
 
     def self.build_name(vendor, tile_name)
       "[b]#{vendor}_#{tile_name}"

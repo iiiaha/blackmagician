@@ -65,11 +65,23 @@ module BlackMagician
     @dialog.show
   end
 
+  def self.pbr_supported?
+    Sketchup.version.to_i >= 25
+  end
+
   def self.register_callbacks(dialog)
-    # Insert: Canvas image → SketchUp material
-    dialog.add_action_callback('insert_material') do |_ctx, data_url, vendor, tile_name, size_str|
+    # Report SketchUp version to JS (so web knows if PBR is supported)
+    dialog.add_action_callback('get_su_version') do |_ctx|
+      ver = Sketchup.version.to_i
+      pbr = pbr_supported? ? 'true' : 'false'
+      dialog.execute_script("window.__SU_VERSION=#{ver};window.__SU_PBR=#{pbr};")
+    end
+
+    # Insert: Canvas image → SketchUp material (with optional PBR maps)
+    dialog.add_action_callback('insert_material') do |_ctx, json_str|
       begin
-        final_name = MaterialManager.insert(data_url, vendor, tile_name, size_str)
+        data = JSON.parse(json_str)
+        final_name = MaterialManager.insert(data, pbr_supported?)
         dialog.execute_script("onInsertResult(true, '#{final_name}')")
       rescue => e
         dialog.execute_script("onInsertResult(false, '#{e.message.gsub("'", "\\\\'")}')")

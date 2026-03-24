@@ -57,7 +57,7 @@ interface Props {
   canApply: boolean
   todayApplyCount: number
   maxFreeApplies: number
-  onInsertRequest?: (dataUrl: string, vendor: string, tileName: string, sizeStr: string) => void
+  onInsertRequest?: (dataUrl: string, vendor: string, tileName: string, sizeStr: string, canvas?: HTMLCanvasElement) => void
   onLoginRequest?: () => void
   onApplyLog?: (productId: string) => Promise<boolean>
 }
@@ -117,7 +117,7 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
     drawCanvas(canvasRef.current, sizeStr, edit, mainImg, false)
     const finalMM = calcFinalSizeMM(sizeStr, edit)
     const finalSizeStr = finalMM ? `${Math.round(finalMM.w)}x${Math.round(finalMM.h)}` : sizeStr
-    onInsertRequest(dataUrl, vendorName, tileName, finalSizeStr)
+    onInsertRequest(dataUrl, vendorName, tileName, finalSizeStr, canvasRef.current)
     setTimeout(() => setInserting(false), 1500)
   }
 

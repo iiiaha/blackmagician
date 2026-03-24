@@ -71,6 +71,13 @@ export default function LibraryHome() {
   const [showLoginPopup, setShowLoginPopup] = useState(false)
 
 
+  // Request SketchUp version on mount
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sk = (window as any).sketchup as Record<string, () => void> | undefined
+    if (sk?.get_su_version) sk.get_su_version()
+  }, [])
+
   // Fetch vendors + roots
   useEffect(() => {
     const fetchAll = async () => {
@@ -198,13 +205,43 @@ export default function LibraryHome() {
     setPreviewSizeStr(sizeMatch ? `${sizeMatch[1]}x${sizeMatch[2]}` : '600x600')
   }
 
-  const handleInsert = (dataUrl: string, vendor: string, tileName: string, sizeStr: string) => {
+  const handleInsert = (dataUrl: string, vendor: string, tileName: string, sizeStr: string, canvas?: HTMLCanvasElement) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sk = (window as any).sketchup as Record<string, (...args: string[]) => void> | undefined
-    if (sk?.insert_material) {
-      sk.insert_material(dataUrl, vendor, tileName, sizeStr)
-    } else {
+    if (!sk?.insert_material) {
       alert('SketchUp 환경에서만 사용 가능합니다.')
+      return
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const w = window as any
+    const pbrSupported = w.__SU_PBR === true
+
+    if (pbrSupported && canvas) {
+      // Generate PBR maps and send as JSON
+      import('@/lib/pbr').then(({ generatePBRMaps }) => {
+        const maps = generatePBRMaps(canvas, 2.0, 0.5, 1.0)
+        const payload = JSON.stringify({
+          albedo: dataUrl,
+          normal: maps.normal,
+          roughness: maps.roughness,
+          ao: maps.ao,
+          vendor,
+          tileName,
+          sizeStr,
+          roughnessFactor: 0.5,
+        })
+        sk.insert_material(payload)
+      })
+    } else {
+      // Legacy: send as JSON without PBR
+      const payload = JSON.stringify({
+        albedo: dataUrl,
+        vendor,
+        tileName,
+        sizeStr,
+      })
+      sk.insert_material(payload)
     }
   }
 
