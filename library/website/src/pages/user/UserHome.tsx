@@ -406,6 +406,13 @@ export default function UserHome() {
             onInsertRequest={handleInsert}
             onLoginRequest={() => setShowLoginPopup(true)}
             onApplyLog={logApply}
+            onSubscribeRequest={async () => {
+              const { createCheckoutSession } = await import('@/lib/stripe')
+              try {
+                const url = await createCheckoutSession()
+                window.location.href = url
+              } catch { alert('결제 페이지를 열 수 없습니다.') }
+            }}
           />
         </div>
       </div>

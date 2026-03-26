@@ -60,9 +60,10 @@ interface Props {
   onInsertRequest?: (dataUrl: string, vendor: string, tileName: string, sizeStr: string) => void
   onLoginRequest?: () => void
   onApplyLog?: (productId: string) => Promise<boolean>
+  onSubscribeRequest?: () => void
 }
 
-export default function PreviewPanel({ images, sizeStr, vendorName, tileName, product, loggedIn, isPro, canApply, todayApplyCount, maxFreeApplies, onInsertRequest, onLoginRequest, onApplyLog }: Props) {
+export default function PreviewPanel({ images, sizeStr, vendorName, tileName, product, loggedIn, isPro, canApply, todayApplyCount, maxFreeApplies, onInsertRequest, onLoginRequest, onApplyLog, onSubscribeRequest }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [edit, setEdit] = useState<EditState>({ ...defaultEditState })
   const [mainImg, setMainImg] = useState<HTMLImageElement | null>(null)
@@ -212,6 +213,7 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
       {/* Apply / Subscribe */}
       {loggedIn && !isPro && !canApply ? (
         <button
+          onClick={onSubscribeRequest}
           className="w-full h-[30px] bg-foreground hover:bg-foreground/85 text-primary-foreground text-[10px] font-semibold tracking-[0.3px] rounded-[4px] cursor-pointer transition-colors flex items-center justify-center"
         >
           Subscribe

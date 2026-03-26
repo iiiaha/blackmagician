@@ -1,17 +1,19 @@
 import { Outlet, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
+import { createCheckoutSession, createPortalSession } from '@/lib/stripe'
 import { LogIn, Sun, Moon, ChevronDown } from 'lucide-react'
 import { CATEGORIES, type CategoryId } from '@/lib/categories'
 import { useState, useEffect, useRef } from 'react'
 
 export default function UserLayout() {
-  const { user, userProfile, signOut, isPro, todayApplyCount, maxFreeApplies } = useAuth()
+  const { user, userProfile, signOut, isPro, todayApplyCount, maxFreeApplies, refreshUserProfile } = useAuth()
   const [activeCategory, setActiveCategory] = useState<CategoryId>('tile')
   const [showLoginPopup, setShowLoginPopup] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showPlanInfo, setShowPlanInfo] = useState(false)
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
   const navRef = useRef<HTMLElement>(null)
   const [indicatorStyle, setIndicatorStyle] = useState<{ left: number; width: number }>({ left: 0, width: 0 })
@@ -44,6 +46,42 @@ export default function UserLayout() {
     document.documentElement.classList.toggle('dark', dark)
     localStorage.setItem('bm-theme', dark ? 'dark' : 'light')
   }, [dark])
+
+  // Handle checkout success redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('checkout') === 'success') {
+      window.history.replaceState({}, '', '/')
+      // Poll until profile reflects Pro (webhook may take a moment)
+      let attempts = 0
+      const poll = setInterval(async () => {
+        await refreshUserProfile()
+        attempts++
+        if (attempts >= 5) clearInterval(poll)
+      }, 2000)
+      return () => clearInterval(poll)
+    }
+  }, [])
+
+  const handleSubscribe = async () => {
+    setCheckoutLoading(true)
+    try {
+      const url = await createCheckoutSession()
+      window.location.href = url
+    } catch {
+      alert('결제 페이지를 열 수 없습니다. 잠시 후 다시 시도해주세요.')
+      setCheckoutLoading(false)
+    }
+  }
+
+  const handleManageSubscription = async () => {
+    try {
+      const url = await createPortalSession()
+      window.location.href = url
+    } catch {
+      alert('구독 관리 페이지를 열 수 없습니다.')
+    }
+  }
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
@@ -208,12 +246,26 @@ export default function UserLayout() {
                   <span className="font-semibold">{new Date(userProfile.plan_expires_at).toLocaleDateString('ko-KR')}</span>
                 </div>
               )}
+              {isPro && userProfile?.stripe_subscription_id && (
+                <div className="mt-4 pt-3 border-t border-border text-center">
+                  <button
+                    onClick={handleManageSubscription}
+                    className="w-full h-[32px] border border-border rounded-[5px] text-[10px] font-semibold cursor-pointer hover:bg-muted transition-colors"
+                  >
+                    구독 관리
+                  </button>
+                </div>
+              )}
               {!isPro && (
                 <div className="mt-4 pt-3 border-t border-border text-center">
                   <p className="text-[10px] text-muted-foreground mb-2">Pro 구독 시 Apply to Bucket 무제한</p>
                   <p className="text-[14px] font-bold">월 3,900원</p>
-                  <button className="w-full h-[32px] mt-3 bg-foreground text-primary-foreground text-[10px] font-semibold rounded-[5px] cursor-pointer hover:bg-foreground/85 transition-colors">
-                    Pro 구독하기
+                  <button
+                    onClick={handleSubscribe}
+                    disabled={checkoutLoading}
+                    className="w-full h-[32px] mt-3 bg-foreground text-primary-foreground text-[10px] font-semibold rounded-[5px] cursor-pointer hover:bg-foreground/85 transition-colors disabled:opacity-50"
+                  >
+                    {checkoutLoading ? '이동 중...' : 'Pro 구독하기'}
                   </button>
                 </div>
               )}
@@ -245,6 +297,10 @@ export default function UserLayout() {
               </button>
               <button
                 onClick={async () => {
+                  // Cancel Stripe subscription if exists
+                  if (userProfile?.stripe_subscription_id) {
+                    try { await createPortalSession() } catch { /* proceed anyway */ }
+                  }
                   await supabase.rpc('soft_delete_account')
                   await supabase.auth.signOut({ scope: 'global' })
                   window.location.href = '/'

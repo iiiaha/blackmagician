@@ -193,6 +193,8 @@ export interface Database {
           trial_expires_at: string | null
           deleted_at: string | null
           rejoin_available_at: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
           created_at: string
         }
         Insert: {
@@ -205,6 +207,8 @@ export interface Database {
           trial_expires_at?: string | null
           deleted_at?: string | null
           rejoin_available_at?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           created_at?: string
         }
         Update: {
@@ -217,6 +221,8 @@ export interface Database {
           trial_expires_at?: string | null
           deleted_at?: string | null
           rejoin_available_at?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           created_at?: string
         }
         Relationships: []
