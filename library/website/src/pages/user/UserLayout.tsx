@@ -14,6 +14,7 @@ export default function UserLayout() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showPlanInfo, setShowPlanInfo] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [portalLoading, setPortalLoading] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
   const navRef = useRef<HTMLElement>(null)
   const [indicatorStyle, setIndicatorStyle] = useState<{ left: number; width: number }>({ left: 0, width: 0 })
@@ -75,11 +76,13 @@ export default function UserLayout() {
   }
 
   const handleManageSubscription = async () => {
+    setPortalLoading(true)
     try {
       const url = await createPortalSession()
       window.location.href = url
     } catch {
       alert('구독 관리 페이지를 열 수 없습니다.')
+      setPortalLoading(false)
     }
   }
 
@@ -250,9 +253,10 @@ export default function UserLayout() {
                 <div className="mt-4 pt-3 border-t border-border text-center">
                   <button
                     onClick={handleManageSubscription}
-                    className="w-full h-[32px] border border-border rounded-[5px] text-[10px] font-semibold cursor-pointer hover:bg-muted transition-colors"
+                    disabled={portalLoading}
+                    className="w-full h-[32px] border border-border rounded-[5px] text-[10px] font-semibold cursor-pointer hover:bg-muted transition-colors disabled:opacity-50"
                   >
-                    구독 관리
+                    {portalLoading ? '이동 중...' : '구독 관리'}
                   </button>
                 </div>
               )}

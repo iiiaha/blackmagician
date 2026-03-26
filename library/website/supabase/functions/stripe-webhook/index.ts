@@ -1,10 +1,17 @@
 import Stripe from 'https://esm.sh/stripe@17?target=deno'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!, { apiVersion: '2025-04-30.basil' })
+const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!)
 const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET')!
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+
+function toISOString(value: unknown): string {
+  if (!value) return new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+  if (typeof value === 'number') return new Date(value * 1000).toISOString()
+  if (typeof value === 'string') return new Date(value).toISOString()
+  return new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+}
 
 Deno.serve(async (req) => {
   if (req.method !== 'POST') {
@@ -20,13 +27,13 @@ Deno.serve(async (req) => {
 
     switch (event.type) {
       case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session
-        const customerId = session.customer as string
-        const subscriptionId = session.subscription as string
+        const session = event.data.object
+        const customerId = (session as Record<string, unknown>).customer as string
+        const subscriptionId = (session as Record<string, unknown>).subscription as string
 
         // Fetch subscription to get period end
         const subscription = await stripe.subscriptions.retrieve(subscriptionId)
-        const periodEnd = new Date(subscription.current_period_end * 1000).toISOString()
+        const periodEnd = toISOString((subscription as Record<string, unknown>).current_period_end)
 
         await supabase
           .from('user_profiles')
@@ -41,13 +48,13 @@ Deno.serve(async (req) => {
       }
 
       case 'invoice.paid': {
-        const invoice = event.data.object as Stripe.Invoice
-        const customerId = invoice.customer as string
-        const subscriptionId = invoice.subscription as string
+        const invoice = event.data.object
+        const customerId = (invoice as Record<string, unknown>).customer as string
+        const subscriptionId = (invoice as Record<string, unknown>).subscription as string
 
         if (subscriptionId) {
           const subscription = await stripe.subscriptions.retrieve(subscriptionId)
-          const periodEnd = new Date(subscription.current_period_end * 1000).toISOString()
+          const periodEnd = toISOString((subscription as Record<string, unknown>).current_period_end)
 
           await supabase
             .from('user_profiles')
@@ -62,8 +69,8 @@ Deno.serve(async (req) => {
       }
 
       case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription
-        const customerId = subscription.customer as string
+        const subscription = event.data.object
+        const customerId = (subscription as Record<string, unknown>).customer as string
 
         await supabase
           .from('user_profiles')
@@ -78,11 +85,12 @@ Deno.serve(async (req) => {
       }
 
       case 'customer.subscription.updated': {
-        const subscription = event.data.object as Stripe.Subscription
-        const customerId = subscription.customer as string
+        const subscription = event.data.object
+        const customerId = (subscription as Record<string, unknown>).customer as string
+        const status = (subscription as Record<string, unknown>).status as string
 
-        if (subscription.status === 'active') {
-          const periodEnd = new Date(subscription.current_period_end * 1000).toISOString()
+        if (status === 'active') {
+          const periodEnd = toISOString((subscription as Record<string, unknown>).current_period_end)
           await supabase
             .from('user_profiles')
             .update({
@@ -90,7 +98,7 @@ Deno.serve(async (req) => {
               plan_expires_at: periodEnd,
             })
             .eq('stripe_customer_id', customerId)
-        } else if (subscription.status === 'past_due' || subscription.status === 'canceled' || subscription.status === 'unpaid') {
+        } else if (status === 'past_due' || status === 'canceled' || status === 'unpaid') {
           await supabase
             .from('user_profiles')
             .update({
