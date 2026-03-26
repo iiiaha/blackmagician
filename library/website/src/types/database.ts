@@ -195,6 +195,8 @@ export interface Database {
           rejoin_available_at: string | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
+          toss_customer_key: string | null
+          toss_billing_key: string | null
           created_at: string
         }
         Insert: {
@@ -209,6 +211,8 @@ export interface Database {
           rejoin_available_at?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          toss_customer_key?: string | null
+          toss_billing_key?: string | null
           created_at?: string
         }
         Update: {
@@ -223,6 +227,8 @@ export interface Database {
           rejoin_available_at?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
+          toss_customer_key?: string | null
+          toss_billing_key?: string | null
           created_at?: string
         }
         Relationships: []

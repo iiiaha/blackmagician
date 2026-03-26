@@ -1,7 +1,7 @@
 import { Outlet, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
-import { createCheckoutSession, createPortalSession } from '@/lib/stripe'
+import { requestBillingAuth, issueBillingKey, cancelSubscription } from '@/lib/toss'
 import { LogIn, Sun, Moon, ChevronDown } from 'lucide-react'
 import { CATEGORIES, type CategoryId } from '@/lib/categories'
 import { useState, useEffect, useRef } from 'react'
@@ -14,7 +14,6 @@ export default function UserLayout() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showPlanInfo, setShowPlanInfo] = useState(false)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
-  const [portalLoading, setPortalLoading] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
   const navRef = useRef<HTMLElement>(null)
   const [indicatorStyle, setIndicatorStyle] = useState<{ left: number; width: number }>({ left: 0, width: 0 })
@@ -48,41 +47,50 @@ export default function UserLayout() {
     localStorage.setItem('bm-theme', dark ? 'dark' : 'light')
   }, [dark])
 
-  // Handle checkout success redirect
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
+  const [cancelLoading, setCancelLoading] = useState(false)
+
+  // Handle billing auth success redirect
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    if (params.get('checkout') === 'success') {
+    if (params.get('billing') === 'success') {
+      const authKey = params.get('authKey')
+      const customerKey = params.get('customerKey')
       window.history.replaceState({}, '', '/')
-      // Poll until profile reflects Pro (webhook may take a moment)
-      let attempts = 0
-      const poll = setInterval(async () => {
-        await refreshUserProfile()
-        attempts++
-        if (attempts >= 5) clearInterval(poll)
-      }, 2000)
-      return () => clearInterval(poll)
+      if (authKey && customerKey) {
+        issueBillingKey(authKey, customerKey)
+          .then(() => refreshUserProfile())
+          .catch(() => alert('결제 처리 중 오류가 발생했습니다.'))
+      }
+    }
+    if (params.get('billing') === 'fail') {
+      window.history.replaceState({}, '', '/')
+      alert('결제가 취소되었습니다.')
     }
   }, [])
 
   const handleSubscribe = async () => {
+    if (!userProfile) return
     setCheckoutLoading(true)
     try {
-      const url = await createCheckoutSession()
-      window.location.href = url
+      await requestBillingAuth(userProfile.id)
     } catch {
       alert('결제 페이지를 열 수 없습니다. 잠시 후 다시 시도해주세요.')
       setCheckoutLoading(false)
     }
   }
 
-  const handleManageSubscription = async () => {
-    setPortalLoading(true)
+  const handleCancelSubscription = async () => {
+    setCancelLoading(true)
     try {
-      const url = await createPortalSession()
-      window.location.href = url
+      await cancelSubscription()
+      await refreshUserProfile()
+      setShowCancelConfirm(false)
+      setShowPlanInfo(false)
     } catch {
-      alert('구독 관리 페이지를 열 수 없습니다.')
-      setPortalLoading(false)
+      alert('구독 취소 중 오류가 발생했습니다.')
+    } finally {
+      setCancelLoading(false)
     }
   }
 
@@ -249,16 +257,20 @@ export default function UserLayout() {
                   <span className="font-semibold">{new Date(userProfile.plan_expires_at).toLocaleDateString('ko-KR')}</span>
                 </div>
               )}
-              {isPro && userProfile?.stripe_subscription_id && (
+              {isPro && userProfile?.toss_billing_key && (
                 <div className="mt-4 pt-3 border-t border-border text-center">
                   <button
-                    onClick={handleManageSubscription}
-                    disabled={portalLoading}
-                    className="w-full h-[32px] border border-border rounded-[5px] text-[10px] font-semibold cursor-pointer hover:bg-muted transition-colors disabled:opacity-50"
+                    onClick={() => setShowCancelConfirm(true)}
+                    className="w-full h-[32px] border border-border rounded-[5px] text-[10px] font-semibold cursor-pointer hover:bg-muted transition-colors text-muted-foreground"
                   >
-                    {portalLoading ? '이동 중...' : '구독 관리'}
+                    구독 취소
                   </button>
                 </div>
+              )}
+              {isPro && !userProfile?.toss_billing_key && (
+                <p className="mt-3 text-[9px] text-text-tertiary text-center">
+                  구독 취소됨 — {userProfile?.plan_expires_at ? new Date(userProfile.plan_expires_at).toLocaleDateString('ko-KR') : ''} 까지 이용 가능
+                </p>
               )}
               {!isPro && (
                 <div className="mt-4 pt-3 border-t border-border text-center">
@@ -301,9 +313,8 @@ export default function UserLayout() {
               </button>
               <button
                 onClick={async () => {
-                  // Cancel Stripe subscription if exists
-                  if (userProfile?.stripe_subscription_id) {
-                    try { await createPortalSession() } catch { /* proceed anyway */ }
+                  if (userProfile?.toss_billing_key) {
+                    try { await cancelSubscription() } catch { /* proceed anyway */ }
                   }
                   await supabase.rpc('soft_delete_account')
                   await supabase.auth.signOut({ scope: 'global' })
@@ -312,6 +323,37 @@ export default function UserLayout() {
                 className="flex-1 h-[34px] text-[11px] font-semibold border border-border rounded-[5px] bg-destructive/10 text-destructive hover:bg-destructive/20 cursor-pointer transition-colors"
               >
                 탈퇴하기
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Cancel Subscription Confirm */}
+      {showCancelConfirm && (
+        <>
+          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setShowCancelConfirm(false)} />
+          <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] bg-surface border border-border rounded-[8px] p-6 text-center shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+            <h3 className="text-[13px] font-bold mb-2">구독 취소</h3>
+            <p className="text-[10px] text-muted-foreground mb-5 leading-relaxed">
+              구독을 취소하시겠습니까?<br />
+              {userProfile?.plan_expires_at && (
+                <><strong>{new Date(userProfile.plan_expires_at).toLocaleDateString('ko-KR')}</strong>까지는 Pro를 이용할 수 있습니다.</>
+              )}
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowCancelConfirm(false)}
+                className="flex-1 h-[34px] text-[11px] font-semibold border border-border rounded-[5px] bg-surface hover:bg-muted cursor-pointer transition-colors"
+              >
+                유지하기
+              </button>
+              <button
+                onClick={handleCancelSubscription}
+                disabled={cancelLoading}
+                className="flex-1 h-[34px] text-[11px] font-semibold border border-border rounded-[5px] bg-destructive/10 text-destructive hover:bg-destructive/20 cursor-pointer transition-colors disabled:opacity-50"
+              >
+                {cancelLoading ? '처리 중...' : '구독 취소'}
               </button>
             </div>
           </div>

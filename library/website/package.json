@@ -12,6 +12,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.99.3",
     "@tailwindcss/vite": "^4.2.2",
+    "@tosspayments/tosspayments-sdk": "^2.6.0",
     "ag-grid-community": "^35.1.0",
     "ag-grid-react": "^35.1.0",
     "class-variance-authority": "^0.7.1",

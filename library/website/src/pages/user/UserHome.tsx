@@ -407,10 +407,10 @@ export default function UserHome() {
             onLoginRequest={() => setShowLoginPopup(true)}
             onApplyLog={logApply}
             onSubscribeRequest={async () => {
-              const { createCheckoutSession } = await import('@/lib/stripe')
+              if (!userProfile) return
+              const { requestBillingAuth } = await import('@/lib/toss')
               try {
-                const url = await createCheckoutSession()
-                window.location.href = url
+                await requestBillingAuth(userProfile.id)
               } catch { alert('결제 페이지를 열 수 없습니다.') }
             }}
           />
