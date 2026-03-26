@@ -14,7 +14,7 @@ function GoogleIcon({ className }: { className?: string }) {
   )
 }
 
-export default function LibraryLogin() {
+export default function UserLogin() {
   const navigate = useNavigate()
   const [error, setError] = useState('')
 

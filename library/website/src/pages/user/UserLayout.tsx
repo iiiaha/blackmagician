@@ -5,7 +5,7 @@ import { LogIn, Sun, Moon, ChevronDown } from 'lucide-react'
 import { CATEGORIES, type CategoryId } from '@/lib/categories'
 import { useState, useEffect, useRef } from 'react'
 
-export default function LibraryLayout() {
+export default function UserLayout() {
   const { user, userProfile, signOut, isPro, todayApplyCount, maxFreeApplies } = useAuth()
   const [activeCategory, setActiveCategory] = useState<CategoryId>('tile')
   const [showLoginPopup, setShowLoginPopup] = useState(false)

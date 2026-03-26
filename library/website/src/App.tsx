@@ -1,12 +1,12 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from '@/contexts/AuthContext'
 
-// Library pages
-import LibraryLayout from '@/pages/library/LibraryLayout'
-import LibraryHome from '@/pages/library/LibraryHome'
-import LibraryLogin from '@/pages/library/LibraryLogin'
-import Terms from '@/pages/library/Terms'
-import Privacy from '@/pages/library/Privacy'
+// User pages
+import UserLayout from '@/pages/user/UserLayout'
+import UserHome from '@/pages/user/UserHome'
+import UserLogin from '@/pages/user/UserLogin'
+import Terms from '@/pages/user/Terms'
+import Privacy from '@/pages/user/Privacy'
 
 // Vendor pages
 import VendorLayout from '@/pages/vendor/VendorLayout'
@@ -28,10 +28,10 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Library */}
-          <Route path="/" element={<LibraryLayout />}>
-            <Route index element={<LibraryHome />} />
-            <Route path="library/login" element={<LibraryLogin />} />
+          {/* User */}
+          <Route path="/" element={<UserLayout />}>
+            <Route index element={<UserHome />} />
+            <Route path="user/login" element={<UserLogin />} />
           </Route>
 
           <Route path="/terms" element={<Terms />} />

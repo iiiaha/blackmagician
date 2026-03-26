@@ -29,7 +29,7 @@ function getBreadcrumb(nodes: FolderNode[], folderId: string): FolderNode[] {
   return path
 }
 
-export default function LibraryHome() {
+export default function UserHome() {
   const { user, userProfile, isPro, canApply, todayApplyCount, maxFreeApplies, logApply } = useAuth()
 
   const { activeCategory } = useOutletContext<{ activeCategory: CategoryId }>()
