@@ -1,4 +1,4 @@
-require_relative 'material'
+Sketchup.require(File.join(__dir__, 'material'))
 
 module BlackMagician
   LIBRARY_URL = 'https://blackmagician.pages.dev'
