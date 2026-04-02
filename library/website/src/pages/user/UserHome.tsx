@@ -114,9 +114,9 @@ export default function UserHome() {
     setTimeout(() => { setCatSliding(false); setPrevVendors([]) }, 200)
   }, [activeCategory, allVendors])
 
-  // Fade in main area when vendor selected
+  // Fade in main area when vendor selected (only trigger once, not on every re-render)
   useEffect(() => {
-    if (selectedVendor && !searchResults && !showFavorites) {
+    if (selectedVendor && !searchResults && !showFavorites && mainFade !== 'in') {
       setMainFade('in')
     }
   }, [selectedVendor, searchResults, showFavorites])
@@ -483,6 +483,7 @@ export default function UserHome() {
         {/* Vendor content area — banner + filter + grid fade together */}
         <div
           className="flex-1 flex flex-col overflow-hidden"
+          key={mainFade}
           style={{
             animation: mainFade === 'in' ? 'fadeIn 150ms ease-out forwards'
               : mainFade === 'out' ? 'fadeOut 150ms ease-in forwards'
