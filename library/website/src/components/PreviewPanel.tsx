@@ -71,8 +71,10 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
   const allImgsRef = useRef<HTMLImageElement[]>([])
   const [showColor, setShowColor] = useState(false)
   const [inserting, setInserting] = useState(false)
+  const [imgsLoading, setImgsLoading] = useState(false)
 
   const hasMix = allImgs.length > 1
+  const willHaveMix = images.length > 1
 
   // Sync size orientation with image orientation
   // If image is landscape but size says portrait (or vice versa), swap w/h
@@ -99,13 +101,15 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
     setMainImg(null)
     setAllImgs([])
     allImgsRef.current = []
-    if (images.length === 0) return
+    if (images.length === 0) { setImgsLoading(false); return }
+    setImgsLoading(images.length > 1)
     let cancelled = false
     loadImage(images[0].url).then(img => { if (!cancelled) setMainImg(img) })
     Promise.all(images.map(i => loadImage(i.url))).then(imgs => {
       if (!cancelled) {
         setAllImgs(imgs)
         allImgsRef.current = imgs
+        setImgsLoading(false)
       }
     })
     return () => { cancelled = true }
@@ -185,11 +189,11 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
           onClick={() => updateEdit({ groutEnabled: !edit.groutEnabled })} title="Grout" />
         <div className="w-px bg-border mx-[1px]" />
         <ToolBtn icon={<MixIcon className="w-3.5 h-3.5" />} active={edit.mixMode === 'grid'}
-          onClick={() => handleMix('grid')} title="Mix 3×3" disabled={!hasMix} />
+          onClick={() => handleMix('grid')} title="Mix 3×3" disabled={!hasMix} loading={imgsLoading && willHaveMix} />
         <ToolBtn icon={<HalfStaggerIcon className="w-3.5 h-3.5" />} active={edit.mixMode === 'half'}
-          onClick={() => handleMix('half')} title="1/2 Stagger" disabled={!hasMix} />
+          onClick={() => handleMix('half')} title="1/2 Stagger" disabled={!hasMix} loading={imgsLoading && willHaveMix} />
         <ToolBtn icon={<ThirdStaggerIcon className="w-3.5 h-3.5" />} active={edit.mixMode === 'third'}
-          onClick={() => handleMix('third')} title="1/3 Stagger" disabled={!hasMix} />
+          onClick={() => handleMix('third')} title="1/3 Stagger" disabled={!hasMix} loading={imgsLoading && willHaveMix} />
       </div>
 
       {/* Color */}
@@ -271,12 +275,14 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
   )
 }
 
-function ToolBtn({ icon, active, onClick, title, disabled }: {
-  icon: React.ReactNode; active: boolean; onClick: () => void; title: string; disabled?: boolean
+function ToolBtn({ icon, active, onClick, title, disabled, loading }: {
+  icon: React.ReactNode; active: boolean; onClick: () => void; title: string; disabled?: boolean; loading?: boolean
 }) {
   return (
     <button onClick={onClick} title={title} disabled={disabled}
-      className={`flex-1 h-[26px] flex items-center justify-center rounded-[3px] cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed ${
+      className={`flex-1 h-[26px] flex items-center justify-center rounded-[3px] cursor-pointer disabled:cursor-not-allowed ${
+        loading ? 'opacity-40 animate-pulse' :
+        disabled ? 'opacity-20' :
         active ? 'bg-brand text-white' : 'bg-muted text-text-secondary hover:bg-brand-light/30'
       }`}>
       {icon}
