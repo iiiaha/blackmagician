@@ -42,6 +42,8 @@ export default function VendorProducts() {
   const [importProgress, setImportProgress] = useState({ current: 0, total: 0, name: '' })
   const folderInputRef = useRef<HTMLInputElement>(null)
   const [showFolderGuide, setShowFolderGuide] = useState(false)
+  const [folderCounts, setFolderCounts] = useState<Record<string, number>>({})
+  const [totalProductCount, setTotalProductCount] = useState(0)
 
   const fetchFolders = useCallback(async () => {
     if (!vendor) return
@@ -49,6 +51,16 @@ export default function VendorProducts() {
     const f = (data as FolderNode[]) || []
     setFolders(f)
     setExpandedIds(new Set(f.map(n => n.id)))
+    // Fetch product counts per folder
+    const { data: countData } = await supabase.from('products').select('folder_id').eq('vendor_id', vendor.id)
+    if (countData) {
+      const counts: Record<string, number> = {}
+      for (const row of countData) {
+        counts[row.folder_id] = (counts[row.folder_id] || 0) + 1
+      }
+      setFolderCounts(counts)
+      setTotalProductCount(countData.length)
+    }
   }, [vendor])
 
   useEffect(() => { if (vendor?.approved) fetchFolders() }, [vendor, fetchFolders])
@@ -378,9 +390,16 @@ export default function VendorProducts() {
   const selectedProduct = products.find(p => p.id === selectedProductId)
   const selectedImages = selectedProductId ? (productImages[selectedProductId] || []) : []
 
+  // Count products in a node (leaf = direct count, branch = sum of descendants)
+  const getNodeCount = (node: TreeNode): number => {
+    if (node.children.length === 0) return folderCounts[node.id] || 0
+    return node.children.reduce((sum, child) => sum + getNodeCount(child), 0)
+  }
+
   const renderNode = (node: TreeNode, level: number) => {
     const isExpanded = expandedIds.has(node.id)
     const isSelected = selectedFolder?.id === node.id
+    const count = getNodeCount(node)
     return (
       <div key={node.id}>
         <button onClick={() => handleSelectFolder(node)}
@@ -392,6 +411,7 @@ export default function VendorProducts() {
             : <span className="w-3 shrink-0" />}
           {node.children.length === 0 ? <FolderOpen className="w-3.5 h-3.5 shrink-0 opacity-50" /> : <Folder className="w-3.5 h-3.5 shrink-0 opacity-50" />}
           <span className="truncate">{node.name}</span>
+          {count > 0 && <span className="text-[9px] text-[#bbb] ml-auto shrink-0">({count})</span>}
         </button>
         {isExpanded && node.children.map(child => renderNode(child, level + 1))}
       </div>
@@ -404,7 +424,7 @@ export default function VendorProducts() {
     <div className="flex gap-5 h-full" style={{ minHeight: 'calc(100vh - 48px - 48px)' }}>
       {/* Folder tree */}
       <div className="w-[200px] shrink-0 bg-white border border-[rgba(0,0,0,0.06)] rounded-[6px] p-3 overflow-y-auto">
-        <p className="text-[9px] font-semibold text-[#999] uppercase tracking-[0.5px] mb-2 px-1">폴더 구조</p>
+        <p className="text-[9px] font-semibold text-[#999] uppercase tracking-[0.5px] mb-2 px-1">폴더 구조 {totalProductCount > 0 && <span className="text-[#bbb]">({totalProductCount})</span>}</p>
         {tree.length === 0
           ? <p className="text-[10px] text-[#aaa] text-center py-6">관리자가 폴더를 아직 설정하지 않았습니다.</p>
           : tree.map(n => renderNode(n, 0))}

@@ -114,12 +114,6 @@ export default function UserHome() {
     setTimeout(() => { setCatSliding(false); setPrevVendors([]) }, 200)
   }, [activeCategory, allVendors])
 
-  // Fade in main area when vendor selected (only trigger once, not on every re-render)
-  useEffect(() => {
-    if (selectedVendor && !searchResults && !showFavorites && mainFade !== 'in') {
-      setMainFade('in')
-    }
-  }, [selectedVendor, searchResults, showFavorites])
 
   // Toggle vendor expand
   const handleToggleVendor = async (vendor: Vendor) => {
@@ -483,11 +477,8 @@ export default function UserHome() {
         {/* Vendor content area — banner + filter + grid fade together */}
         <div
           className="flex-1 flex flex-col overflow-hidden"
-          key={mainFade}
           style={{
-            animation: mainFade === 'in' ? 'fadeIn 150ms ease-out forwards'
-              : mainFade === 'out' ? 'fadeOut 150ms ease-in forwards'
-              : undefined
+            animation: mainFade === 'out' ? 'fadeOut 150ms ease-in forwards' : undefined
           }}
         >
         {/* Vendor Banner — full width, outside scroll */}

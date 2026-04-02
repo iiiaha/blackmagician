@@ -68,6 +68,7 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
   const [edit, setEdit] = useState<EditState>({ ...defaultEditState })
   const [mainImg, setMainImg] = useState<HTMLImageElement | null>(null)
   const [allImgs, setAllImgs] = useState<HTMLImageElement[]>([])
+  const allImgsRef = useRef<HTMLImageElement[]>([])
   const [showColor, setShowColor] = useState(false)
   const [inserting, setInserting] = useState(false)
 
@@ -76,9 +77,12 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
   useEffect(() => {
     setEdit({ ...defaultEditState })
     setShowColor(false)
-    if (images.length === 0) { setMainImg(null); setAllImgs([]); return }
+    if (images.length === 0) { setMainImg(null); setAllImgs([]); allImgsRef.current = []; return }
     loadImage(images[0].url).then(img => setMainImg(img))
-    Promise.all(images.map(i => loadImage(i.url))).then(imgs => setAllImgs(imgs))
+    Promise.all(images.map(i => loadImage(i.url))).then(imgs => {
+      setAllImgs(imgs)
+      allImgsRef.current = imgs
+    })
   }, [images])
 
   const redraw = useCallback(() => {
@@ -94,9 +98,11 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
 
   const handleMix = (mode: 'grid' | 'half' | 'third') => {
     if (edit.mixMode === mode) { updateEdit({ mixMode: 'none', mixSelections: [] }); return }
+    const currentImgs = allImgsRef.current
+    if (currentImgs.length === 0) return
     const count = getMixTileCount(mode, sizeStr)
     const picks: HTMLImageElement[] = []
-    for (let i = 0; i < count; i++) picks.push(allImgs[Math.floor(Math.random() * allImgs.length)])
+    for (let i = 0; i < count; i++) picks.push(currentImgs[Math.floor(Math.random() * currentImgs.length)])
     updateEdit({ mixMode: mode, mixSelections: picks })
   }
 
