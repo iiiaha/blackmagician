@@ -70,9 +70,9 @@ module BlackMagician
     dialog.add_action_callback('insert_material') do |_ctx, data_url, vendor, tile_name, size_str|
       begin
         final_name = MaterialManager.insert(data_url, vendor, tile_name, size_str)
-        dialog.execute_script("onInsertResult(true, '#{final_name}')")
+        dialog.execute_script("onInsertResult(true, #{final_name.to_json})")
       rescue => e
-        dialog.execute_script("onInsertResult(false, '#{e.message.gsub("'", "\\\\'")}')")
+        dialog.execute_script("onInsertResult(false, #{e.message.to_json})")
       end
     end
   end

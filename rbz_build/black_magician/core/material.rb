@@ -21,6 +21,8 @@ module BlackMagician
 
       # 머티리얼 등록
       model = Sketchup.active_model
+      model.start_operation('Add Material', true)
+
       materials = model.materials
       final_name = unique_name(materials, mat_name)
 
@@ -31,6 +33,8 @@ module BlackMagician
       if dims && material.texture
         material.texture.size = [dims[:w].mm, dims[:h].mm]
       end
+
+      model.commit_operation
 
       File.delete(temp_path) if File.exist?(temp_path)
 
