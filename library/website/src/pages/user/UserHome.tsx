@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
@@ -48,6 +48,12 @@ export default function UserHome() {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   const [products, setProducts] = useState<Product[]>([])
   const [productImages, setProductImages] = useState<Record<string, ProductImage[]>>({})
+  const [sidebarView, setSidebarView] = useState<'vendors' | 'folders'>('vendors')
+  const [slideDir, setSlideDir] = useState<'forward' | 'back'>('forward')
+  const sidebarContentRef = useRef<HTMLDivElement>(null)
+  const [mainFade, setMainFade] = useState<'in' | 'out' | 'idle'>('idle')
+  const [prevVendors, setPrevVendors] = useState<Vendor[]>([])
+  const [catSliding, setCatSliding] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<(Product & { vendor_name: string })[] | null>(null)
 
@@ -95,6 +101,8 @@ export default function UserHome() {
 
   // Filter vendors by category (direct match on vendor.category)
   useEffect(() => {
+    setPrevVendors(filteredVendors)
+    setCatSliding(true)
     setFilteredVendors(allVendors.filter(v => v.category === activeCategory))
     setExpandedVendorId(null)
     setSelectedVendor(null)
@@ -103,7 +111,16 @@ export default function UserHome() {
     setProductImages({})
     setSearchResults(null)
     setShowFavorites(false)
+    setSidebarView('vendors')
+    setTimeout(() => { setCatSliding(false); setPrevVendors([]) }, 200)
   }, [activeCategory, allVendors])
+
+  // Fade in main area when vendor selected
+  useEffect(() => {
+    if (selectedVendor && !searchResults && !showFavorites) {
+      setMainFade('in')
+    }
+  }, [selectedVendor, searchResults, showFavorites])
 
   // Toggle vendor expand
   const handleToggleVendor = async (vendor: Vendor) => {
@@ -113,6 +130,8 @@ export default function UserHome() {
     }
     setExpandedVendorId(vendor.id)
     setSelectedVendor(vendor)
+    setSlideDir('forward')
+    setSidebarView('folders')
 
     if (!vendorFolders[vendor.id]) {
       const { data } = await supabase.from('folder_nodes').select('*').eq('vendor_id', vendor.id).order('sort_order')
@@ -324,11 +343,11 @@ export default function UserHome() {
             <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleSearch()}
               placeholder="Search"
-              className="w-full h-[26px] text-[10px] pl-6 pr-2 bg-muted border border-border rounded-[4px] outline-none placeholder:text-text-tertiary focus:border-foreground" />
+              className="w-full h-[26px] text-[10px] pl-6 pr-2 bg-muted border border-border rounded-[4px] outline-none placeholder:text-text-tertiary focus:border-brand" />
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-1 pb-1 flex flex-col">
+        <div className="flex-1 overflow-hidden px-1 pb-1 flex flex-col">
           {/* Favorites — always visible */}
           {user && (
             <button onClick={handleShowFavorites}
@@ -343,50 +362,95 @@ export default function UserHome() {
             </button>
           )}
 
-          {selectedVendor ? (
-            /* Vendor drill-down */
-            <>
-              {/* Vendor name + back on same row */}
-              <div className="flex items-center justify-between px-2.5 pt-1 pb-2">
-                <span className="text-[11px] font-bold">{selectedVendor.company_name}</span>
-                <button onClick={() => { setSelectedVendor(null); setExpandedVendorId(null); setSelectedFolder(null); setProducts([]); setShowFavorites(false) }}
-                  className="text-[9px] text-text-tertiary hover:text-foreground cursor-pointer">
-                  ← Back
-                </button>
+          <div ref={sidebarContentRef} className="flex-1 relative overflow-hidden">
+            {/* Previous vendor list (sliding out) */}
+            {catSliding && prevVendors.length > 0 && (
+              <div
+                className="absolute inset-0 overflow-y-auto"
+                style={{ animation: 'slideOutToRight 200ms ease-in forwards' }}
+              >
+                <div className="flex flex-col items-center gap-1.5 px-2 pt-1">
+                  {prevVendors.map(v => (
+                    <div key={v.id}
+                      className="w-full h-[36px] text-[12px] font-medium tracking-normal text-center rounded-[5px] overflow-hidden relative uppercase flex items-center justify-center">
+                      {v.logo_url ? (
+                        <>
+                          <img src={v.logo_url} alt="" className="absolute inset-0 w-full h-full object-cover blur-[2px] scale-[1.05]" />
+                          <div className="absolute inset-0 vendor-overlay" />
+                          <span className="relative vendor-text">{v.company_name}</span>
+                        </>
+                      ) : (
+                        <span className="text-text-secondary border border-border rounded-[5px] w-full h-full flex items-center justify-center bg-muted">
+                          {v.company_name}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
+            )}
 
-              <div className="flex-1 overflow-y-auto" style={{ animation: 'slideDown 0.25s ease-out' }}>
-                {vendorTrees[selectedVendor.id] && vendorTrees[selectedVendor.id].length > 0
-                  ? vendorTrees[selectedVendor.id].map(n => renderNode(n, 0, selectedVendor!))
-                  : <p className="text-[10px] text-text-tertiary px-2 py-4 text-center">No folders</p>
-                }
+            {/* Vendor list */}
+            <div
+              className="absolute inset-0 overflow-y-auto transition-transform duration-250 ease-in-out"
+              style={{
+                transform: sidebarView === 'vendors' ? 'translateX(0)' : 'translateX(-100%)',
+                animation: catSliding ? 'slideInFromLeft 200ms ease-out' : undefined,
+              }}
+            >
+              <div className="flex flex-col items-center gap-1.5 px-2 pt-1">
+                {filteredVendors.map((v, i) => (
+                  <button key={v.id} onClick={() => handleToggleVendor(v)}
+                    className="w-full h-[36px] text-[12px] font-medium tracking-normal text-center cursor-pointer rounded-[5px] overflow-hidden relative transition-all duration-200 hover:shadow-[0_2px_8px_rgba(0,0,0,0.12)] group uppercase"
+>
+                    {v.logo_url ? (
+                      <>
+                        <img src={v.logo_url} alt="" className="absolute inset-0 w-full h-full object-cover blur-[2px] scale-[1.05]" />
+                        <div className="absolute inset-0 vendor-overlay transition-[background] duration-500 ease-in-out" />
+                        <span className="relative vendor-text">{v.company_name}</span>
+                      </>
+                    ) : (
+                      <span className="text-text-secondary border border-border rounded-[5px] w-full h-full flex items-center justify-center bg-muted hover:bg-accent">
+                        {v.company_name}
+                      </span>
+                    )}
+                  </button>
+                ))}
+                {filteredVendors.length === 0 && (
+                  <p className="text-[10px] text-text-tertiary py-4 text-center">No vendors</p>
+                )}
               </div>
-            </>
-          ) : (
-            /* Vendor list — centered button cards */
-            <div className="flex flex-col items-center gap-1.5 px-2 pt-1">
-              {filteredVendors.map((v, i) => (
-                <button key={v.id} onClick={() => handleToggleVendor(v)}
-                  className="w-full h-[36px] text-[12px] font-medium tracking-normal text-center cursor-pointer rounded-[5px] overflow-hidden relative transition-all duration-200 hover:shadow-[0_2px_8px_rgba(0,0,0,0.12)] group uppercase"
-                  style={{ animation: `fadeInUp 0.2s ease-out ${i * 0.04}s both` }}>
-                  {v.logo_url ? (
-                    <>
-                      <img src={v.logo_url} alt="" className="absolute inset-0 w-full h-full object-cover blur-[2px] scale-[1.05]" />
-                      <div className="absolute inset-0 vendor-overlay transition-[background] duration-500 ease-in-out" />
-                      <span className="relative vendor-text">{v.company_name}</span>
-                    </>
-                  ) : (
-                    <span className="text-text-secondary border border-border rounded-[5px] w-full h-full flex items-center justify-center bg-muted hover:bg-accent">
-                      {v.company_name}
-                    </span>
-                  )}
-                </button>
-              ))}
-              {filteredVendors.length === 0 && (
-                <p className="text-[10px] text-text-tertiary py-4 text-center">No vendors</p>
+            </div>
+
+            {/* Vendor folders */}
+            <div
+              className="absolute inset-0 overflow-y-auto transition-transform duration-250 ease-in-out"
+              style={{ transform: sidebarView === 'folders' ? 'translateX(0)' : 'translateX(100%)' }}
+            >
+              {selectedVendor && (
+                <>
+                  <div className="flex items-center justify-between px-2.5 pt-1 pb-2">
+                    <span className="text-[11px] font-bold">{selectedVendor.company_name}</span>
+                    <button onClick={() => {
+                        setMainFade('out')
+                        setSlideDir('back')
+                        setSidebarView('vendors')
+                        setTimeout(() => { setSelectedVendor(null); setExpandedVendorId(null); setSelectedFolder(null); setProducts([]); setShowFavorites(false); setMainFade('idle') }, 250)
+                      }}
+                      className="text-[9px] text-text-tertiary hover:text-foreground cursor-pointer">
+                      ← Back
+                    </button>
+                  </div>
+                  <div>
+                    {vendorTrees[selectedVendor.id] && vendorTrees[selectedVendor.id].length > 0
+                      ? vendorTrees[selectedVendor.id].map(n => renderNode(n, 0, selectedVendor!))
+                      : <p className="text-[10px] text-text-tertiary px-2 py-4 text-center">No folders</p>
+                    }
+                  </div>
+                </>
               )}
             </div>
-          )}
+          </div>
         </div>
 
         <div className="border-t" />
@@ -419,8 +483,17 @@ export default function UserHome() {
 
       {/* ── Main ── */}
       <div className="flex-1 flex flex-col overflow-hidden bg-background">
+        {/* Vendor content area — banner + filter + grid fade together */}
+        <div
+          className="flex-1 flex flex-col overflow-hidden"
+          style={{
+            animation: mainFade === 'in' ? 'fadeIn 150ms ease-out forwards'
+              : mainFade === 'out' ? 'fadeOut 150ms ease-in forwards'
+              : undefined
+          }}
+        >
         {/* Vendor Banner — full width, outside scroll */}
-        {selectedVendor && !searchResults && !showFavorites && (
+        {selectedVendor && (
           <VendorBanner vendor={selectedVendor} />
         )}
 
@@ -435,7 +508,7 @@ export default function UserHome() {
             }`}>
               <span className={`inline-block w-[6px] h-[6px] rounded-full transition-all duration-300 ${
                 hasActiveFilter
-                  ? 'bg-[#34d399] shadow-[0_0_5px_rgba(52,211,153,0.5)]'
+                  ? 'bg-brand-accent shadow-[0_0_5px_rgba(234,0,3,0.35)]'
                   : 'bg-text-tertiary/30 dark:bg-text-tertiary/50'
               }`} />
               FILTER
@@ -446,13 +519,13 @@ export default function UserHome() {
             <input
               placeholder="최소" value={filterMinPrice}
               onChange={e => { const v = e.target.value; if (v === '' || /^\d*$/.test(v)) setFilterMinPrice(v) }}
-              className="w-[60px] h-[20px] text-[10px] px-1.5 bg-muted border border-border rounded-[3px] outline-none focus:border-foreground text-foreground placeholder:text-text-tertiary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="w-[60px] h-[20px] text-[10px] px-1.5 bg-muted border border-border rounded-[3px] outline-none focus:border-brand text-foreground placeholder:text-text-tertiary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
             <span className="text-[8px] text-text-tertiary">~</span>
             <input
               placeholder="최대" value={filterMaxPrice}
               onChange={e => { const v = e.target.value; if (v === '' || /^\d*$/.test(v)) setFilterMaxPrice(v) }}
-              className="w-[60px] h-[20px] text-[10px] px-1.5 bg-muted border border-border rounded-[3px] outline-none focus:border-foreground text-foreground placeholder:text-text-tertiary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="w-[60px] h-[20px] text-[10px] px-1.5 bg-muted border border-border rounded-[3px] outline-none focus:border-brand text-foreground placeholder:text-text-tertiary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
 
             <div className="w-px h-3 bg-border" />
@@ -462,7 +535,7 @@ export default function UserHome() {
             <input
               placeholder="최소" value={filterMinStock}
               onChange={e => { const v = e.target.value; if (v === '' || /^\d*$/.test(v)) setFilterMinStock(v) }}
-              className="w-[50px] h-[20px] text-[10px] px-1.5 bg-muted border border-border rounded-[3px] outline-none focus:border-foreground text-foreground placeholder:text-text-tertiary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="w-[50px] h-[20px] text-[10px] px-1.5 bg-muted border border-border rounded-[3px] outline-none focus:border-brand text-foreground placeholder:text-text-tertiary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
             <span className="text-[8px] text-text-tertiary">㎡ 이상</span>
 
@@ -548,6 +621,7 @@ export default function UserHome() {
           )}
 
         </div>
+        </div>
       </div>
 
       {/* Login Popup */}
@@ -603,7 +677,7 @@ function VendorBanner({ vendor }: { vendor: Vendor }) {
   const insta = vendor.instagram || 'blackmagician'
 
   return (
-    <div className="shrink-0 text-white relative overflow-hidden" style={{ animation: 'fadeIn 0.3s ease-out',
+    <div className="shrink-0 text-white relative overflow-hidden" style={{
       background: vendor.logo_url
         ? undefined
         : 'linear-gradient(135deg, #2a2a2a, #3a3a3a, #4a4a4a)',
@@ -712,7 +786,7 @@ function OriginDropdown({ origins, selected, onChange }: {
         <>
           <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
           <div className="absolute top-full left-0 mt-1 z-40 bg-surface border border-border rounded-[4px] shadow-[0_4px_12px_rgba(0,0,0,0.1)] max-h-[200px] overflow-y-auto min-w-[120px]"
-            style={{ animation: 'slideDown 0.15s ease-out' }}>
+            style={{ animation: 'fadeIn 0.15s ease-out' }}>
             {origins.length === 0 ? (
               <p className="text-[9px] text-text-tertiary px-3 py-2">데이터 없음</p>
             ) : (
@@ -748,7 +822,7 @@ function MaterialItem({ product, onClick, selected, isFavorite, onToggleFavorite
     <div
       className="group cursor-pointer"
       onClick={onClick}
-      style={animationDelay !== undefined ? { animation: `fadeInUp 0.25s ease-out ${animationDelay}s both` } : undefined}
+      style={animationDelay !== undefined ? { animation: `fadeIn 0.2s ease-out ${animationDelay}s both` } : undefined}
     >
       <div className="aspect-square rounded-[3px] overflow-hidden relative hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-shadow duration-200">
         {product.thumbnail_url ? (

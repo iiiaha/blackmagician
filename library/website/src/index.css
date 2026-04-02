@@ -6,19 +6,22 @@
   --color-foreground: #1a1a1a;
   --color-card: #ffffff;
   --color-card-foreground: #1a1a1a;
-  --color-primary: #1a1a1a;
+  --color-primary: #49637a;
   --color-primary-foreground: #ffffff;
   --color-secondary: rgba(0, 0, 0, 0.03);
   --color-secondary-foreground: #1a1a1a;
   --color-muted: rgba(0, 0, 0, 0.03);
   --color-muted-foreground: #6e6e6e;
-  --color-accent: rgba(0, 0, 0, 0.03);
+  --color-accent: rgba(0, 0, 0, 0.05);
   --color-accent-foreground: #1a1a1a;
   --color-destructive: #e53e3e;
   --color-destructive-foreground: #ffffff;
   --color-border: rgba(0, 0, 0, 0.06);
   --color-input: rgba(0, 0, 0, 0.06);
-  --color-ring: #1a1a1a;
+  --color-ring: #49637a;
+  --color-brand: #49637a;
+  --color-brand-light: #add7eb;
+  --color-brand-accent: #ea0003;
   --color-success: #16a34a;
   --color-warning: #f59e0b;
   --color-surface: #ffffff;
@@ -43,7 +46,10 @@
   --color-accent-foreground: #ebebeb;
   --color-border: rgba(255, 255, 255, 0.1);
   --color-input: rgba(255, 255, 255, 0.1);
-  --color-ring: #ebebeb;
+  --color-ring: #add7eb;
+  --color-brand: #add7eb;
+  --color-brand-light: #49637a;
+  --color-brand-accent: #ea0003;
   --color-surface: #242424;
   --color-text-secondary: #aaaaaa;
   --color-text-tertiary: #707070;
@@ -107,7 +113,7 @@ body {
 ::-webkit-scrollbar-thumb:hover { background: rgba(128, 128, 128, 0.35); }
 
 /* Selection */
-::selection { background: rgba(0, 102, 255, 0.2); color: var(--color-foreground); }
+::selection { background: rgba(173, 215, 235, 0.35); color: var(--color-foreground); }
 
 /* Focus */
 :focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
@@ -159,8 +165,24 @@ input[type="range"]::-webkit-slider-thumb {
   to { opacity: 1; max-height: 500px; }
 }
 
-/* Banner fade-in */
+/* Banner fade-in / fade-out */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes slideInFromLeft {
+  from { transform: translateX(-100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes orbPulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.6); }
+}
+@keyframes slideOutToRight {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(100%); opacity: 0; }
 }

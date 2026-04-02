@@ -99,17 +99,17 @@ export default function UserLayout() {
       <header className="h-[60px] bg-surface border-b border-border flex items-center px-5 justify-between shrink-0">
         <div className="flex items-center gap-8">
           <Link to="/" className="hover:opacity-80 transition-opacity shrink-0 flex items-center gap-2">
-            <img src="/logopic.png" alt="" className="h-[35px] w-auto" />
+            <img src="/logopic.png" alt="" className="h-[45px] w-auto" />
             <img src="/logotext.png" alt="Black Magician" className="h-[25px] w-auto" style={dark ? { filter: 'invert(1)' } : undefined} />
           </Link>
 
-          <nav ref={navRef} className="relative flex items-center gap-0.5">
+          <nav ref={navRef} className="relative flex items-center gap-1 bg-muted rounded-full p-[3px] ml-[30px]">
             {CATEGORIES.map(cat => (
               <button
                 key={cat.id}
                 data-active={activeCategory === cat.id}
                 onClick={() => setActiveCategory(cat.id)}
-                className={`px-2.5 py-1 text-[10px] tracking-[0.5px] font-semibold cursor-pointer transition-colors duration-200 ${
+                className={`relative z-10 px-3 py-[5px] text-[10px] tracking-[0.3px] font-semibold cursor-pointer transition-all duration-200 rounded-full ${
                   activeCategory === cat.id
                     ? 'text-foreground'
                     : 'text-muted-foreground hover:text-foreground/70'
@@ -118,10 +118,10 @@ export default function UserLayout() {
                 {cat.label}
               </button>
             ))}
-            {/* Sliding underline indicator */}
+            {/* Sliding pill indicator */}
             <span
-              className="absolute bottom-0 h-[1.5px] bg-foreground rounded-full transition-all duration-300 ease-in-out"
-              style={{ left: indicatorStyle.left, width: indicatorStyle.width }}
+              className="absolute top-[3px] h-[calc(100%-6px)] bg-surface rounded-full shadow-sm transition-all duration-300 ease-in-out"
+              style={{ left: indicatorStyle.left + 3, width: indicatorStyle.width }}
             />
           </nav>
         </div>
@@ -226,7 +226,7 @@ export default function UserLayout() {
                 <span className="font-semibold">
                   {isPro ? (
                     <span className="inline-flex items-center gap-1">
-                      <span className="text-[8px] font-bold bg-foreground text-primary-foreground px-1.5 py-[2px] rounded-[3px]">PRO</span>
+                      <span className="text-[8px] font-bold bg-[#34d399] text-white px-1.5 py-[2px] rounded-[3px]">PRO</span>
                       무제한
                     </span>
                   ) : 'Free'}
@@ -279,7 +279,7 @@ export default function UserLayout() {
                   <button
                     onClick={handleSubscribe}
                     disabled={checkoutLoading}
-                    className="w-full h-[32px] mt-3 bg-foreground text-primary-foreground text-[10px] font-semibold rounded-[5px] cursor-pointer hover:bg-foreground/85 transition-colors disabled:opacity-50"
+                    className="w-full h-[32px] mt-3 bg-[#34d399] text-white text-[10px] font-semibold rounded-[5px] cursor-pointer hover:opacity-85 transition-colors disabled:opacity-50"
                   >
                     {checkoutLoading ? '이동 중...' : 'Pro 구독하기'}
                   </button>

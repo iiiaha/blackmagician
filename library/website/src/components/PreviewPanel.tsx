@@ -214,13 +214,13 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
       {loggedIn && !isPro && !canApply ? (
         <button
           onClick={onSubscribeRequest}
-          className="w-full h-[30px] bg-foreground hover:bg-foreground/85 text-primary-foreground text-[10px] font-semibold tracking-[0.3px] rounded-[4px] cursor-pointer transition-colors flex items-center justify-center"
+          className="w-full h-[30px] bg-brand-accent hover:opacity-85 text-white text-[10px] font-semibold tracking-[0.3px] rounded-[4px] cursor-pointer transition-colors flex items-center justify-center"
         >
           Subscribe
         </button>
       ) : (
         <button
-          className="w-full h-[30px] bg-foreground hover:bg-foreground/85 text-primary-foreground text-[10px] font-semibold tracking-[0.3px] rounded-[4px] cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed transition-colors relative flex items-center justify-center"
+          className="w-full h-[30px] bg-[#34d399] hover:opacity-85 text-white text-[10px] font-semibold tracking-[0.3px] rounded-[4px] cursor-pointer disabled:opacity-25 disabled:cursor-not-allowed transition-colors relative flex items-center justify-center"
           onClick={loggedIn ? handleInsert : onLoginRequest}
           disabled={loggedIn && (inserting || !mainImg || isEmpty)}
         >
@@ -245,7 +245,7 @@ function ToolBtn({ icon, active, onClick, title, disabled }: {
   return (
     <button onClick={onClick} title={title} disabled={disabled}
       className={`flex-1 h-[26px] flex items-center justify-center rounded-[3px] cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed ${
-        active ? 'bg-foreground text-primary-foreground' : 'bg-muted text-text-secondary hover:bg-accent'
+        active ? 'bg-brand text-white' : 'bg-muted text-text-secondary hover:bg-brand-light/30'
       }`}>
       {icon}
     </button>
