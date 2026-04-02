@@ -49,7 +49,6 @@ export default function UserHome() {
   const [products, setProducts] = useState<Product[]>([])
   const [productImages, setProductImages] = useState<Record<string, ProductImage[]>>({})
   const [sidebarView, setSidebarView] = useState<'vendors' | 'folders'>('vendors')
-  const [slideDir, setSlideDir] = useState<'forward' | 'back'>('forward')
   const sidebarContentRef = useRef<HTMLDivElement>(null)
   const [mainFade, setMainFade] = useState<'in' | 'out' | 'idle'>('idle')
   const [prevVendors, setPrevVendors] = useState<Vendor[]>([])
@@ -130,7 +129,6 @@ export default function UserHome() {
     }
     setExpandedVendorId(vendor.id)
     setSelectedVendor(vendor)
-    setSlideDir('forward')
     setSidebarView('folders')
 
     if (!vendorFolders[vendor.id]) {
@@ -399,7 +397,7 @@ export default function UserHome() {
               }}
             >
               <div className="flex flex-col items-center gap-1.5 px-2 pt-1">
-                {filteredVendors.map((v, i) => (
+                {filteredVendors.map((v) => (
                   <button key={v.id} onClick={() => handleToggleVendor(v)}
                     className="w-full h-[36px] text-[12px] font-medium tracking-normal text-center cursor-pointer rounded-[5px] overflow-hidden relative transition-all duration-200 hover:shadow-[0_2px_8px_rgba(0,0,0,0.12)] group uppercase"
 >
@@ -433,7 +431,6 @@ export default function UserHome() {
                     <span className="text-[11px] font-bold">{selectedVendor.company_name}</span>
                     <button onClick={() => {
                         setMainFade('out')
-                        setSlideDir('back')
                         setSidebarView('vendors')
                         setTimeout(() => { setSelectedVendor(null); setExpandedVendorId(null); setSelectedFolder(null); setProducts([]); setShowFavorites(false); setMainFade('idle') }, 250)
                       }}
