@@ -99,7 +99,7 @@ export default function UserLayout() {
       <header className="h-[60px] bg-surface border-b border-border flex items-center px-5 justify-between shrink-0">
         <div className="flex items-center gap-8">
           <Link to="/" className="hover:opacity-80 transition-opacity shrink-0 flex items-center gap-2">
-            <img src="/logopic.png" alt="" className="h-[35px] w-auto" style={dark ? { filter: 'invert(1)' } : undefined} />
+            <img src="/logopic.png" alt="" className="h-[35px] w-auto" />
             <img src="/logotext.png" alt="Black Magician" className="h-[25px] w-auto" style={dark ? { filter: 'invert(1)' } : undefined} />
           </Link>
 
