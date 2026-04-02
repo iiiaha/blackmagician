@@ -96,12 +96,19 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
   useEffect(() => {
     setEdit({ ...defaultEditState })
     setShowColor(false)
-    if (images.length === 0) { setMainImg(null); setAllImgs([]); allImgsRef.current = []; return }
-    loadImage(images[0].url).then(img => setMainImg(img))
+    setMainImg(null)
+    setAllImgs([])
+    allImgsRef.current = []
+    if (images.length === 0) return
+    let cancelled = false
+    loadImage(images[0].url).then(img => { if (!cancelled) setMainImg(img) })
     Promise.all(images.map(i => loadImage(i.url))).then(imgs => {
-      setAllImgs(imgs)
-      allImgsRef.current = imgs
+      if (!cancelled) {
+        setAllImgs(imgs)
+        allImgsRef.current = imgs
+      }
     })
+    return () => { cancelled = true }
   }, [images])
 
   const redraw = useCallback(() => {
