@@ -381,9 +381,12 @@ export default function VendorProducts() {
     fetchProducts(selectedFolder.id)
   }
 
+  const [deleteImageTarget, setDeleteImageTarget] = useState<ProductImage | null>(null)
+
   const handleDeleteImage = async (image: ProductImage) => {
     await supabase.storage.from('product-images').remove([image.storage_path])
     await supabase.from('product_images').delete().eq('id', image.id)
+    setDeleteImageTarget(null)
     if (selectedFolder) fetchProducts(selectedFolder.id)
   }
 
@@ -514,7 +517,7 @@ export default function VendorProducts() {
                   {selectedImages.map(img => (
                     <div key={img.id} className="relative group w-[72px] h-[72px] rounded-[3px] border border-[rgba(0,0,0,0.06)] overflow-hidden">
                       <img src={img.url} alt={img.file_name} className="w-full h-full object-cover" />
-                      <button onClick={() => handleDeleteImage(img)}
+                      <button onClick={() => setDeleteImageTarget(img)}
                         className="absolute top-0.5 right-0.5 hidden group-hover:flex items-center justify-center w-4 h-4 bg-black/60 rounded-full cursor-pointer">
                         <X className="w-2.5 h-2.5 text-white" />
                       </button>
@@ -728,6 +731,30 @@ export default function VendorProducts() {
                 취소
               </button>
               <button onClick={handleBulkDelete}
+                className="flex-1 h-[34px] text-[11px] font-semibold border border-[rgba(0,0,0,0.08)] rounded-[5px] cursor-pointer hover:bg-[#f5f5f5]">
+                삭제하기
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Delete image confirmation popup */}
+      {deleteImageTarget && (
+        <>
+          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setDeleteImageTarget(null)} />
+          <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] bg-white border border-[rgba(0,0,0,0.08)] rounded-[8px] p-6 text-center shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+            <h3 className="text-[13px] font-bold mb-2">이미지 삭제</h3>
+            <p className="text-[11px] text-[#888] mb-1">
+              <span className="font-semibold text-[#333]">{deleteImageTarget.file_name}</span>
+            </p>
+            <p className="text-[10px] text-[#aaa] mb-5">이 이미지를 삭제하시겠습니까?</p>
+            <div className="flex gap-2">
+              <button onClick={() => setDeleteImageTarget(null)}
+                className="flex-1 h-[34px] text-[11px] font-semibold border border-[rgba(0,0,0,0.08)] rounded-[5px] cursor-pointer hover:bg-[#f5f5f5]">
+                취소
+              </button>
+              <button onClick={() => handleDeleteImage(deleteImageTarget)}
                 className="flex-1 h-[34px] text-[11px] font-semibold border border-[rgba(0,0,0,0.08)] rounded-[5px] cursor-pointer hover:bg-[#f5f5f5]">
                 삭제하기
               </button>

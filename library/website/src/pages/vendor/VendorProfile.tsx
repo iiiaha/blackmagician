@@ -6,6 +6,7 @@ import type { Vendor } from '@/types/database'
 
 export default function VendorProfile() {
   const { vendor } = useOutletContext<{ vendor: Vendor }>()
+  const [showDeleteLogo, setShowDeleteLogo] = useState(false)
 
   const refreshVendor = async () => {
     // Reload page to refresh vendor data from layout
@@ -85,10 +86,7 @@ export default function VendorProfile() {
               <div className="relative rounded-[6px] overflow-hidden h-[80px] bg-[#f5f5f5]">
                 <img src={vendor.logo_url} alt="배너" className="w-full h-full object-cover" />
                 <button
-                  onClick={async () => {
-                    await supabase.from('vendors').update({ logo_url: null }).eq('id', vendor.id)
-                    await refreshVendor()
-                  }}
+                  onClick={() => setShowDeleteLogo(true)}
                   className="absolute top-2 right-2 w-5 h-5 bg-black/50 rounded-full flex items-center justify-center cursor-pointer hover:bg-black/70"
                 >
                   <X className="w-3 h-3 text-white" />
@@ -151,6 +149,31 @@ export default function VendorProfile() {
           </button>
         </div>
       </div>
+
+      {/* Delete logo confirmation popup */}
+      {showDeleteLogo && (
+        <>
+          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setShowDeleteLogo(false)} />
+          <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] bg-white border border-[rgba(0,0,0,0.08)] rounded-[8px] p-6 text-center shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+            <h3 className="text-[13px] font-bold mb-2">배너 이미지 삭제</h3>
+            <p className="text-[10px] text-[#aaa] mb-5">배너 이미지를 삭제하시겠습니까?</p>
+            <div className="flex gap-2">
+              <button onClick={() => setShowDeleteLogo(false)}
+                className="flex-1 h-[34px] text-[11px] font-semibold border border-[rgba(0,0,0,0.08)] rounded-[5px] cursor-pointer hover:bg-[#f5f5f5]">
+                취소
+              </button>
+              <button onClick={async () => {
+                await supabase.from('vendors').update({ logo_url: null }).eq('id', vendor.id)
+                await refreshVendor()
+                setShowDeleteLogo(false)
+              }}
+                className="flex-1 h-[34px] text-[11px] font-semibold border border-[rgba(0,0,0,0.08)] rounded-[5px] cursor-pointer hover:bg-[#f5f5f5]">
+                삭제하기
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

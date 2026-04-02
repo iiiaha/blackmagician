@@ -60,11 +60,18 @@ export default function AdminFolders() {
     fetchFolders(selectedVendor.id)
   }
 
-  const handleDelete = async (nodeId: string) => {
+  const [deleteFolderTarget, setDeleteFolderTarget] = useState<string | null>(null)
+
+  const handleDeleteFolder = async (nodeId: string) => {
+    await supabase.from('folder_nodes').delete().eq('id', nodeId)
+    setDeleteFolderTarget(null)
+    if (selectedVendor) fetchFolders(selectedVendor.id)
+  }
+
+  const confirmDeleteFolder = (nodeId: string) => {
     const hasChildren = nodes.some(n => n.parent_id === nodeId)
     if (hasChildren) { alert('하위 폴더를 먼저 삭제해주세요.'); return }
-    await supabase.from('folder_nodes').delete().eq('id', nodeId)
-    if (selectedVendor) fetchFolders(selectedVendor.id)
+    setDeleteFolderTarget(nodeId)
   }
 
   const handleRename = async (nodeId: string) => {
@@ -129,7 +136,7 @@ export default function AdminFolders() {
               className="text-[#ccc] hover:text-[#333] cursor-pointer" title="하위 폴더 추가">
               <Plus className="w-3 h-3" />
             </button>
-            <button onClick={() => handleDelete(node.id)}
+            <button onClick={() => confirmDeleteFolder(node.id)}
               className="text-[#ccc] hover:text-[#e53e3e] cursor-pointer" title="삭제">
               <Trash2 className="w-3 h-3" />
             </button>
@@ -210,6 +217,30 @@ export default function AdminFolders() {
           )}
         </div>
       </div>
+
+      {/* Delete folder confirmation popup */}
+      {deleteFolderTarget && (
+        <>
+          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setDeleteFolderTarget(null)} />
+          <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] bg-white border border-[rgba(0,0,0,0.08)] rounded-[8px] p-6 text-center shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+            <h3 className="text-[13px] font-bold mb-2">폴더 삭제</h3>
+            <p className="text-[11px] text-[#888] mb-1">
+              <span className="font-semibold text-[#333]">{nodes.find(n => n.id === deleteFolderTarget)?.name}</span>
+            </p>
+            <p className="text-[10px] text-[#aaa] mb-5">이 폴더를 삭제하시겠습니까?</p>
+            <div className="flex gap-2">
+              <button onClick={() => setDeleteFolderTarget(null)}
+                className="flex-1 h-[34px] text-[11px] font-semibold border border-[rgba(0,0,0,0.08)] rounded-[5px] cursor-pointer hover:bg-[#f5f5f5]">
+                취소
+              </button>
+              <button onClick={() => handleDeleteFolder(deleteFolderTarget)}
+                className="flex-1 h-[34px] text-[11px] font-semibold border border-[rgba(0,0,0,0.08)] rounded-[5px] cursor-pointer hover:bg-[#f5f5f5]">
+                삭제하기
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }
