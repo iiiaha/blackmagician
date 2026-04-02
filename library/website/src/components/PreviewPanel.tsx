@@ -2,7 +2,7 @@ import { useRef, useEffect, useCallback, useState } from 'react'
 import { RotateCw, Palette } from 'lucide-react'
 import {
   type EditState, defaultEditState, drawCanvas, calcFinalSizeMM,
-  loadImage, getMixTileCount,
+  loadImage, getMixTileCount, parseSizeMM,
 } from '@/lib/canvas'
 import type { ProductImage, Product } from '@/types/database'
 
@@ -74,6 +74,25 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
 
   const hasMix = allImgs.length > 1
 
+  // Sync size orientation with image orientation
+  // If image is landscape but size says portrait (or vice versa), swap w/h
+  const effectiveSizeStr = (() => {
+    if (!mainImg || !sizeStr) return sizeStr
+    const parsed = parseSizeMM(sizeStr)
+    if (!parsed) return sizeStr
+    const { w, h } = parsed
+    if (w === h) return sizeStr // square, no swap needed
+    const imgLandscape = mainImg.naturalWidth > mainImg.naturalHeight
+    const sizeLandscape = w > h
+    if (imgLandscape !== sizeLandscape) {
+      // Swap w and h, keep thickness if present
+      const parts = sizeStr.split(/[x×*]/)
+      if (parts.length >= 3) return `${parts[1]}×${parts[0]}×${parts[2]}`
+      return `${parts[1]}×${parts[0]}`
+    }
+    return sizeStr
+  })()
+
   useEffect(() => {
     setEdit({ ...defaultEditState })
     setShowColor(false)
@@ -87,8 +106,8 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
 
   const redraw = useCallback(() => {
     if (!canvasRef.current || !mainImg) return
-    drawCanvas(canvasRef.current, sizeStr, edit, mainImg)
-  }, [sizeStr, edit, mainImg])
+    drawCanvas(canvasRef.current, effectiveSizeStr, edit, mainImg)
+  }, [effectiveSizeStr, edit, mainImg])
 
   useEffect(() => { redraw() }, [redraw])
 
@@ -100,7 +119,7 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
     if (edit.mixMode === mode) { updateEdit({ mixMode: 'none', mixSelections: [] }); return }
     const currentImgs = allImgsRef.current
     if (currentImgs.length === 0) return
-    const count = getMixTileCount(mode, sizeStr)
+    const count = getMixTileCount(mode, effectiveSizeStr)
     const picks: HTMLImageElement[] = []
     for (let i = 0; i < count; i++) picks.push(currentImgs[Math.floor(Math.random() * currentImgs.length)])
     updateEdit({ mixMode: mode, mixSelections: picks })
@@ -118,17 +137,17 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
 
     setInserting(true)
     // Re-draw at actual grout size for export
-    drawCanvas(canvasRef.current, sizeStr, edit, mainImg, true)
+    drawCanvas(canvasRef.current, effectiveSizeStr, edit, mainImg, true)
     const dataUrl = canvasRef.current.toDataURL('image/png')
     // Re-draw preview version
-    drawCanvas(canvasRef.current, sizeStr, edit, mainImg, false)
-    const finalMM = calcFinalSizeMM(sizeStr, edit)
-    const finalSizeStr = finalMM ? `${Math.round(finalMM.w)}x${Math.round(finalMM.h)}` : sizeStr
+    drawCanvas(canvasRef.current, effectiveSizeStr, edit, mainImg, false)
+    const finalMM = calcFinalSizeMM(effectiveSizeStr, edit)
+    const finalSizeStr = finalMM ? `${Math.round(finalMM.w)}x${Math.round(finalMM.h)}` : effectiveSizeStr
     onInsertRequest(dataUrl, vendorName, tileName, finalSizeStr)
     setTimeout(() => setInserting(false), 1500)
   }
 
-  const finalMM = calcFinalSizeMM(sizeStr, edit)
+  const finalMM = calcFinalSizeMM(effectiveSizeStr, edit)
 
   const isEmpty = images.length === 0
 
