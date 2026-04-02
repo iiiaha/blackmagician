@@ -365,20 +365,26 @@ export default function UserLayout() {
         <>
           <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setShowLoginPopup(false)} />
           <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] rounded-[12px] overflow-hidden shadow-[0_12px_40px_rgba(0,0,0,0.2)]">
-            {/* Top section */}
-            <div className="bg-surface px-6 pt-7 pb-5 text-center border-b border-border">
-              <div className="w-8 h-8 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-                <img src="/logopic.png" alt="" className="w-5 h-5" />
+            {/* Hero section */}
+            <div className="relative px-6 pt-8 pb-6 text-center overflow-hidden"
+              style={{ background: 'linear-gradient(135deg, #49637a 0%, #3a5269 50%, #2d4155 100%)' }}>
+              <div className="absolute inset-0 opacity-[0.06]"
+                style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, #add7eb 1px, transparent 1px), radial-gradient(circle at 80% 20%, #add7eb 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+              <div className="relative">
+                <div className="w-10 h-10 mx-auto mb-4 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center ring-1 ring-white/20">
+                  <img src="/logopic.png" alt="" className="w-6 h-6" />
+                </div>
+                <h3 className="text-[15px] font-bold text-white mb-2 leading-snug">
+                  선택하신 마감재,<br />바로 입혀보세요
+                </h3>
+                <p className="text-[11px] text-white/60 mb-3">
+                  Google 계정으로 3초 만에 시작하세요.
+                </p>
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-[#34d399] bg-[#34d399]/10 px-3 py-1 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#34d399]" />
+                  무료 3일 + 첫 달 100원
+                </span>
               </div>
-              <h3 className="text-[14px] font-bold text-foreground mb-2 leading-snug">
-                선택하신 마감재,<br />바로 입혀보세요
-              </h3>
-              <p className="text-[11px] text-muted-foreground mb-3">
-                Google 계정으로 3초 만에 시작하세요.
-              </p>
-              <p className="text-[10px] text-[#34d399] font-semibold">
-                무료 3일 + 첫 달 100원
-              </p>
             </div>
             {/* Bottom section */}
             <div className="bg-surface px-6 pt-5 pb-4">
