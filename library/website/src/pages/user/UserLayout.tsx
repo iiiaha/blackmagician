@@ -365,22 +365,22 @@ export default function UserLayout() {
         <>
           <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setShowLoginPopup(false)} />
           <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] rounded-[12px] overflow-hidden shadow-[0_12px_40px_rgba(0,0,0,0.2)]">
-            {/* Dark top section */}
-            <div className="bg-[#1a1a1a] px-6 pt-7 pb-6 text-center">
-              <div className="w-8 h-8 mx-auto mb-4 rounded-full bg-[#2a2a2a] flex items-center justify-center">
+            {/* Top section */}
+            <div className="bg-surface px-6 pt-7 pb-5 text-center border-b border-border">
+              <div className="w-8 h-8 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
                 <img src="/logopic.png" alt="" className="w-5 h-5" />
               </div>
-              <h3 className="text-[14px] font-bold text-white mb-2 leading-snug">
+              <h3 className="text-[14px] font-bold text-foreground mb-2 leading-snug">
                 선택하신 마감재,<br />바로 입혀보세요
               </h3>
-              <p className="text-[11px] text-[#888] mb-3">
+              <p className="text-[11px] text-muted-foreground mb-3">
                 Google 계정으로 3초 만에 시작하세요.
               </p>
               <p className="text-[10px] text-[#34d399] font-semibold">
                 무료 3일 + 첫 달 100원
               </p>
             </div>
-            {/* White bottom section */}
+            {/* Bottom section */}
             <div className="bg-surface px-6 pt-5 pb-4">
               <button
                 onClick={async () => {
