@@ -16,7 +16,7 @@ export default function VendorDashboard() {
         supabase.from('products').select('id', { count: 'exact', head: true }).eq('vendor_id', vendor.id),
         supabase.from('product_images').select('id', { count: 'exact', head: true })
           .in('product_id', (await supabase.from('products').select('id').eq('vendor_id', vendor.id)).data?.map((p: { id: string }) => p.id) || []),
-        supabase.from('folder_nodes').select('id', { count: 'exact', head: true }).eq('vendor_id', vendor.id).eq('is_leaf', true),
+        supabase.from('folder_nodes').select('id', { count: 'exact', head: true }).eq('vendor_id', vendor.id),
         supabase.from('products').select('id, name, created_at').eq('vendor_id', vendor.id).order('created_at', { ascending: false }).limit(5),
       ])
       setStats({
