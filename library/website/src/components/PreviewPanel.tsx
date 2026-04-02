@@ -279,13 +279,15 @@ function ToolBtn({ icon, active, onClick, title, disabled, loading }: {
   icon: React.ReactNode; active: boolean; onClick: () => void; title: string; disabled?: boolean; loading?: boolean
 }) {
   return (
-    <button onClick={onClick} title={title} disabled={disabled}
+    <button onClick={onClick} title={title} disabled={disabled || loading}
       className={`flex-1 h-[26px] flex items-center justify-center rounded-[3px] cursor-pointer disabled:cursor-not-allowed ${
-        loading ? 'opacity-40 animate-pulse' :
+        loading ? 'bg-muted text-text-tertiary' :
         disabled ? 'opacity-20' :
         active ? 'bg-brand text-white' : 'bg-muted text-text-secondary hover:bg-brand-light/30'
       }`}>
-      {icon}
+      {loading ? (
+        <span className="w-3 h-3 border-[1.5px] border-text-tertiary/30 border-t-text-tertiary rounded-full animate-spin" />
+      ) : icon}
     </button>
   )
 }
