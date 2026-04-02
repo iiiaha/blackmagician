@@ -88,8 +88,8 @@ module BlackMagician
     cmd = UI::Command.new('Black Magician') { show_dialog }
     cmd.small_icon = File.join(icon_dir, 'logopic_24.png')
     cmd.large_icon = File.join(icon_dir, 'logopic_32.png')
-    cmd.tooltip = 'Black Magician — Material Library'
-    cmd.status_bar_text = 'Open Black Magician material library'
+    cmd.tooltip = 'Black Magician'
+    cmd.status_bar_text = 'Open Black Magician'
     toolbar.add_item(cmd)
     toolbar.show
 

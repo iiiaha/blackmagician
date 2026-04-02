@@ -12,7 +12,7 @@ export default function Terms() {
         <div className="space-y-6 text-[11px] leading-[1.8] text-text-secondary">
           <section>
             <h2 className="text-[13px] font-bold text-foreground mb-2">제1조 (목적)</h2>
-            <p>본 약관은 Black Magician(이하 "회사")이 제공하는 마감재 라이브러리 서비스(이하 "서비스")의 이용 조건 및 절차, 회사와 이용자의 권리·의무를 규정함을 목적으로 합니다.</p>
+            <p>본 약관은 Black Magician(이하 "회사")이 제공하는 마감재 서비스(이하 "서비스")의 이용 조건 및 절차, 회사와 이용자의 권리·의무를 규정함을 목적으로 합니다.</p>
           </section>
 
           <section>
