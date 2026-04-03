@@ -180,11 +180,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     (profile.plan === 'pro' && (!profile.plan_expires_at || new Date(profile.plan_expires_at) > now)) ||
     (!!profile.trial_expires_at && new Date(profile.trial_expires_at) > now)
   )
-  const canApply = isPro || todayApplyCount < FREE_DAILY_LIMIT
+  const canApply = !!profile
 
   const logApply = async (productId: string): Promise<boolean> => {
     if (!state.userProfile) return false
-    if (!isPro && todayApplyCount >= FREE_DAILY_LIMIT) return false
 
     await supabase.from('apply_logs').insert({
       user_id: state.userProfile.id,

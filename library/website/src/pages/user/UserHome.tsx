@@ -657,7 +657,7 @@ function LoginPopup({ onClose }: { onClose: () => void }) {
             </p>
             <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-[#34d399] bg-[#34d399]/10 px-3 py-1 rounded-full">
               <span className="w-1.5 h-1.5 rounded-full bg-[#34d399]" />
-              무료 3일 + 첫 달 100원
+              완전 무료, 횟수 제한 없음
             </span>
           </div>
         </div>
