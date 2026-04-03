@@ -30,7 +30,7 @@ function getBreadcrumb(nodes: FolderNode[], folderId: string): FolderNode[] {
 }
 
 export default function UserHome() {
-  const { user, userProfile, isPro, canApply, todayApplyCount, maxFreeApplies, logApply } = useAuth()
+  const { user, userProfile, canApply, logApply } = useAuth()
 
   const { activeCategory } = useOutletContext<{ activeCategory: CategoryId }>()
 
@@ -454,20 +454,10 @@ export default function UserHome() {
             tileName={previewProduct?.name || ''}
             product={previewProduct}
             loggedIn={!!user}
-            isPro={isPro}
             canApply={canApply}
-            todayApplyCount={todayApplyCount}
-            maxFreeApplies={maxFreeApplies}
             onInsertRequest={handleInsert}
             onLoginRequest={() => setShowLoginPopup(true)}
             onApplyLog={logApply}
-            onSubscribeRequest={async () => {
-              if (!userProfile) return
-              const { requestBillingAuth } = await import('@/lib/toss')
-              try {
-                await requestBillingAuth(userProfile.id)
-              } catch { alert('결제 페이지를 열 수 없습니다.') }
-            }}
           />
         </div>
       </div>

@@ -53,17 +53,13 @@ interface Props {
   tileName: string
   product?: Product | null
   loggedIn: boolean
-  isPro: boolean
   canApply: boolean
-  todayApplyCount: number
-  maxFreeApplies: number
   onInsertRequest?: (dataUrl: string, vendor: string, tileName: string, sizeStr: string) => void
   onLoginRequest?: () => void
   onApplyLog?: (productId: string) => Promise<boolean>
-  onSubscribeRequest?: () => void
 }
 
-export default function PreviewPanel({ images, sizeStr, vendorName, tileName, product, loggedIn, isPro, canApply, todayApplyCount, maxFreeApplies, onInsertRequest, onLoginRequest, onApplyLog, onSubscribeRequest }: Props) {
+export default function PreviewPanel({ images, sizeStr, vendorName, tileName, product, loggedIn, canApply, onInsertRequest, onLoginRequest, onApplyLog }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [edit, setEdit] = useState<EditState>({ ...defaultEditState })
   const [mainImg, setMainImg] = useState<HTMLImageElement | null>(null)
