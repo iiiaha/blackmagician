@@ -301,11 +301,13 @@ function drawMixStagger(
       let x: number, y: number
 
       if (vertical) {
-        const colShift = Math.round(c * offsetFraction * cellH_px)
+        const step = edit.mixMode === 'half' ? 2 : 3
+        const colShift = Math.round((c % step) * offsetFraction * cellH_px)
         x = -totalW / 2 + c * cellW_px + gPx / 2
         y = -totalH / 2 + r * cellH_px + gPx / 2 + colShift
       } else {
-        const rowShift = Math.round(r * offsetFraction * cellW_px)
+        const step = edit.mixMode === 'half' ? 2 : 3
+        const rowShift = Math.round((r % step) * offsetFraction * cellW_px)
         x = -totalW / 2 + c * cellW_px + gPx / 2 + rowShift
         y = -totalH / 2 + r * cellH_px + gPx / 2
       }
