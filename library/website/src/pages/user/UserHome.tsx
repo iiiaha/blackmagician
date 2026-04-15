@@ -138,8 +138,8 @@ export default function UserHome() {
   }
 
   const fetchProducts = useCallback(async (folderId: string) => {
-    const { data } = await supabase.from('products').select('*').eq('folder_id', folderId).order('name')
-    const prods = (data as Product[]) || []
+    const { data } = await supabase.from('products').select('*').eq('folder_id', folderId)
+    const prods = ((data as Product[]) || []).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
     setProducts(prods)
     if (prods.length > 0) {
       const { data: imgData } = await supabase.from('product_images').select('*')
