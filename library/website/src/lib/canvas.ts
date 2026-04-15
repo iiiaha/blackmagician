@@ -10,6 +10,7 @@ export interface EditState {
   groutThickness: number
   mixMode: 'none' | 'grid' | 'half' | 'third'
   mixSelections: HTMLImageElement[]
+  mixRotations: number[]
 }
 
 export const defaultEditState: EditState = {
@@ -22,6 +23,7 @@ export const defaultEditState: EditState = {
   groutThickness: 2.0,
   mixMode: 'none',
   mixSelections: [],
+  mixRotations: [],
 }
 
 const BASE_PX_PER_MM = 4
@@ -240,12 +242,31 @@ function drawMixGrid(
   ctx.filter = buildFilter(edit)
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      const img = imgs[r * cols + c]
+      const idx = r * cols + c
+      const img = imgs[idx]
       const x = -totalW / 2 + c * cellW_px + gPx / 2
       const y = -totalH / 2 + r * cellH_px + gPx / 2
-      ctx.drawImage(img, x, y, tileW_px, tileH_px)
+      drawTileRotated(ctx, img, x, y, tileW_px, tileH_px, edit.mixRotations[idx] ?? 0)
     }
   }
+  ctx.restore()
+}
+
+function drawTileRotated(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  x: number, y: number,
+  w: number, h: number,
+  rotation: number,
+) {
+  if (!rotation) {
+    ctx.drawImage(img, x, y, w, h)
+    return
+  }
+  ctx.save()
+  ctx.translate(x + w / 2, y + h / 2)
+  ctx.rotate(rotation * Math.PI / 180)
+  ctx.drawImage(img, -w / 2, -h / 2, w, h)
   ctx.restore()
 }
 
@@ -295,24 +316,27 @@ function drawMixStagger(
   ctx.rect(-totalW / 2, -totalH / 2, totalW, totalH)
   ctx.clip()
 
+  const step = edit.mixMode === 'half' ? 2 : 3
+  const filterStr = buildFilter(edit)
+
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      const img = imgs[r * cols + c]
+      const idx = r * cols + c
+      const img = imgs[idx]
+      const rot = edit.mixRotations[idx] ?? 0
       let x: number, y: number
 
       if (vertical) {
-        const step = edit.mixMode === 'half' ? 2 : 3
         const colShift = Math.round((c % step) * offsetFraction * cellH_px)
         x = -totalW / 2 + c * cellW_px + gPx / 2
         y = -totalH / 2 + r * cellH_px + gPx / 2 + colShift
       } else {
-        const step = edit.mixMode === 'half' ? 2 : 3
         const rowShift = Math.round((r % step) * offsetFraction * cellW_px)
         x = -totalW / 2 + c * cellW_px + gPx / 2 + rowShift
         y = -totalH / 2 + r * cellH_px + gPx / 2
       }
 
-      ctx.drawImage(img, x, y, tileW_px, tileH_px)
+      drawTileRotated(ctx, img, x, y, tileW_px, tileH_px, rot)
 
       if (vertical) {
         if (y + cellH_px > totalH / 2) {
@@ -320,9 +344,9 @@ function drawMixStagger(
             ctx.filter = 'none'
             ctx.fillStyle = edit.groutColor
             ctx.fillRect(x - gPx / 2, y - totalH, cellW_px, cellH_px)
-            ctx.filter = buildFilter(edit)
+            ctx.filter = filterStr
           }
-          ctx.drawImage(img, x, y - totalH, tileW_px, tileH_px)
+          drawTileRotated(ctx, img, x, y - totalH, tileW_px, tileH_px, rot)
         }
       } else {
         if (x + cellW_px > totalW / 2) {
@@ -330,9 +354,9 @@ function drawMixStagger(
             ctx.filter = 'none'
             ctx.fillStyle = edit.groutColor
             ctx.fillRect(x - totalW, y - gPx / 2, cellW_px, cellH_px)
-            ctx.filter = buildFilter(edit)
+            ctx.filter = filterStr
           }
-          ctx.drawImage(img, x - totalW, y, tileW_px, tileH_px)
+          drawTileRotated(ctx, img, x - totalW, y, tileW_px, tileH_px, rot)
         }
       }
     }

@@ -123,13 +123,40 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
   }
 
   const handleMix = (mode: 'grid' | 'half' | 'third') => {
-    if (edit.mixMode === mode) { updateEdit({ mixMode: 'none', mixSelections: [] }); return }
+    if (edit.mixMode === mode) { updateEdit({ mixMode: 'none', mixSelections: [], mixRotations: [] }); return }
     const currentImgs = allImgsRef.current
     if (currentImgs.length === 0) return
     const count = getMixTileCount(mode, effectiveSizeStr)
+
+    // Pick images: unique when pool >= count, otherwise repeat shuffled pool
+    // to distribute duplicates as evenly as possible.
+    const shuffle = <T,>(arr: T[]): T[] => {
+      const a = arr.slice()
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[a[i], a[j]] = [a[j], a[i]]
+      }
+      return a
+    }
     const picks: HTMLImageElement[] = []
-    for (let i = 0; i < count; i++) picks.push(currentImgs[Math.floor(Math.random() * currentImgs.length)])
-    updateEdit({ mixMode: mode, mixSelections: picks })
+    while (picks.length < count) {
+      const chunk = shuffle(currentImgs)
+      for (const img of chunk) {
+        if (picks.length >= count) break
+        picks.push(img)
+      }
+    }
+
+    // Per-tile rotation: squares get 0/90/180/270, rectangles get 0/180.
+    const base = parseSizeMM(effectiveSizeStr)
+    const isSquare = base ? base.w === base.h : false
+    const rotChoices = isSquare ? [0, 90, 180, 270] : [0, 180]
+    const rotations: number[] = []
+    for (let i = 0; i < count; i++) {
+      rotations.push(rotChoices[Math.floor(Math.random() * rotChoices.length)])
+    }
+
+    updateEdit({ mixMode: mode, mixSelections: picks, mixRotations: rotations })
   }
 
   const handleInsert = async () => {
