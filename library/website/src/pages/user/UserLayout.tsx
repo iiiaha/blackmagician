@@ -224,7 +224,7 @@ export default function UserLayout() {
         style={{ height: isSketchUp ? '24px' : '36px' }}>
         {vendorMode ? (
           <div className="flex items-center gap-2">
-            <span>이 라이브러리는 디자이너의 편의를 위해 윤현상재와 이아하랩의 협업으로 제작되었습니다</span>
+            <span>이 익스텐션은 디자이너의 편의를 위해 윤현상재와 이아하랩의 협업으로 제작되었습니다</span>
             <span className="text-border">|</span>
             <a href="https://instagram.com/iiiaha.lab" target="_blank" rel="noopener noreferrer"
               className="hover:text-foreground transition-colors flex items-center gap-1">
