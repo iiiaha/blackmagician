@@ -207,7 +207,12 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
         <ToolBtn icon={<RotateCw className="w-3.5 h-3.5" />} active={edit.rotation > 0}
           onClick={() => updateEdit({ rotation: (edit.rotation + 90) % 360 })} title="Rotate" />
         <ToolBtn icon={<Palette className="w-3.5 h-3.5" />} active={showColor}
-          onClick={() => setShowColor(!showColor)} title="Color" />
+          onClick={() => {
+            if (showColor) {
+              updateEdit({ hue: 0, saturation: 100, brightness: 100 })
+            }
+            setShowColor(!showColor)
+          }} title="Color" />
         <ToolBtn icon={<GroutIcon className="w-3.5 h-3.5" />} active={edit.groutEnabled}
           onClick={() => updateEdit({ groutEnabled: !edit.groutEnabled })} title="Grout" />
         <div className="w-px bg-border mx-[1px]" />
@@ -301,11 +306,30 @@ function ToolBtn({ icon, active, onClick, title, disabled, loading }: {
 function SliderRow({ label, value, min, max, step, unit, onChange }: {
   label: string; value: number; min: number; max: number; step?: number; unit: string; onChange: (v: number) => void
 }) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState('')
+
+  const commit = () => {
+    setEditing(false)
+    const n = parseInt(draft, 10)
+    if (!isNaN(n)) onChange(Math.min(max, Math.max(min, n)))
+  }
+
   return (
     <div className="flex items-center gap-2">
       <span className="text-[9px] font-semibold text-text-secondary w-[24px] shrink-0">{label}</span>
       <input type="range" min={min} max={max} step={step || 1} value={value} onChange={e => onChange(+e.target.value)} className="flex-1" />
-      <span className="text-[9px] text-text-tertiary w-[30px] text-right tabular-nums">{value}{unit}</span>
+      {editing ? (
+        <input type="text" autoFocus value={draft}
+          onChange={e => setDraft(e.target.value.replace(/[^0-9-]/g, ''))}
+          onBlur={commit}
+          onKeyDown={e => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') setEditing(false) }}
+          className="w-[36px] h-[16px] text-[9px] text-right tabular-nums bg-surface border border-input rounded-[2px] px-1 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        />
+      ) : (
+        <span className="text-[9px] text-text-tertiary w-[36px] text-right tabular-nums cursor-text"
+          onClick={() => { setDraft(String(value)); setEditing(true) }}>{value}{unit}</span>
+      )}
     </div>
   )
 }
