@@ -481,7 +481,7 @@ export default function UserHome() {
             vendorName={previewVendor}
             tileName={previewProduct?.name || ''}
             product={previewProduct}
-            loggedIn={!!user}
+            loggedIn={!!user || !!vendorMode}
             canApply={canApply}
             onInsertRequest={handleInsert}
             onLoginRequest={() => setShowLoginPopup(true)}
@@ -615,7 +615,7 @@ export default function UserHome() {
                     selected={previewProduct?.id === p.id}
                     isFavorite={favoriteIds.has(p.id)}
                     onToggleFavorite={() => toggleFavorite(p.id)}
-                    loggedIn={!!user}
+                    loggedIn={!!user || !!vendorMode}
                     vendorPrefix={showFavorites ? (selectedVendor?.company_name || '') : undefined}
                     animationDelay={0} />
                 ))}
