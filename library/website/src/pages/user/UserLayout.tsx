@@ -146,13 +146,19 @@ export default function UserLayout() {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Theme toggle */}
+          {/* Theme toggle — pill switch */}
           <button
             onClick={() => setDark(!dark)}
-            className="w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+            className="relative w-[36px] h-[18px] rounded-full cursor-pointer transition-colors duration-300"
+            style={{ background: dark ? '#444' : '#d4d4d4' }}
             title={dark ? 'Light mode' : 'Dark mode'}
           >
-            {dark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+            <span
+              className="absolute top-[2px] w-[14px] h-[14px] rounded-full bg-white shadow-sm flex items-center justify-center transition-all duration-300"
+              style={{ left: dark ? '19px' : '2px' }}
+            >
+              {dark ? <Sun className="w-[9px] h-[9px] text-[#f59e0b]" /> : <Moon className="w-[9px] h-[9px] text-[#666]" />}
+            </span>
           </button>
 
           {vendorMode && vendorInfo ? (
