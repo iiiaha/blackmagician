@@ -157,7 +157,7 @@ export default function UserLayout() {
               className="absolute top-[2px] w-[14px] h-[14px] rounded-full bg-white shadow-sm flex items-center justify-center transition-all duration-300"
               style={{ left: dark ? '19px' : '2px' }}
             >
-              {dark ? <Sun className="w-[9px] h-[9px] text-[#f59e0b]" /> : <Moon className="w-[9px] h-[9px] text-[#666]" />}
+              {dark ? <Moon className="w-[9px] h-[9px] text-[#7c8dff]" /> : <Sun className="w-[9px] h-[9px] text-[#f59e0b]" />}
             </span>
           </button>
 
