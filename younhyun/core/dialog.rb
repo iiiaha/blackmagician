@@ -75,7 +75,9 @@ module Younhyun
     end
   end
 
-  unless file_loaded?(File.basename(__FILE__))
+  unless @toolbar_loaded
+    @toolbar_loaded = true
+
     menu = UI.menu('Plugins')
     menu.add_item('Younhyun Material Library') { show_dialog }
 
@@ -88,7 +90,5 @@ module Younhyun
     cmd.status_bar_text = 'Open Younhyun Material Library'
     toolbar.add_item(cmd)
     toolbar.show
-
-    file_loaded(File.basename(__FILE__))
   end
 end
