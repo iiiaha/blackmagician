@@ -500,7 +500,7 @@ export default function UserHome() {
           }}
         >
         {/* Vendor Banner — full width, outside scroll */}
-        {selectedVendor && (
+        {selectedVendor && !vendorMode && (
           <VendorBanner vendor={selectedVendor} />
         )}
 

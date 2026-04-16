@@ -2,9 +2,10 @@ import { Outlet, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { requestBillingAuth, issueBillingKey, cancelSubscription } from '@/lib/toss'
-import { LogIn, Sun, Moon, ChevronDown } from 'lucide-react'
+import { LogIn, Sun, Moon, ChevronDown, Globe, Instagram, Phone } from 'lucide-react'
 import { CATEGORIES, type CategoryId } from '@/lib/categories'
 import { useState, useEffect, useRef } from 'react'
+import type { Vendor } from '@/types/database'
 
 const isSketchUp = typeof window !== 'undefined' && 'sketchup' in window
 
@@ -19,6 +20,14 @@ export default function UserLayout() {
   const userMenuRef = useRef<HTMLDivElement>(null)
   const navRef = useRef<HTMLElement>(null)
   const [indicatorStyle, setIndicatorStyle] = useState<{ left: number; width: number }>({ left: 0, width: 0 })
+
+  // Fetch vendor info for vendor mode header links
+  const [vendorInfo, setVendorInfo] = useState<Vendor | null>(null)
+  useEffect(() => {
+    if (!vendorMode) return
+    supabase.from('vendors').select('*').eq('slug', vendorMode).eq('approved', true).maybeSingle()
+      .then(({ data }) => { if (data) setVendorInfo(data as Vendor) })
+  }, [vendorMode])
 
   // Update sliding indicator position
   useEffect(() => {
@@ -140,7 +149,25 @@ export default function UserLayout() {
             {dark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
           </button>
 
-          {!vendorMode && (user ? (
+          {vendorMode && vendorInfo ? (
+            <div className="flex items-center gap-2">
+              {vendorInfo.website_url && (
+                <a href={vendorInfo.website_url} target="_blank" rel="noopener noreferrer"
+                  className="h-6 flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5">
+                  <Globe className="w-3 h-3" /> Website
+                </a>
+              )}
+              {vendorInfo.instagram && (
+                <a href={`https://instagram.com/${vendorInfo.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer"
+                  className="h-6 flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5">
+                  <Instagram className="w-3 h-3" /> Instagram
+                </a>
+              )}
+              {vendorInfo.contact_phone && (
+                <VendorContact vendor={vendorInfo} />
+              )}
+            </div>
+          ) : !vendorMode && (user ? (
             <>
               <div className="relative" ref={userMenuRef}>
               <button
@@ -420,6 +447,48 @@ export default function UserLayout() {
         </>
       )}
     </div>
+  )
+}
+
+function VendorContact({ vendor }: { vendor: Vendor }) {
+  const [show, setShow] = useState(false)
+  return (
+    <>
+      <button onClick={() => setShow(true)}
+        className="h-6 flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5 cursor-pointer">
+        <Phone className="w-3 h-3" /> Contact
+      </button>
+      {show && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setShow(false)} />
+          <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[240px] bg-surface border border-border rounded-[8px] p-5 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+            <h3 className="text-[12px] font-bold mb-3 text-foreground">{vendor.company_name}</h3>
+            <div className="space-y-2 text-[11px]">
+              {vendor.contact_name && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">담당자</span>
+                  <span className="font-medium text-foreground">{vendor.contact_name}</span>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">연락처</span>
+                <span className="font-medium text-foreground">{vendor.contact_phone}</span>
+              </div>
+              {vendor.address && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">주소</span>
+                  <span className="font-medium text-foreground text-right max-w-[140px]">{vendor.address}</span>
+                </div>
+              )}
+            </div>
+            <button onClick={() => setShow(false)}
+              className="w-full h-[28px] mt-4 border border-border rounded-[4px] text-[10px] font-semibold cursor-pointer hover:bg-muted transition-colors">
+              닫기
+            </button>
+          </div>
+        </>
+      )}
+    </>
   )
 }
 
