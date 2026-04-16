@@ -220,36 +220,52 @@ export default function UserLayout() {
         <Outlet context={{ activeCategory }} />
       </main>
 
-      <footer className="bg-surface border-t border-border flex items-center justify-between px-5 shrink-0 text-[9px] text-muted-foreground"
+      <footer className="bg-surface border-t border-border flex items-center justify-center px-5 shrink-0 text-[9px] text-muted-foreground"
         style={{ height: isSketchUp ? '24px' : '36px' }}>
-        <div className="flex items-center gap-3">
-          <span>&copy; 2026 Black Magician. All rights reserved.</span>
-          {!isSketchUp && (
-            <>
-              <span className="text-border">|</span>
-              <span>이아하랩</span>
-              <span className="text-border">|</span>
-              <span>대표 이상훈</span>
-              <span className="text-border">|</span>
-              <span>사업자등록번호 367-02-03753</span>
-              <span className="text-border">|</span>
-              <span>서울특별시 강남구 논현동 77-20</span>
-              <span className="text-border">|</span>
-              <span>010-4005-7606</span>
-            </>
-          )}
-        </div>
-        <div className="flex items-center gap-3">
-          <Link to="/terms" className="hover:text-foreground transition-colors">이용약관</Link>
-          <Link to="/privacy" className="hover:text-foreground transition-colors">개인정보처리방침</Link>
-          <a href="https://instagram.com/iiiaha.lab" target="_blank" rel="noopener noreferrer"
-            className="hover:text-foreground transition-colors flex items-center gap-1">
-            <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="5" /><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none" />
-            </svg>
-            @iiiaha.lab
-          </a>
-        </div>
+        {vendorMode ? (
+          <div className="flex items-center gap-2">
+            <span>윤현상재 &times; iiiaha.lab 협업으로 제작되었습니다</span>
+            <span className="text-border">|</span>
+            <a href="https://instagram.com/iiiaha.lab" target="_blank" rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors flex items-center gap-1">
+              <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="5" /><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none" />
+              </svg>
+              @iiiaha.lab
+            </a>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-3">
+              <span>&copy; 2026 Black Magician. All rights reserved.</span>
+              {!isSketchUp && (
+                <>
+                  <span className="text-border">|</span>
+                  <span>이아하랩</span>
+                  <span className="text-border">|</span>
+                  <span>대표 이상훈</span>
+                  <span className="text-border">|</span>
+                  <span>사업자등록번호 367-02-03753</span>
+                  <span className="text-border">|</span>
+                  <span>서울특별시 강남구 논현동 77-20</span>
+                  <span className="text-border">|</span>
+                  <span>010-4005-7606</span>
+                </>
+              )}
+            </div>
+            <div className="flex items-center gap-3 ml-auto">
+              <Link to="/terms" className="hover:text-foreground transition-colors">이용약관</Link>
+              <Link to="/privacy" className="hover:text-foreground transition-colors">개인정보처리방침</Link>
+              <a href="https://instagram.com/iiiaha.lab" target="_blank" rel="noopener noreferrer"
+                className="hover:text-foreground transition-colors flex items-center gap-1">
+                <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="5" /><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none" />
+                </svg>
+                @iiiaha.lab
+              </a>
+            </div>
+          </>
+        )}
       </footer>
 
       {/* Plan Info Popup */}
