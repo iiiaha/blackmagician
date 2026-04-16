@@ -111,7 +111,7 @@ export default function UserLayout() {
         <div className="flex items-center gap-8">
           {vendorMode ? (
             <div className="w-[190px] flex items-center justify-center shrink-0 -ml-5">
-              <img src="/yunhyun_logo.png" alt="Younhyun Trading" className="h-[35px] w-auto" style={dark ? { filter: 'invert(1)' } : undefined} />
+              <img src="/yunhyun_logo.png" alt="Younhyun Trading" className="h-[45px] w-auto" style={dark ? { filter: 'invert(1)' } : undefined} />
             </div>
           ) : (
             <Link to="/" className="hover:opacity-80 transition-opacity shrink-0 flex items-center gap-2">
