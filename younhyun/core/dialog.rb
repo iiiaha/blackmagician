@@ -1,6 +1,6 @@
 Sketchup.require(File.join(__dir__, 'material'))
 
-module Yunhyun
+module Younhyun
   LIBRARY_URL = 'https://blackmagician.pages.dev?vendor=younhyun'
 
   def self.show_dialog
@@ -10,8 +10,8 @@ module Yunhyun
     end
 
     @dialog = UI::HtmlDialog.new(
-      dialog_title:    'Yunhyun Material Library',
-      preferences_key: 'YunhyunMaterial',
+      dialog_title:    'Younhyun Material Library',
+      preferences_key: 'YounhyunMaterial',
       width:           900,
       height:          650,
       resizable:       true,
@@ -77,15 +77,15 @@ module Yunhyun
 
   unless file_loaded?(File.basename(__FILE__))
     menu = UI.menu('Plugins')
-    menu.add_item('Yunhyun Material Library') { show_dialog }
+    menu.add_item('Younhyun Material Library') { show_dialog }
 
-    icon_dir = File.join(PLUGIN_DIR, 'yunhyun', 'icons')
-    toolbar = UI::Toolbar.new('Yunhyun')
-    cmd = UI::Command.new('Yunhyun Material Library') { show_dialog }
+    icon_dir = File.join(PLUGIN_DIR, 'younhyun', 'icons')
+    toolbar = UI::Toolbar.new('Younhyun')
+    cmd = UI::Command.new('Younhyun Material Library') { show_dialog }
     cmd.small_icon = File.join(icon_dir, 'icon_24.png')
     cmd.large_icon = File.join(icon_dir, 'icon_32.png')
-    cmd.tooltip = 'Yunhyun Material Library'
-    cmd.status_bar_text = 'Open Yunhyun Material Library'
+    cmd.tooltip = 'Younhyun Material Library'
+    cmd.status_bar_text = 'Open Younhyun Material Library'
     toolbar.add_item(cmd)
     toolbar.show
 

@@ -1,7 +1,7 @@
 require 'fileutils'
 require 'tmpdir'
 
-module Yunhyun
+module Younhyun
   module MaterialManager
     def self.insert(data_url, vendor, tile_name, final_size_str)
       temp_dir = Dir.tmpdir
