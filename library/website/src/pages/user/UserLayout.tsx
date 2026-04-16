@@ -220,7 +220,7 @@ export default function UserLayout() {
         <Outlet context={{ activeCategory }} />
       </main>
 
-      <footer className="bg-surface border-t border-border flex items-center justify-center px-5 shrink-0 text-[9px] text-muted-foreground"
+      <footer className="bg-surface border-t border-border flex items-center justify-center px-5 shrink-0 text-[10px] text-muted-foreground"
         style={{ height: isSketchUp ? '24px' : '36px' }}>
         {vendorMode ? (
           <div className="flex items-center gap-2">
