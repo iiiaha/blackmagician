@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { CATEGORIES } from '@/lib/categories'
-import { Plus, Trash2, KeyRound, ChevronDown, ChevronRight, Save } from 'lucide-react'
+import { Plus, Trash2, KeyRound, ChevronDown, ChevronRight, Pencil, Save } from 'lucide-react'
 import type { Vendor } from '@/types/database'
 
 type EditableFields = {
@@ -37,7 +37,8 @@ export default function AdminVendors() {
   const [newPassword, setNewPassword] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<Vendor | null>(null)
 
-  // Per-vendor edit state
+  // Edit mode & state per vendor
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [editState, setEditState] = useState<Record<string, EditableFields>>({})
   const [saving, setSaving] = useState(false)
 
@@ -49,14 +50,23 @@ export default function AdminVendors() {
 
   useEffect(() => { fetchVendors() }, [])
 
-  // Initialize edit state when expanding a vendor
   const handleExpand = (vendor: Vendor) => {
     if (expandedId === vendor.id) {
       setExpandedId(null)
+      setEditingId(null)
       return
     }
     setExpandedId(vendor.id)
+    setEditingId(null)
+  }
+
+  const startEditing = (vendor: Vendor) => {
     setEditState(prev => ({ ...prev, [vendor.id]: pickEditable(vendor) }))
+    setEditingId(vendor.id)
+  }
+
+  const cancelEditing = () => {
+    setEditingId(null)
   }
 
   const updateField = (vendorId: string, field: keyof EditableFields, value: string) => {
@@ -64,13 +74,6 @@ export default function AdminVendors() {
       ...prev,
       [vendorId]: { ...prev[vendorId], [field]: value },
     }))
-  }
-
-  const isDirty = (vendor: Vendor): boolean => {
-    const edit = editState[vendor.id]
-    if (!edit) return false
-    const orig = pickEditable(vendor)
-    return (Object.keys(orig) as (keyof EditableFields)[]).some(k => edit[k] !== orig[k])
   }
 
   const handleSave = async (vendor: Vendor) => {
@@ -84,8 +87,11 @@ export default function AdminVendors() {
         updates[k] = edit[k] || null
       }
     }
-    await supabase.from('vendors').update(updates).eq('id', vendor.id)
-    await fetchVendors()
+    if (Object.keys(updates).length > 0) {
+      await supabase.from('vendors').update(updates).eq('id', vendor.id)
+      await fetchVendors()
+    }
+    setEditingId(null)
     setSaving(false)
   }
 
@@ -193,7 +199,7 @@ export default function AdminVendors() {
             <div className="bg-white border border-[rgba(0,0,0,0.06)] rounded-[6px] overflow-hidden">
               {catVendors.map(vendor => {
                 const isExpanded = expandedId === vendor.id
-                const dirty = isDirty(vendor)
+                const isEditing = editingId === vendor.id
                 const edit = editState[vendor.id]
                 return (
                   <div key={vendor.id} className="border-b border-[rgba(0,0,0,0.04)] last:border-0">
@@ -209,14 +215,27 @@ export default function AdminVendors() {
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                        {isExpanded && dirty && (
-                          <button onClick={(e) => { e.stopPropagation(); handleSave(vendor) }}
-                            disabled={saving}
-                            className="flex items-center gap-1 h-[24px] px-2.5 bg-[#1a1a1a] text-white text-[9px] font-semibold rounded-[3px] cursor-pointer disabled:opacity-50"
-                            title="저장">
-                            <Save className="w-3 h-3" />
-                            {saving ? '저장 중...' : '저장'}
+                        {isExpanded && !isEditing && (
+                          <button onClick={(e) => { e.stopPropagation(); startEditing(vendor) }}
+                            className="flex items-center gap-1 h-[24px] px-2.5 border border-[rgba(0,0,0,0.08)] text-[9px] font-semibold rounded-[3px] cursor-pointer hover:bg-[#f5f5f5]"
+                            title="편집">
+                            <Pencil className="w-3 h-3" /> 편집
                           </button>
+                        )}
+                        {isExpanded && isEditing && (
+                          <>
+                            <button onClick={(e) => { e.stopPropagation(); cancelEditing() }}
+                              className="h-[24px] px-2.5 border border-[rgba(0,0,0,0.08)] text-[9px] font-semibold text-[#999] rounded-[3px] cursor-pointer hover:bg-[#f5f5f5]">
+                              취소
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); handleSave(vendor) }}
+                              disabled={saving}
+                              className="flex items-center gap-1 h-[24px] px-2.5 bg-[#1a1a1a] text-white text-[9px] font-semibold rounded-[3px] cursor-pointer disabled:opacity-50"
+                              title="저장">
+                              <Save className="w-3 h-3" />
+                              {saving ? '저장 중...' : '저장'}
+                            </button>
+                          </>
                         )}
                         <button onClick={(e) => { e.stopPropagation(); setResetPwVendorId(vendor.id); setNewPassword('') }}
                           className="text-[#bbb] hover:text-[#333] cursor-pointer" title="비밀번호 변경">
@@ -230,18 +249,18 @@ export default function AdminVendors() {
                     </button>
 
                     {/* Expanded detail */}
-                    {isExpanded && edit && (
+                    {isExpanded && (
                       <div className="px-4 pb-4 pt-1">
                         <div className="grid grid-cols-2 gap-3">
-                          <Field label="담당자" value={edit.contact_name} onChange={v => updateField(vendor.id, 'contact_name', v)} />
-                          <Field label="연락처" value={edit.contact_phone} onChange={v => updateField(vendor.id, 'contact_phone', v)} />
-                          <Field label="주소" value={edit.address} onChange={v => updateField(vendor.id, 'address', v)} />
-                          <Field label="홈페이지" value={edit.website_url} onChange={v => updateField(vendor.id, 'website_url', v)} />
-                          <Field label="인스타그램" value={edit.instagram} onChange={v => updateField(vendor.id, 'instagram', v)} />
-                          <Field label="독자 슬러그" value={edit.slug} onChange={v => updateField(vendor.id, 'slug', v)} placeholder="예: younhyun" />
+                          <Field label="담당자" value={isEditing ? edit.contact_name : (vendor.contact_name || '')} editing={isEditing} onChange={v => updateField(vendor.id, 'contact_name', v)} />
+                          <Field label="연락처" value={isEditing ? edit.contact_phone : (vendor.contact_phone || '')} editing={isEditing} onChange={v => updateField(vendor.id, 'contact_phone', v)} />
+                          <Field label="주소" value={isEditing ? edit.address : (vendor.address || '')} editing={isEditing} onChange={v => updateField(vendor.id, 'address', v)} />
+                          <Field label="홈페이지" value={isEditing ? edit.website_url : (vendor.website_url || '')} editing={isEditing} onChange={v => updateField(vendor.id, 'website_url', v)} />
+                          <Field label="인스타그램" value={isEditing ? edit.instagram : (vendor.instagram || '')} editing={isEditing} onChange={v => updateField(vendor.id, 'instagram', v)} />
+                          <Field label="독자 슬러그" value={isEditing ? edit.slug : (vendor.slug || '')} editing={isEditing} onChange={v => updateField(vendor.id, 'slug', v)} placeholder="예: younhyun" />
                         </div>
                         <div className="mt-3">
-                          <Field label="소개글" value={edit.description} onChange={v => updateField(vendor.id, 'description', v)} multiline />
+                          <Field label="소개글" value={isEditing ? edit.description : (vendor.description || '')} editing={isEditing} onChange={v => updateField(vendor.id, 'description', v)} multiline />
                         </div>
                         <p className="text-[9px] text-[#aaa] mt-3">등록일: {new Date(vendor.created_at).toLocaleDateString('ko-KR')}</p>
                       </div>
@@ -297,18 +316,24 @@ export default function AdminVendors() {
   )
 }
 
-function Field({ label, value, onChange, multiline, placeholder }: {
-  label: string; value: string; onChange: (v: string) => void; multiline?: boolean; placeholder?: string
+function Field({ label, value, editing, onChange, multiline, placeholder }: {
+  label: string; value: string; editing: boolean; onChange: (v: string) => void; multiline?: boolean; placeholder?: string
 }) {
   return (
     <div>
       <label className="text-[9px] text-[#999] font-semibold mb-1 block">{label}</label>
-      {multiline ? (
-        <textarea value={value} onChange={e => onChange(e.target.value)} rows={2} placeholder={placeholder}
-          className="w-full text-[11px] px-2 py-1.5 border border-[rgba(0,0,0,0.08)] rounded-[3px] outline-none resize-none focus:border-[#1a1a1a] bg-white placeholder:text-[#ccc]" />
+      {editing ? (
+        multiline ? (
+          <textarea value={value} onChange={e => onChange(e.target.value)} rows={2} placeholder={placeholder}
+            className="w-full text-[11px] px-2 py-1.5 border border-[rgba(0,0,0,0.1)] rounded-[3px] outline-none resize-none focus:border-[#1a1a1a] bg-white placeholder:text-[#ccc]" />
+        ) : (
+          <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+            className="w-full h-[28px] text-[11px] px-2 border border-[rgba(0,0,0,0.1)] rounded-[3px] outline-none focus:border-[#1a1a1a] bg-white placeholder:text-[#ccc]" />
+        )
       ) : (
-        <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-          className="w-full h-[28px] text-[11px] px-2 border border-[rgba(0,0,0,0.08)] rounded-[3px] outline-none focus:border-[#1a1a1a] bg-white placeholder:text-[#ccc]" />
+        <div className="min-h-[28px] flex items-center text-[11px] px-2 bg-[#fafafa] rounded-[3px]">
+          {value || <span className="text-[#ccc]">-</span>}
+        </div>
       )}
     </div>
   )
