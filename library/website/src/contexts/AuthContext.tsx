@@ -22,6 +22,7 @@ interface AuthContextType extends AuthState {
   canApply: boolean
   refreshApplyCount: () => Promise<void>
   logApply: (productId: string) => Promise<boolean>
+  vendorMode: string | null
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -97,13 +98,15 @@ async function fetchOrCreateUserProfile(userId: string, email?: string): Promise
 const FREE_DAILY_LIMIT = 3
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const [vendorMode] = useState(() => new URLSearchParams(window.location.search).get('vendor'))
+
   const [state, setState] = useState<AuthState>({
     user: null,
     session: null,
     vendor: null,
     userProfile: null,
     isAdmin: false,
-    loading: true,
+    loading: !vendorMode,
   })
   const [todayApplyCount, setTodayApplyCount] = useState(0)
 
@@ -134,6 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
+    if (vendorMode) return // Skip auth in vendor mode
     // Initial session load
     supabase.auth.getSession().then(({ data: { session } }) => {
       loadUserData(session)
@@ -176,13 +180,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Check if user is on pro plan (active subscription or active trial)
   const profile = state.userProfile
   const now = new Date()
-  const isPro = !!profile && (
+  const isPro = vendorMode ? true : !!profile && (
     (profile.plan === 'pro' && (!profile.plan_expires_at || new Date(profile.plan_expires_at) > now)) ||
     (!!profile.trial_expires_at && new Date(profile.trial_expires_at) > now)
   )
-  const canApply = !!profile
+  const canApply = vendorMode ? true : !!profile
 
   const logApply = async (productId: string): Promise<boolean> => {
+    if (vendorMode) return true // No logging in vendor mode
     if (!state.userProfile) return false
 
     await supabase.from('apply_logs').insert({
@@ -202,7 +207,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider value={{
       ...state, signOut, refreshVendor, refreshUserProfile,
       isPro, todayApplyCount, maxFreeApplies: FREE_DAILY_LIMIT, canApply,
-      refreshApplyCount, logApply,
+      refreshApplyCount, logApply, vendorMode,
     }}>
       {children}
     </AuthContext.Provider>

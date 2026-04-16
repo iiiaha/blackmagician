@@ -29,8 +29,13 @@ function getBreadcrumb(nodes: FolderNode[], folderId: string): FolderNode[] {
   return path
 }
 
+// Vendor slug → company_name mapping for independent extension mode
+const VENDOR_SLUGS: Record<string, string> = {
+  yunhyun: '윤현상재',
+}
+
 export default function UserHome() {
-  const { user, userProfile, canApply, logApply } = useAuth()
+  const { user, userProfile, canApply, logApply, vendorMode } = useAuth()
 
   const { activeCategory } = useOutletContext<{ activeCategory: CategoryId }>()
 
@@ -85,6 +90,31 @@ export default function UserHome() {
     fetchAll()
   }, [])
 
+  // Vendor mode: auto-select the vendor and load folders
+  useEffect(() => {
+    if (!vendorMode) return
+    const companyName = VENDOR_SLUGS[vendorMode]
+    if (!companyName) return
+
+    const autoSelect = async () => {
+      const { data } = await supabase.from('vendors').select('*')
+        .eq('company_name', companyName).eq('approved', true).maybeSingle()
+      if (!data) return
+      const vendor = data as Vendor
+      setSelectedVendor(vendor)
+      setSidebarView('folders')
+      setExpandedVendorId(vendor.id)
+
+      const { data: folderData } = await supabase.from('folder_nodes').select('*')
+        .eq('vendor_id', vendor.id).order('sort_order')
+      const f = (folderData as FolderNode[]) || []
+      setVendorFolders(prev => ({ ...prev, [vendor.id]: f }))
+      setVendorTrees(prev => ({ ...prev, [vendor.id]: buildTree(f, null) }))
+      setExpandedIds(new Set(f.map(n => n.id)))
+    }
+    autoSelect()
+  }, [vendorMode])
+
   // Fetch favorites
   useEffect(() => {
     if (!userProfile) return
@@ -98,8 +128,9 @@ export default function UserHome() {
     fetchFavs()
   }, [userProfile, activeCategory])
 
-  // Filter vendors by category (direct match on vendor.category)
+  // Filter vendors by category (direct match on vendor.category) — skip in vendor mode
   useEffect(() => {
+    if (vendorMode) return
     setPrevVendors(filteredVendors)
     setCatSliding(true)
     setFilteredVendors(allVendors.filter(v => v.category === activeCategory))
@@ -382,55 +413,59 @@ export default function UserHome() {
               </div>
             )}
 
-            {/* Vendor list */}
-            <div
-              className="absolute inset-0 overflow-y-auto transition-transform duration-250 ease-in-out"
-              style={{
-                transform: sidebarView === 'vendors' ? 'translateX(0)' : 'translateX(-100%)',
-                animation: catSliding ? 'slideInFromLeft 200ms ease-out' : undefined,
-              }}
-            >
-              <div className="flex flex-col items-center gap-1.5 px-2 pt-1">
-                {filteredVendors.map((v) => (
-                  <button key={v.id} onClick={() => handleToggleVendor(v)}
-                    className="w-full h-[36px] text-[12px] font-medium tracking-normal text-center cursor-pointer rounded-[5px] overflow-hidden relative transition-all duration-200 hover:shadow-[0_2px_8px_rgba(0,0,0,0.12)] group uppercase"
->
-                    {v.logo_url ? (
-                      <>
-                        <img src={v.logo_url} alt="" className="absolute inset-0 w-full h-full object-cover blur-[2px] scale-[1.05]" />
-                        <div className="absolute inset-0 vendor-overlay transition-[background] duration-500 ease-in-out" />
-                        <span className="relative vendor-text">{v.company_name}</span>
-                      </>
-                    ) : (
-                      <span className="text-text-secondary border border-border rounded-[5px] w-full h-full flex items-center justify-center bg-muted hover:bg-accent">
-                        {v.company_name}
-                      </span>
-                    )}
-                  </button>
-                ))}
-                {filteredVendors.length === 0 && (
-                  <p className="text-[10px] text-text-tertiary py-4 text-center">No vendors</p>
-                )}
+            {/* Vendor list — hidden in vendor mode */}
+            {!vendorMode && (
+              <div
+                className="absolute inset-0 overflow-y-auto transition-transform duration-250 ease-in-out"
+                style={{
+                  transform: sidebarView === 'vendors' ? 'translateX(0)' : 'translateX(-100%)',
+                  animation: catSliding ? 'slideInFromLeft 200ms ease-out' : undefined,
+                }}
+              >
+                <div className="flex flex-col items-center gap-1.5 px-2 pt-1">
+                  {filteredVendors.map((v) => (
+                    <button key={v.id} onClick={() => handleToggleVendor(v)}
+                      className="w-full h-[36px] text-[12px] font-medium tracking-normal text-center cursor-pointer rounded-[5px] overflow-hidden relative transition-all duration-200 hover:shadow-[0_2px_8px_rgba(0,0,0,0.12)] group uppercase"
+  >
+                      {v.logo_url ? (
+                        <>
+                          <img src={v.logo_url} alt="" className="absolute inset-0 w-full h-full object-cover blur-[2px] scale-[1.05]" />
+                          <div className="absolute inset-0 vendor-overlay transition-[background] duration-500 ease-in-out" />
+                          <span className="relative vendor-text">{v.company_name}</span>
+                        </>
+                      ) : (
+                        <span className="text-text-secondary border border-border rounded-[5px] w-full h-full flex items-center justify-center bg-muted hover:bg-accent">
+                          {v.company_name}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                  {filteredVendors.length === 0 && (
+                    <p className="text-[10px] text-text-tertiary py-4 text-center">No vendors</p>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Vendor folders */}
             <div
               className="absolute inset-0 overflow-y-auto transition-transform duration-250 ease-in-out"
-              style={{ transform: sidebarView === 'folders' ? 'translateX(0)' : 'translateX(100%)' }}
+              style={{ transform: (vendorMode || sidebarView === 'folders') ? 'translateX(0)' : 'translateX(100%)' }}
             >
               {selectedVendor && (
                 <>
                   <div className="flex items-center justify-between px-2.5 pt-1 pb-2">
                     <span className="text-[11px] font-bold">{selectedVendor.company_name}</span>
-                    <button onClick={() => {
-                        setMainFade('out')
-                        setSidebarView('vendors')
-                        setTimeout(() => { setSelectedVendor(null); setExpandedVendorId(null); setSelectedFolder(null); setProducts([]); setShowFavorites(false); setMainFade('idle') }, 250)
-                      }}
-                      className="text-[9px] text-text-tertiary hover:text-foreground cursor-pointer">
-                      ← Back
-                    </button>
+                    {!vendorMode && (
+                      <button onClick={() => {
+                          setMainFade('out')
+                          setSidebarView('vendors')
+                          setTimeout(() => { setSelectedVendor(null); setExpandedVendorId(null); setSelectedFolder(null); setProducts([]); setShowFavorites(false); setMainFade('idle') }, 250)
+                        }}
+                        className="text-[9px] text-text-tertiary hover:text-foreground cursor-pointer">
+                        ← Back
+                      </button>
+                    )}
                   </div>
                   <div>
                     {vendorTrees[selectedVendor.id] && vendorTrees[selectedVendor.id].length > 0

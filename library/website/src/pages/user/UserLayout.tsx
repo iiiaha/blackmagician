@@ -9,7 +9,7 @@ import { useState, useEffect, useRef } from 'react'
 const isSketchUp = typeof window !== 'undefined' && 'sketchup' in window
 
 export default function UserLayout() {
-  const { user, userProfile, signOut, isPro, todayApplyCount, maxFreeApplies, refreshUserProfile } = useAuth()
+  const { user, userProfile, signOut, isPro, todayApplyCount, maxFreeApplies, refreshUserProfile, vendorMode } = useAuth()
   const [activeCategory, setActiveCategory] = useState<CategoryId>('tile')
   const [showLoginPopup, setShowLoginPopup] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
@@ -105,27 +105,29 @@ export default function UserLayout() {
             <img src="/logotext.png" alt="Black Magician" className="h-[25px] w-auto" style={dark ? { filter: 'invert(1)' } : undefined} />
           </Link>
 
-          <nav ref={navRef} className="relative flex items-center gap-1 bg-muted rounded-full p-[3px] ml-[30px]">
-            {CATEGORIES.map(cat => (
-              <button
-                key={cat.id}
-                data-active={activeCategory === cat.id}
-                onClick={() => setActiveCategory(cat.id)}
-                className={`relative z-10 px-3 py-[5px] text-[10px] tracking-[0.3px] font-semibold cursor-pointer transition-all duration-200 rounded-full ${
-                  activeCategory === cat.id
-                    ? 'text-foreground'
-                    : 'text-muted-foreground hover:text-foreground/70'
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
-            {/* Sliding pill indicator */}
-            <span
-              className="absolute top-[3px] h-[calc(100%-6px)] bg-surface rounded-full shadow-sm transition-all duration-300 ease-in-out"
-              style={{ left: indicatorStyle.left + 3, width: indicatorStyle.width }}
-            />
-          </nav>
+          {!vendorMode && (
+            <nav ref={navRef} className="relative flex items-center gap-1 bg-muted rounded-full p-[3px] ml-[30px]">
+              {CATEGORIES.map(cat => (
+                <button
+                  key={cat.id}
+                  data-active={activeCategory === cat.id}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={`relative z-10 px-3 py-[5px] text-[10px] tracking-[0.3px] font-semibold cursor-pointer transition-all duration-200 rounded-full ${
+                    activeCategory === cat.id
+                      ? 'text-foreground'
+                      : 'text-muted-foreground hover:text-foreground/70'
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+              {/* Sliding pill indicator */}
+              <span
+                className="absolute top-[3px] h-[calc(100%-6px)] bg-surface rounded-full shadow-sm transition-all duration-300 ease-in-out"
+                style={{ left: indicatorStyle.left + 3, width: indicatorStyle.width }}
+              />
+            </nav>
+          )}
         </div>
 
         <div className="flex items-center gap-3">
@@ -138,7 +140,7 @@ export default function UserLayout() {
             {dark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
           </button>
 
-          {user ? (
+          {!vendorMode && (user ? (
             <>
               <div className="relative" ref={userMenuRef}>
               <button
@@ -177,7 +179,7 @@ export default function UserLayout() {
               <LogIn className="w-3 h-3" />
               LOGIN
             </button>
-          )}
+          ))}
         </div>
       </header>
 
