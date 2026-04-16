@@ -149,15 +149,15 @@ export default function UserLayout() {
           {/* Theme toggle — pill switch */}
           <button
             onClick={() => setDark(!dark)}
-            className="relative w-[36px] h-[18px] rounded-full cursor-pointer transition-colors duration-300"
-            style={{ background: dark ? '#444' : '#d4d4d4' }}
+            className="relative w-[32px] h-[16px] rounded-full cursor-pointer transition-colors duration-300 border"
+            style={{ background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)', borderColor: dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)' }}
             title={dark ? 'Light mode' : 'Dark mode'}
           >
             <span
-              className="absolute top-[2px] w-[14px] h-[14px] rounded-full bg-white shadow-sm flex items-center justify-center transition-all duration-300"
-              style={{ left: dark ? '19px' : '2px' }}
+              className="absolute top-[2px] w-[10px] h-[10px] rounded-full transition-all duration-300 flex items-center justify-center"
+              style={{ left: dark ? '18px' : '3px', background: dark ? '#888' : '#999' }}
             >
-              {dark ? <Moon className="w-[9px] h-[9px] text-[#7c8dff]" /> : <Sun className="w-[9px] h-[9px] text-[#f59e0b]" />}
+              <span className="block w-[6px] h-[6px] rounded-full" style={{ background: dark ? '#1a1a1a' : '#fff' }} />
             </span>
           </button>
 
