@@ -109,16 +109,16 @@ export default function UserLayout() {
     <div className="h-screen flex flex-col bg-background text-foreground">
       <header className="h-[60px] bg-surface border-b border-border flex items-center px-5 justify-between shrink-0">
         <div className="flex items-center gap-8">
-          <Link to="/" className="hover:opacity-80 transition-opacity shrink-0 flex items-center gap-2">
-            {vendorMode ? (
+          {vendorMode ? (
+            <div className="w-[190px] flex items-center justify-center shrink-0 -ml-5">
               <img src="/yunhyun_logo.png" alt="Younhyun Trading" className="h-[35px] w-auto" style={dark ? { filter: 'invert(1)' } : undefined} />
-            ) : (
-              <>
-                <img src="/logopic.png" alt="" className="h-[45px] w-auto" />
-                <img src="/logotext.png" alt="Black Magician" className="h-[25px] w-auto" style={dark ? { filter: 'invert(1)' } : undefined} />
-              </>
-            )}
-          </Link>
+            </div>
+          ) : (
+            <Link to="/" className="hover:opacity-80 transition-opacity shrink-0 flex items-center gap-2">
+              <img src="/logopic.png" alt="" className="h-[45px] w-auto" />
+              <img src="/logotext.png" alt="Black Magician" className="h-[25px] w-auto" style={dark ? { filter: 'invert(1)' } : undefined} />
+            </Link>
+          )}
 
           {!vendorMode && (
             <nav ref={navRef} className="relative flex items-center gap-1 bg-muted rounded-full p-[3px] ml-[30px]">
