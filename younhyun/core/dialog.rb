@@ -13,7 +13,7 @@ module Younhyun
       dialog_title:    'Younhyun Material Library',
       preferences_key: 'YounhyunMaterial',
       width:           900,
-      height:          650,
+      height:          900,
       resizable:       true,
       style:           UI::HtmlDialog::STYLE_DIALOG
     )
