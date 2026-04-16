@@ -447,9 +447,9 @@ export default function UserHome() {
             >
               {selectedVendor && (
                 <>
-                  <div className="flex items-center justify-between px-2.5 pt-1 pb-2">
-                    <span className="text-[11px] font-bold">{selectedVendor.company_name}</span>
-                    {!vendorMode && (
+                  {!vendorMode && (
+                    <div className="flex items-center justify-between px-2.5 pt-1 pb-2">
+                      <span className="text-[11px] font-bold">{selectedVendor.company_name}</span>
                       <button onClick={() => {
                           setMainFade('out')
                           setSidebarView('vendors')
@@ -458,8 +458,8 @@ export default function UserHome() {
                         className="text-[9px] text-text-tertiary hover:text-foreground cursor-pointer">
                         ← Back
                       </button>
-                    )}
-                  </div>
+                    </div>
+                  )}
                   <div>
                     {vendorTrees[selectedVendor.id] && vendorTrees[selectedVendor.id].length > 0
                       ? vendorTrees[selectedVendor.id].map(n => renderNode(n, 0, selectedVendor!))
