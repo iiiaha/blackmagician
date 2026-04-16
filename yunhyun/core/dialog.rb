@@ -1,7 +1,7 @@
 Sketchup.require(File.join(__dir__, 'material'))
 
 module Yunhyun
-  LIBRARY_URL = 'https://blackmagician.pages.dev?vendor=yunhyun'
+  LIBRARY_URL = 'https://blackmagician.pages.dev?vendor=younhyun'
 
   def self.show_dialog
     if @dialog && @dialog.visible?
