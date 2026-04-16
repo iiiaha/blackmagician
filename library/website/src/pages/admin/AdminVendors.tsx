@@ -1,8 +1,30 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { CATEGORIES } from '@/lib/categories'
-import { Plus, Trash2, KeyRound, ChevronDown, ChevronRight } from 'lucide-react'
+import { Plus, Trash2, KeyRound, ChevronDown, ChevronRight, Save } from 'lucide-react'
 import type { Vendor } from '@/types/database'
+
+type EditableFields = {
+  contact_name: string
+  contact_phone: string
+  address: string
+  website_url: string
+  instagram: string
+  slug: string
+  description: string
+}
+
+function pickEditable(v: Vendor): EditableFields {
+  return {
+    contact_name: v.contact_name || '',
+    contact_phone: v.contact_phone || '',
+    address: v.address || '',
+    website_url: v.website_url || '',
+    instagram: v.instagram || '',
+    slug: v.slug || '',
+    description: v.description || '',
+  }
+}
 
 export default function AdminVendors() {
   const [vendors, setVendors] = useState<Vendor[]>([])
@@ -15,6 +37,10 @@ export default function AdminVendors() {
   const [newPassword, setNewPassword] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<Vendor | null>(null)
 
+  // Per-vendor edit state
+  const [editState, setEditState] = useState<Record<string, EditableFields>>({})
+  const [saving, setSaving] = useState(false)
+
   const fetchVendors = async () => {
     const { data } = await supabase.from('vendors').select('*').order('category').order('company_name')
     setVendors((data as Vendor[]) || [])
@@ -22,6 +48,46 @@ export default function AdminVendors() {
   }
 
   useEffect(() => { fetchVendors() }, [])
+
+  // Initialize edit state when expanding a vendor
+  const handleExpand = (vendor: Vendor) => {
+    if (expandedId === vendor.id) {
+      setExpandedId(null)
+      return
+    }
+    setExpandedId(vendor.id)
+    setEditState(prev => ({ ...prev, [vendor.id]: pickEditable(vendor) }))
+  }
+
+  const updateField = (vendorId: string, field: keyof EditableFields, value: string) => {
+    setEditState(prev => ({
+      ...prev,
+      [vendorId]: { ...prev[vendorId], [field]: value },
+    }))
+  }
+
+  const isDirty = (vendor: Vendor): boolean => {
+    const edit = editState[vendor.id]
+    if (!edit) return false
+    const orig = pickEditable(vendor)
+    return (Object.keys(orig) as (keyof EditableFields)[]).some(k => edit[k] !== orig[k])
+  }
+
+  const handleSave = async (vendor: Vendor) => {
+    const edit = editState[vendor.id]
+    if (!edit) return
+    setSaving(true)
+    const updates: Record<string, string | null> = {}
+    const orig = pickEditable(vendor)
+    for (const k of Object.keys(orig) as (keyof EditableFields)[]) {
+      if (edit[k] !== orig[k]) {
+        updates[k] = edit[k] || null
+      }
+    }
+    await supabase.from('vendors').update(updates).eq('id', vendor.id)
+    await fetchVendors()
+    setSaving(false)
+  }
 
   const handleCreate = async () => {
     if (!createForm.login_id || !createForm.password || !createForm.company_name) return
@@ -55,11 +121,6 @@ export default function AdminVendors() {
     setResetPwVendorId(null)
     setNewPassword('')
     alert('비밀번호가 변경되었습니다.')
-  }
-
-  const handleUpdateField = async (vendorId: string, field: string, value: string) => {
-    await supabase.from('vendors').update({ [field]: value || null }).eq('id', vendorId)
-    fetchVendors()
   }
 
   if (loading) return <div className="text-[11px] text-[#999] py-8 text-center">로딩 중...</div>
@@ -132,17 +193,31 @@ export default function AdminVendors() {
             <div className="bg-white border border-[rgba(0,0,0,0.06)] rounded-[6px] overflow-hidden">
               {catVendors.map(vendor => {
                 const isExpanded = expandedId === vendor.id
+                const dirty = isDirty(vendor)
+                const edit = editState[vendor.id]
                 return (
                   <div key={vendor.id} className="border-b border-[rgba(0,0,0,0.04)] last:border-0">
                     {/* Header row */}
-                    <button onClick={() => setExpandedId(isExpanded ? null : vendor.id)}
+                    <button onClick={() => handleExpand(vendor)}
                       className="w-full flex items-center justify-between px-4 py-3 text-left cursor-pointer hover:bg-[rgba(0,0,0,0.01)]">
                       <div className="flex items-center gap-2">
                         {isExpanded ? <ChevronDown className="w-3 h-3 text-[#aaa]" /> : <ChevronRight className="w-3 h-3 text-[#aaa]" />}
                         <span className="text-[12px] font-semibold">{vendor.company_name}</span>
                         <span className="text-[9px] text-[#aaa]">{vendor.login_id}</span>
+                        {vendor.slug && (
+                          <span className="text-[8px] font-semibold text-[#1a7f64] bg-[#e6f7f2] px-1.5 py-[1px] rounded-[3px]">독자</span>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
+                        {isExpanded && dirty && (
+                          <button onClick={(e) => { e.stopPropagation(); handleSave(vendor) }}
+                            disabled={saving}
+                            className="flex items-center gap-1 h-[24px] px-2.5 bg-[#1a1a1a] text-white text-[9px] font-semibold rounded-[3px] cursor-pointer disabled:opacity-50"
+                            title="저장">
+                            <Save className="w-3 h-3" />
+                            {saving ? '저장 중...' : '저장'}
+                          </button>
+                        )}
                         <button onClick={(e) => { e.stopPropagation(); setResetPwVendorId(vendor.id); setNewPassword('') }}
                           className="text-[#bbb] hover:text-[#333] cursor-pointer" title="비밀번호 변경">
                           <KeyRound className="w-3.5 h-3.5" />
@@ -155,18 +230,18 @@ export default function AdminVendors() {
                     </button>
 
                     {/* Expanded detail */}
-                    {isExpanded && (
+                    {isExpanded && edit && (
                       <div className="px-4 pb-4 pt-1">
                         <div className="grid grid-cols-2 gap-3">
-                          <EditField label="담당자" value={vendor.contact_name} onSave={v => handleUpdateField(vendor.id, 'contact_name', v)} />
-                          <EditField label="연락처" value={vendor.contact_phone} onSave={v => handleUpdateField(vendor.id, 'contact_phone', v)} />
-                          <EditField label="주소" value={vendor.address || ''} onSave={v => handleUpdateField(vendor.id, 'address', v)} />
-                          <EditField label="홈페이지" value={vendor.website_url || ''} onSave={v => handleUpdateField(vendor.id, 'website_url', v)} />
-                          <EditField label="인스타그램" value={vendor.instagram || ''} onSave={v => handleUpdateField(vendor.id, 'instagram', v)} />
-                          <EditField label="독자 슬러그" value={vendor.slug || ''} onSave={v => handleUpdateField(vendor.id, 'slug', v)} />
+                          <Field label="담당자" value={edit.contact_name} onChange={v => updateField(vendor.id, 'contact_name', v)} />
+                          <Field label="연락처" value={edit.contact_phone} onChange={v => updateField(vendor.id, 'contact_phone', v)} />
+                          <Field label="주소" value={edit.address} onChange={v => updateField(vendor.id, 'address', v)} />
+                          <Field label="홈페이지" value={edit.website_url} onChange={v => updateField(vendor.id, 'website_url', v)} />
+                          <Field label="인스타그램" value={edit.instagram} onChange={v => updateField(vendor.id, 'instagram', v)} />
+                          <Field label="독자 슬러그" value={edit.slug} onChange={v => updateField(vendor.id, 'slug', v)} placeholder="예: younhyun" />
                         </div>
                         <div className="mt-3">
-                          <EditField label="소개글" value={vendor.description || ''} onSave={v => handleUpdateField(vendor.id, 'description', v)} multiline />
+                          <Field label="소개글" value={edit.description} onChange={v => updateField(vendor.id, 'description', v)} multiline />
                         </div>
                         <p className="text-[9px] text-[#aaa] mt-3">등록일: {new Date(vendor.created_at).toLocaleDateString('ko-KR')}</p>
                       </div>
@@ -222,46 +297,18 @@ export default function AdminVendors() {
   )
 }
 
-function EditField({ label, value, onSave, multiline }: { label: string; value: string; onSave: (v: string) => void; multiline?: boolean }) {
-  const [editing, setEditing] = useState(false)
-  const [val, setVal] = useState(value)
-
-  useEffect(() => { setVal(value) }, [value])
-
-  const save = () => {
-    if (val !== value) onSave(val)
-    setEditing(false)
-  }
-
-  const cancel = () => {
-    setVal(value)
-    setEditing(false)
-  }
-
+function Field({ label, value, onChange, multiline, placeholder }: {
+  label: string; value: string; onChange: (v: string) => void; multiline?: boolean; placeholder?: string
+}) {
   return (
     <div>
       <label className="text-[9px] text-[#999] font-semibold mb-1 block">{label}</label>
-      {editing ? (
-        <div>
-          {multiline ? (
-            <textarea value={val} onChange={e => setVal(e.target.value)} autoFocus rows={2}
-              className="w-full text-[11px] px-2 py-1.5 border border-[rgba(0,0,0,0.1)] rounded-[3px] outline-none resize-none focus:border-[#1a1a1a]" />
-          ) : (
-            <input value={val} onChange={e => setVal(e.target.value)} onKeyDown={e => e.key === 'Enter' && save()} autoFocus
-              className="w-full h-[28px] text-[11px] px-2 border border-[rgba(0,0,0,0.1)] rounded-[3px] outline-none focus:border-[#1a1a1a]" />
-          )}
-          <div className="flex gap-1.5 mt-1.5">
-            <button onClick={save} disabled={val === value}
-              className="h-[22px] px-2.5 text-[9px] font-semibold bg-[#1a1a1a] text-white rounded-[3px] cursor-pointer disabled:opacity-30">저장</button>
-            <button onClick={cancel}
-              className="h-[22px] px-2.5 text-[9px] font-semibold text-[#999] border border-[rgba(0,0,0,0.08)] rounded-[3px] cursor-pointer hover:bg-[#f5f5f5]">취소</button>
-          </div>
-        </div>
+      {multiline ? (
+        <textarea value={value} onChange={e => onChange(e.target.value)} rows={2} placeholder={placeholder}
+          className="w-full text-[11px] px-2 py-1.5 border border-[rgba(0,0,0,0.08)] rounded-[3px] outline-none resize-none focus:border-[#1a1a1a] bg-white placeholder:text-[#ccc]" />
       ) : (
-        <div onClick={() => setEditing(true)}
-          className="min-h-[28px] flex items-center text-[11px] px-2 bg-[#fafafa] rounded-[3px] cursor-text hover:bg-[#f0f0f0]">
-          {val || <span className="text-[#ccc]">-</span>}
-        </div>
+        <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+          className="w-full h-[28px] text-[11px] px-2 border border-[rgba(0,0,0,0.08)] rounded-[3px] outline-none focus:border-[#1a1a1a] bg-white placeholder:text-[#ccc]" />
       )}
     </div>
   )
