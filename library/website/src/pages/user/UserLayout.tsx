@@ -107,7 +107,7 @@ export default function UserLayout() {
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
-      <header className="h-[60px] bg-surface border-b border-border flex items-center px-5 justify-between shrink-0">
+      <header className="h-[70px] bg-surface border-b border-border flex items-center px-5 justify-between shrink-0">
         <div className="flex items-center gap-8">
           {vendorMode ? (
             <div className="w-[190px] flex items-center justify-center shrink-0 -ml-5">
