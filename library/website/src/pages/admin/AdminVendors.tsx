@@ -163,6 +163,7 @@ export default function AdminVendors() {
                           <EditField label="주소" value={vendor.address || ''} onSave={v => handleUpdateField(vendor.id, 'address', v)} />
                           <EditField label="홈페이지" value={vendor.website_url || ''} onSave={v => handleUpdateField(vendor.id, 'website_url', v)} />
                           <EditField label="인스타그램" value={vendor.instagram || ''} onSave={v => handleUpdateField(vendor.id, 'instagram', v)} />
+                          <EditField label="독자 슬러그" value={vendor.slug || ''} onSave={v => handleUpdateField(vendor.id, 'slug', v)} />
                         </div>
                         <div className="mt-3">
                           <EditField label="소개글" value={vendor.description || ''} onSave={v => handleUpdateField(vendor.id, 'description', v)} multiline />

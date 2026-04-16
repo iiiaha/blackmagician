@@ -29,11 +29,6 @@ function getBreadcrumb(nodes: FolderNode[], folderId: string): FolderNode[] {
   return path
 }
 
-// Vendor slug → company_name mapping for independent extension mode
-const VENDOR_SLUGS: Record<string, string> = {
-  yunhyun: '윤현상재',
-}
-
 export default function UserHome() {
   const { user, userProfile, canApply, logApply, vendorMode } = useAuth()
 
@@ -93,12 +88,10 @@ export default function UserHome() {
   // Vendor mode: auto-select the vendor and load folders
   useEffect(() => {
     if (!vendorMode) return
-    const companyName = VENDOR_SLUGS[vendorMode]
-    if (!companyName) return
 
     const autoSelect = async () => {
       const { data } = await supabase.from('vendors').select('*')
-        .eq('company_name', companyName).eq('approved', true).maybeSingle()
+        .eq('slug', vendorMode).eq('approved', true).maybeSingle()
       if (!data) return
       const vendor = data as Vendor
       setSelectedVendor(vendor)
@@ -133,7 +126,7 @@ export default function UserHome() {
     if (vendorMode) return
     setPrevVendors(filteredVendors)
     setCatSliding(true)
-    setFilteredVendors(allVendors.filter(v => v.category === activeCategory))
+    setFilteredVendors(allVendors.filter(v => v.category === activeCategory && !v.slug))
     setExpandedVendorId(null)
     setSelectedVendor(null)
     setSelectedFolder(null)
