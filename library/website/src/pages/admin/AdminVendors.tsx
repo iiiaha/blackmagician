@@ -233,17 +233,30 @@ function EditField({ label, value, onSave, multiline }: { label: string; value: 
     setEditing(false)
   }
 
+  const cancel = () => {
+    setVal(value)
+    setEditing(false)
+  }
+
   return (
     <div>
       <label className="text-[9px] text-[#999] font-semibold mb-1 block">{label}</label>
       {editing ? (
-        multiline ? (
-          <textarea value={val} onChange={e => setVal(e.target.value)} onBlur={save} autoFocus rows={2}
-            className="w-full text-[11px] px-2 py-1.5 border border-[rgba(0,0,0,0.1)] rounded-[3px] outline-none resize-none focus:border-[#1a1a1a]" />
-        ) : (
-          <input value={val} onChange={e => setVal(e.target.value)} onBlur={save} onKeyDown={e => e.key === 'Enter' && save()} autoFocus
-            className="w-full h-[28px] text-[11px] px-2 border border-[rgba(0,0,0,0.1)] rounded-[3px] outline-none focus:border-[#1a1a1a]" />
-        )
+        <div>
+          {multiline ? (
+            <textarea value={val} onChange={e => setVal(e.target.value)} autoFocus rows={2}
+              className="w-full text-[11px] px-2 py-1.5 border border-[rgba(0,0,0,0.1)] rounded-[3px] outline-none resize-none focus:border-[#1a1a1a]" />
+          ) : (
+            <input value={val} onChange={e => setVal(e.target.value)} onKeyDown={e => e.key === 'Enter' && save()} autoFocus
+              className="w-full h-[28px] text-[11px] px-2 border border-[rgba(0,0,0,0.1)] rounded-[3px] outline-none focus:border-[#1a1a1a]" />
+          )}
+          <div className="flex gap-1.5 mt-1.5">
+            <button onClick={save} disabled={val === value}
+              className="h-[22px] px-2.5 text-[9px] font-semibold bg-[#1a1a1a] text-white rounded-[3px] cursor-pointer disabled:opacity-30">저장</button>
+            <button onClick={cancel}
+              className="h-[22px] px-2.5 text-[9px] font-semibold text-[#999] border border-[rgba(0,0,0,0.08)] rounded-[3px] cursor-pointer hover:bg-[#f5f5f5]">취소</button>
+          </div>
+        </div>
       ) : (
         <div onClick={() => setEditing(true)}
           className="min-h-[28px] flex items-center text-[11px] px-2 bg-[#fafafa] rounded-[3px] cursor-text hover:bg-[#f0f0f0]">
