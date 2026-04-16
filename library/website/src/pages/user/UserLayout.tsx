@@ -146,34 +146,26 @@ export default function UserLayout() {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Theme toggle — pill switch */}
+          {/* Theme toggle */}
           <button
             onClick={() => setDark(!dark)}
-            className="relative w-[34px] h-[18px] rounded-full cursor-pointer transition-colors duration-300 border"
-            style={{ background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', borderColor: dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)' }}
+            className="w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
             title={dark ? 'Light mode' : 'Dark mode'}
           >
-            <span
-              className="absolute top-[2px] w-[14px] h-[14px] rounded-full bg-white shadow-[0_0.5px_2px_rgba(0,0,0,0.15)] flex items-center justify-center transition-all duration-300"
-              style={{ left: dark ? '17px' : '2px' }}
-            >
-              {dark
-                ? <Moon className="w-[8px] h-[8px] text-muted-foreground" />
-                : <Sun className="w-[8px] h-[8px] text-muted-foreground" />}
-            </span>
+            {dark ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
           </button>
 
           {vendorMode && vendorInfo ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               {vendorInfo.website_url && (
                 <a href={vendorInfo.website_url} target="_blank" rel="noopener noreferrer"
-                  className="h-6 flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5">
+                  className="h-[26px] flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-2.5 rounded-[4px] hover:bg-muted">
                   <Globe className="w-3 h-3" /> Website
                 </a>
               )}
               {vendorInfo.instagram && (
                 <a href={`https://instagram.com/${vendorInfo.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer"
-                  className="h-6 flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5">
+                  className="h-[26px] flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-2.5 rounded-[4px] hover:bg-muted">
                   <Instagram className="w-3 h-3" /> Instagram
                 </a>
               )}
@@ -469,7 +461,7 @@ function VendorContact({ vendor }: { vendor: Vendor }) {
   return (
     <>
       <button onClick={() => setShow(true)}
-        className="h-6 flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5 cursor-pointer">
+        className="h-[26px] flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-2.5 rounded-[4px] hover:bg-muted cursor-pointer">
         <Phone className="w-3 h-3" /> Contact
       </button>
       {show && (
