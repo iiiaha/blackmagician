@@ -318,7 +318,7 @@ function SliderRow({ label, value, min, max, step, unit, onChange }: {
   return (
     <div className="flex items-center gap-2">
       <span className="text-[9px] font-semibold text-text-secondary w-[24px] shrink-0">{label}</span>
-      <input type="range" min={min} max={max} step={step || 1} value={value} onChange={e => onChange(+e.target.value)} className="flex-1" />
+      <input type="range" min={min} max={max} step={step || 1} value={value} onChange={e => onChange(+e.target.value)} className="flex-1 min-w-0" />
       {editing ? (
         <input type="text" autoFocus value={draft}
           onChange={e => setDraft(e.target.value.replace(/[^0-9-]/g, ''))}
