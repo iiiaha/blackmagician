@@ -149,15 +149,17 @@ export default function UserLayout() {
           {/* Theme toggle — pill switch */}
           <button
             onClick={() => setDark(!dark)}
-            className="relative w-[32px] h-[16px] rounded-full cursor-pointer transition-colors duration-300 border"
-            style={{ background: dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)', borderColor: dark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)' }}
+            className="relative w-[34px] h-[18px] rounded-full cursor-pointer transition-colors duration-300 border"
+            style={{ background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', borderColor: dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)' }}
             title={dark ? 'Light mode' : 'Dark mode'}
           >
             <span
-              className="absolute top-[2px] w-[10px] h-[10px] rounded-full transition-all duration-300 flex items-center justify-center"
-              style={{ left: dark ? '18px' : '3px', background: dark ? '#888' : '#999' }}
+              className="absolute top-[2px] w-[14px] h-[14px] rounded-full bg-white shadow-[0_0.5px_2px_rgba(0,0,0,0.15)] flex items-center justify-center transition-all duration-300"
+              style={{ left: dark ? '17px' : '2px' }}
             >
-              <span className="block w-[6px] h-[6px] rounded-full" style={{ background: dark ? '#1a1a1a' : '#fff' }} />
+              {dark
+                ? <Moon className="w-[8px] h-[8px] text-muted-foreground" />
+                : <Sun className="w-[8px] h-[8px] text-muted-foreground" />}
             </span>
           </button>
 
