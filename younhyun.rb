@@ -6,7 +6,7 @@ module Younhyun
 
   unless file_loaded?(__FILE__)
     ext = SketchupExtension.new(
-      'Younhyun Material Library',
+      'Younhyun',
       'younhyun/core/dialog'
     )
     ext.description = 'Browse and apply Younhyun finishing materials directly in SketchUp.'

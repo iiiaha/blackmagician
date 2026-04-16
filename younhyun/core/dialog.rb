@@ -10,7 +10,7 @@ module Younhyun
     end
 
     @dialog = UI::HtmlDialog.new(
-      dialog_title:    'Younhyun Material Library',
+      dialog_title:    'Younhyun',
       preferences_key: 'YounhyunMaterial',
       width:           900,
       height:          900,
@@ -79,15 +79,15 @@ module Younhyun
     @toolbar_loaded = true
 
     menu = UI.menu('Plugins')
-    menu.add_item('Younhyun Material Library') { show_dialog }
+    menu.add_item('Younhyun') { show_dialog }
 
     icon_dir = File.join(PLUGIN_DIR, 'younhyun', 'icons')
     toolbar = UI::Toolbar.new('Younhyun')
-    cmd = UI::Command.new('Younhyun Material Library') { show_dialog }
+    cmd = UI::Command.new('Younhyun') { show_dialog }
     cmd.small_icon = File.join(icon_dir, 'icon_24.png')
     cmd.large_icon = File.join(icon_dir, 'icon_32.png')
-    cmd.tooltip = 'Younhyun Material Library'
-    cmd.status_bar_text = 'Open Younhyun Material Library'
+    cmd.tooltip = 'Younhyun'
+    cmd.status_bar_text = 'Open Younhyun'
     toolbar.add_item(cmd)
     toolbar.show
   end
