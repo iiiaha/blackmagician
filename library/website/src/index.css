@@ -158,6 +158,13 @@ input[type="range"]::-webkit-slider-thumb {
 .ag-header-center .ag-sort-indicator-container {
   margin-left: 4px;
 }
+/* Subtle vertical separators between cells/headers */
+.ag-cell, .ag-header-cell {
+  border-right: 1px solid rgba(0, 0, 0, 0.04);
+}
+.ag-cell:last-child, .ag-header-cell:last-child {
+  border-right: none;
+}
 
 /* Tile fade-in animation */
 @keyframes fadeInUp {
