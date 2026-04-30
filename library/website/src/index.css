@@ -168,14 +168,22 @@ input[type="range"]::-webkit-slider-thumb {
   margin-left: 4px;
 }
 
-/* Always-visible checkbox outline (both AG Grid and native), so unchecked
-   state has a clear box rather than blending into the cell. */
+/* Center the select-all checkbox in the first header cell — it's a sibling
+   of .ag-header-cell-label (not inside it), so flex centering on the label
+   doesn't reach it. Auto margins inside the parent flex do. */
+.ag-header-cell .ag-header-select-all {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Darken AG Grid's built-in unchecked checkbox icon so it reads clearly.
+   The icon itself is the visible box — don't layer extra outlines or it
+   doubles up. */
 .ag-checkbox-input-wrapper:not(.ag-checked):not(.ag-indeterminate) {
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.28);
-  border-radius: 2px;
+  color: rgba(0, 0, 0, 0.55);
 }
 .dark .ag-checkbox-input-wrapper:not(.ag-checked):not(.ag-indeterminate) {
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.55);
 }
 .ag-cell input[type="checkbox"] {
   -webkit-appearance: none;
