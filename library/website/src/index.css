@@ -168,16 +168,19 @@ input[type="range"]::-webkit-slider-thumb {
   margin-left: 4px;
 }
 
-/* Select-all checkbox column: hide the empty label container that was
-   eating the available space, then auto-margin the checkbox to center it.
-   .ag-header-select-all sits as a sibling of the label container — without
-   removing the latter, there's no slack for auto margins to absorb. */
-.col-checkbox .ag-cell-label-container {
-  display: none;
-}
-.col-checkbox .ag-header-select-all {
-  margin-left: auto;
-  margin-right: auto;
+/* Select-all checkbox column: AG Grid's flex layout inside the header cell
+   has been resistant to centering attempts (auto margins, justify-content,
+   hidden label container). Use absolute positioning instead — the header
+   cell is already position: absolute via AG Grid layout, so the checkbox
+   pins to the cell's center regardless of sibling flex behavior. */
+.col-checkbox .ag-header-select-all,
+.col-checkbox .ag-checkbox,
+.col-checkbox .ag-checkbox-input-wrapper {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
 }
 
 /* Darken AG Grid's built-in unchecked checkbox icon so it reads clearly.
