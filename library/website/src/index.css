@@ -168,18 +168,21 @@ input[type="range"]::-webkit-slider-thumb {
   margin-left: 4px;
 }
 
-/* Select-all checkbox column: keep everything in normal flow so AG Grid's
-   click handlers stay intact, but force the inner wrapper into a centered
-   flex layout. The empty label sibling gets flex: 0 so it stops eating
-   the available width and pushing the checkbox left. */
-.col-checkbox .ag-header-cell-comp-wrapper {
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
+/* Select-all checkbox column: pin the checkbox to cell center via absolute
+   positioning, raise its z-index, and make sibling label containers
+   click-through so AG Grid's checkbox click handler still receives events. */
+.col-checkbox .ag-header-select-all {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  margin: 0 !important;
+  z-index: 5;
 }
 .col-checkbox .ag-cell-label-container,
-.col-checkbox .ag-header-cell-label {
-  flex: 0 !important;
+.col-checkbox .ag-header-cell-label,
+.col-checkbox .ag-header-cell-text {
+  pointer-events: none;
 }
 
 /* Darken AG Grid's built-in unchecked checkbox icon so it reads clearly.
