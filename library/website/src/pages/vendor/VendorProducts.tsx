@@ -129,7 +129,7 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
   }, [])
 
   // Editable fields in column order (for paste mapping)
-  const editableFields = ['name', 'unit_price', 'stock', 'origin', 'brand', 'size'] as const
+  const editableFields = ['name', 'unit_price', 'stock', 'origin', 'brand', 'size', 'source_size'] as const
 
   // Custom clipboard: Ctrl+C copies focused cell value, Ctrl+V pastes into cells
   useEffect(() => {
@@ -226,9 +226,28 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
       headerName: '제품명', field: 'name', editable: true, flex: 1, minWidth: 120,
       cellStyle: { fontWeight: 600 },
     },
-    { headerName: '크기', field: 'size', editable: true, width: 200 },
+    { headerName: '원장크기', field: 'size', editable: true, width: 140 },
+    { headerName: '소스크기', field: 'source_size', editable: true, width: 140 },
     {
-      headerName: '단가', field: 'unit_price', editable: true, width: 200,
+      headerName: '썸네일확대', field: 'thumbnail_zoom', editable: false, width: 80,
+      sortable: false, filter: false,
+      cellRenderer: (p: { data: Product, value: boolean }) => (
+        <input
+          type="checkbox"
+          checked={!!p.value}
+          onClick={e => e.stopPropagation()}
+          onChange={async e => {
+            const checked = e.target.checked
+            await supabase.from('products').update({ thumbnail_zoom: checked }).eq('id', p.data.id)
+            setProducts(prev => prev.map(x => x.id === p.data.id ? { ...x, thumbnail_zoom: checked } : x))
+          }}
+          className="cursor-pointer"
+        />
+      ),
+      cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
+    },
+    {
+      headerName: '단가', field: 'unit_price', editable: true, width: 140,
       valueFormatter: (p) => p.value ? `${Number(p.value).toLocaleString()}원` : '',
       valueParser: (p) => { const n = Number(String(p.newValue).replace(/[^0-9.-]/g, '')); return isNaN(n) ? null : n },
     },

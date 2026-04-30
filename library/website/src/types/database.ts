@@ -121,6 +121,8 @@ export interface Database {
           origin: string | null
           brand: string | null
           size: string | null
+          source_size: string | null
+          thumbnail_zoom: boolean
           thumbnail_url: string | null
           created_at: string
           updated_at: string
@@ -135,6 +137,8 @@ export interface Database {
           origin?: string | null
           brand?: string | null
           size?: string | null
+          source_size?: string | null
+          thumbnail_zoom?: boolean
           thumbnail_url?: string | null
           created_at?: string
           updated_at?: string
@@ -149,6 +153,8 @@ export interface Database {
           origin?: string | null
           brand?: string | null
           size?: string | null
+          source_size?: string | null
+          thumbnail_zoom?: boolean
           thumbnail_url?: string | null
           created_at?: string
           updated_at?: string

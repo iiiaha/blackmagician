@@ -252,7 +252,7 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
       <table className={`w-full text-[9px] border border-border rounded-[3px] overflow-hidden ${isEmpty ? 'opacity-30' : ''}`}>
         <tbody>
           <tr className="border-b border-border">
-            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted w-[40px]">크기</td>
+            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted w-[48px]">원장크기</td>
             <td className="px-2 py-[3px]">{product?.size ? `${product.size} mm` : '-'}</td>
           </tr>
           <tr className="border-b border-border">

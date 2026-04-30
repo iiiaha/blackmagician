@@ -227,8 +227,9 @@ export default function UserHome() {
     setPreviewProduct(product)
     setPreviewImages(imgs)
     setPreviewVendor(vName)
-    // Extract WxH from product size (e.g., "600x1200x9" → "600x1200")
-    const rawSize = product.size || ''
+    // Mapping size: source_size if set, else fall back to size (display 원장크기).
+    // Extract WxH from "600x1200x9" → "600x1200".
+    const rawSize = product.source_size || product.size || ''
     const sizeMatch = rawSize.match(/(\d+)\s*[x×*]\s*(\d+)/)
     setPreviewSizeStr(sizeMatch ? `${sizeMatch[1]}x${sizeMatch[2]}` : '600x600')
   }
@@ -860,9 +861,11 @@ function MaterialItem({ product, onClick, selected, isFavorite, onToggleFavorite
     >
       <div className="aspect-square rounded-[3px] overflow-hidden relative hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-shadow duration-200">
         {product.thumbnail_url ? (
-          <img src={product.thumbnail_url} alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]"
-            loading="lazy" />
+          product.thumbnail_zoom
+            ? <ZoomedThumb url={product.thumbnail_url} alt={product.name} />
+            : <img src={product.thumbnail_url} alt={product.name}
+                className="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]"
+                loading="lazy" />
         ) : (
           <div className="w-full h-full bg-muted flex items-center justify-center">
             <ImageIcon className="w-5 h-5 text-text-tertiary opacity-30" />
@@ -894,6 +897,52 @@ function MaterialItem({ product, onClick, selected, isFavorite, onToggleFavorite
           {product.name}
         </p>
       </div>
+    </div>
+  )
+}
+
+// Crops the center 100×100 natural pixels of the source image and scales to fill container.
+// Used when product.thumbnail_zoom is true — small mapping textures shown at usable size.
+function ZoomedThumb({ url, alt }: { url: string; alt: string }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [scale, setScale] = useState(1)
+  const [natural, setNatural] = useState<{ w: number; h: number } | null>(null)
+
+  useEffect(() => {
+    const img = new window.Image()
+    img.onload = () => setNatural({ w: img.naturalWidth, h: img.naturalHeight })
+    img.src = url
+  }, [url])
+
+  useEffect(() => {
+    if (!ref.current) return
+    const compute = () => {
+      const w = ref.current?.clientWidth || 0
+      // 100 natural px should span the container width.
+      setScale(w / 100)
+    }
+    compute()
+    const ro = new ResizeObserver(compute)
+    ro.observe(ref.current)
+    return () => ro.disconnect()
+  }, [])
+
+  return (
+    <div ref={ref} className="w-full h-full overflow-hidden relative bg-muted">
+      {natural && (
+        <img src={url} alt={alt} loading="lazy"
+          style={{
+            position: 'absolute',
+            top: '50%', left: '50%',
+            width: natural.w, height: natural.h,
+            maxWidth: 'none', maxHeight: 'none',
+            transform: `translate(-50%, -50%) scale(${scale})`,
+            transformOrigin: 'center',
+            imageRendering: 'auto',
+          }}
+          className="transition-transform duration-300 ease-out"
+        />
+      )}
     </div>
   )
 }
