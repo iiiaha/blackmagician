@@ -5,7 +5,7 @@ import { AgGridReact } from 'ag-grid-react'
 import { AllCommunityModule, ModuleRegistry, type ColDef, type CellValueChangedEvent } from 'ag-grid-community'
 import {
   ChevronRight, ChevronDown, Folder, FolderOpen,
-  Plus, Package, ImagePlus, X,
+  Plus, Package, ImagePlus, X, FileSpreadsheet, Upload,
 } from 'lucide-react'
 import type { Vendor, FolderNode, Product, ProductImage } from '@/types/database'
 
@@ -18,6 +18,31 @@ function buildTree(nodes: FolderNode[], parentId: string | null): TreeNode[] {
     .filter(n => n.parent_id === parentId)
     .sort((a, b) => a.sort_order - b.sort_order || a.name.localeCompare(b.name))
     .map(n => ({ ...n, children: buildTree(nodes, n.id) }))
+}
+
+// Normalize a row from sheet_to_json into DB-shaped values for diff/update.
+// Trims strings, coerces numerics, treats blank string as null.
+function parseExcelRow(row: Record<string, unknown>) {
+  const str = (v: unknown): string | null => {
+    const s = String(v ?? '').trim()
+    return s === '' ? null : s
+  }
+  const num = (v: unknown): number | null => {
+    const s = String(v ?? '').trim()
+    if (s === '') return null
+    const n = Number(s.replace(/[^0-9.-]/g, ''))
+    return isNaN(n) ? null : n
+  }
+  return {
+    name: (str(row['제품명']) || '').trim() || '(이름없음)',
+    size: str(row['원장크기']),
+    source_size: str(row['소스크기']),
+    unit_price: num(row['단가']),
+    stock: num(row['재고']),
+    origin: str(row['원산지']),
+    brand: str(row['브랜드']),
+    thumbnail_zoom: String(row['썸네일확대(Y/공란)'] ?? '').trim().toUpperCase() === 'Y',
+  }
 }
 
 export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor } = {}) {
@@ -45,6 +70,14 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
   const [showFolderGuide, setShowFolderGuide] = useState(false)
   const [folderCounts, setFolderCounts] = useState<Record<string, number>>({})
   const [totalProductCount, setTotalProductCount] = useState(0)
+  // Excel import/export
+  const excelInputRef = useRef<HTMLInputElement>(null)
+  const [excelPreview, setExcelPreview] = useState<{
+    updates: { id: string; name: string; changes: string[] }[]
+    skipped: number
+  } | null>(null)
+  const [excelApplying, setExcelApplying] = useState(false)
+  const excelRowsRef = useRef<Record<string, unknown>[]>([])
 
   const fetchFolders = useCallback(async () => {
     if (!vendor) return
@@ -211,6 +244,114 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
     }
     setCheckedIds(new Set())
     setBulkDeleteTarget([])
+  }
+
+  // Excel column header (Korean) ↔ DB field mapping. id is hidden from header label
+  // but always first; vendor must not edit it.
+  const excelColumns: { key: keyof Product | 'id'; header: string }[] = [
+    { key: 'id', header: 'id' },
+    { key: 'name', header: '제품명' },
+    { key: 'size', header: '원장크기' },
+    { key: 'source_size', header: '소스크기' },
+    { key: 'unit_price', header: '단가' },
+    { key: 'stock', header: '재고' },
+    { key: 'origin', header: '원산지' },
+    { key: 'brand', header: '브랜드' },
+    { key: 'thumbnail_zoom', header: '썸네일확대(Y/공란)' },
+  ]
+
+  const handleExportExcel = async () => {
+    if (!selectedFolder || products.length === 0) return
+    const XLSX = await import('xlsx')
+    const rows = products.map(p => ({
+      id: p.id,
+      '제품명': p.name,
+      '원장크기': p.size || '',
+      '소스크기': p.source_size || '',
+      '단가': p.unit_price ?? '',
+      '재고': p.stock ?? '',
+      '원산지': p.origin || '',
+      '브랜드': p.brand || '',
+      '썸네일확대(Y/공란)': p.thumbnail_zoom ? 'Y' : '',
+    }))
+    const ws = XLSX.utils.json_to_sheet(rows, { header: excelColumns.map(c => c.header) })
+    // Column widths for readability
+    ws['!cols'] = [
+      { wch: 36 }, { wch: 24 }, { wch: 16 }, { wch: 16 },
+      { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 16 },
+    ]
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'products')
+    const safeFolder = selectedFolder.name.replace(/[\\/:*?"<>|]/g, '_')
+    const safeVendor = (vendor?.company_name || 'vendor').replace(/[\\/:*?"<>|]/g, '_')
+    XLSX.writeFile(wb, `${safeVendor}_${safeFolder}_products.xlsx`)
+  }
+
+  const handleImportExcelFile = async (file: File) => {
+    if (!selectedFolder) return
+    const XLSX = await import('xlsx')
+    const buf = await file.arrayBuffer()
+    const wb = XLSX.read(buf, { type: 'array' })
+    const ws = wb.Sheets[wb.SheetNames[0]]
+    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: '' })
+    excelRowsRef.current = rows
+
+    // Compute diff preview against current products
+    const productMap = new Map(products.map(p => [p.id, p]))
+    const updates: { id: string; name: string; changes: string[] }[] = []
+    let skipped = 0
+
+    for (const row of rows) {
+      const id = String(row['id'] || '').trim()
+      if (!id) { skipped++; continue }
+      const orig = productMap.get(id)
+      if (!orig) { skipped++; continue }
+
+      const next = parseExcelRow(row)
+      const changes: string[] = []
+      if (next.name !== orig.name) changes.push('제품명')
+      if (next.size !== (orig.size || null)) changes.push('원장크기')
+      if (next.source_size !== (orig.source_size || null)) changes.push('소스크기')
+      if (next.unit_price !== (orig.unit_price ?? null)) changes.push('단가')
+      if (next.stock !== (orig.stock ?? null)) changes.push('재고')
+      if (next.origin !== (orig.origin || null)) changes.push('원산지')
+      if (next.brand !== (orig.brand || null)) changes.push('브랜드')
+      if (next.thumbnail_zoom !== orig.thumbnail_zoom) changes.push('썸네일확대')
+
+      if (changes.length > 0) updates.push({ id, name: orig.name, changes })
+    }
+
+    setExcelPreview({ updates, skipped })
+  }
+
+  const applyExcelImport = async () => {
+    if (!excelPreview || !selectedFolder) return
+    setExcelApplying(true)
+    const productMap = new Map(products.map(p => [p.id, p]))
+    for (const u of excelPreview.updates) {
+      const row = excelRowsRef.current.find(r => String(r['id'] || '').trim() === u.id)
+      if (!row) continue
+      const orig = productMap.get(u.id)
+      if (!orig) continue
+      const next = parseExcelRow(row)
+      // Only update fields that actually changed (matches diff above)
+      const update: Record<string, unknown> = {}
+      if (next.name !== orig.name) update.name = next.name
+      if (next.size !== (orig.size || null)) update.size = next.size
+      if (next.source_size !== (orig.source_size || null)) update.source_size = next.source_size
+      if (next.unit_price !== (orig.unit_price ?? null)) update.unit_price = next.unit_price
+      if (next.stock !== (orig.stock ?? null)) update.stock = next.stock
+      if (next.origin !== (orig.origin || null)) update.origin = next.origin
+      if (next.brand !== (orig.brand || null)) update.brand = next.brand
+      if (next.thumbnail_zoom !== orig.thumbnail_zoom) update.thumbnail_zoom = next.thumbnail_zoom
+      if (Object.keys(update).length > 0) {
+        await supabase.from('products').update(update).eq('id', u.id)
+      }
+    }
+    setExcelApplying(false)
+    setExcelPreview(null)
+    excelRowsRef.current = []
+    fetchProducts(selectedFolder.id)
   }
 
   // AG Grid column definitions
@@ -482,6 +623,17 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
                 선택 삭제 ({checkedIds.size})
               </button>
 
+              <button onClick={handleExportExcel} disabled={products.length === 0}
+                className="h-[28px] px-3 border border-[rgba(0,0,0,0.1)] text-[10px] font-semibold rounded-[4px] cursor-pointer hover:bg-[rgba(0,0,0,0.02)] flex items-center gap-1.5 shrink-0 disabled:opacity-30 disabled:cursor-not-allowed">
+                <FileSpreadsheet className="w-3 h-3" /> Excel 내보내기
+              </button>
+              <button onClick={() => excelInputRef.current?.click()}
+                className="h-[28px] px-3 border border-[rgba(0,0,0,0.1)] text-[10px] font-semibold rounded-[4px] cursor-pointer hover:bg-[rgba(0,0,0,0.02)] flex items-center gap-1.5 shrink-0">
+                <Upload className="w-3 h-3" /> Excel 가져오기
+              </button>
+              <input ref={excelInputRef} type="file" accept=".xlsx,.xls" className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) { handleImportExcelFile(f); e.target.value = '' } }} />
+
               <button onClick={() => setShowFolderGuide(true)}
                 className="h-[28px] px-3 border border-[rgba(0,0,0,0.1)] text-[10px] font-semibold rounded-[4px] cursor-pointer hover:bg-[rgba(0,0,0,0.02)] flex items-center gap-1.5 shrink-0">
                 <FolderOpen className="w-3 h-3" /> 폴더로 일괄 등록
@@ -725,6 +877,56 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
                   </button>
                 </>
               )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Excel import preview popup */}
+      {excelPreview && (
+        <>
+          <div className="fixed inset-0 bg-black/30 z-40" onClick={excelApplying ? undefined : () => { setExcelPreview(null); excelRowsRef.current = [] }} />
+          <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[420px] bg-white border border-[rgba(0,0,0,0.08)] rounded-[8px] shadow-[0_8px_30px_rgba(0,0,0,0.12)] overflow-hidden">
+            <div className="px-5 py-4 border-b border-[rgba(0,0,0,0.06)]">
+              <h3 className="text-[13px] font-bold">Excel 가져오기 미리보기</h3>
+            </div>
+            <div className="px-5 py-4">
+              <p className="text-[11px] text-[#666] mb-3">
+                <span className="font-semibold text-[#333]">{excelPreview.updates.length}개 제품</span>이 변경됩니다.
+                {excelPreview.skipped > 0 && <span className="text-[#aaa] ml-1">({excelPreview.skipped}개 무시)</span>}
+              </p>
+              {excelPreview.updates.length > 0 ? (
+                <div className="max-h-[260px] overflow-y-auto border border-[rgba(0,0,0,0.06)] rounded-[4px] mb-4">
+                  <table className="w-full text-[10px]">
+                    <thead className="bg-[#f8f8f8] sticky top-0">
+                      <tr>
+                        <th className="text-left px-3 py-1.5 font-semibold text-[#888]">제품명</th>
+                        <th className="text-left px-3 py-1.5 font-semibold text-[#888]">변경 항목</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {excelPreview.updates.map(u => (
+                        <tr key={u.id} className="border-t border-[rgba(0,0,0,0.04)]">
+                          <td className="px-3 py-1.5">{u.name}</td>
+                          <td className="px-3 py-1.5 text-[#666]">{u.changes.join(', ')}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-[10px] text-[#aaa] text-center py-6 border border-[rgba(0,0,0,0.06)] rounded-[4px] mb-4">변경된 내용이 없습니다.</p>
+              )}
+              <div className="flex gap-2">
+                <button onClick={() => { setExcelPreview(null); excelRowsRef.current = [] }} disabled={excelApplying}
+                  className="flex-1 h-[34px] text-[11px] font-semibold border border-[rgba(0,0,0,0.08)] rounded-[5px] cursor-pointer hover:bg-[#f5f5f5] disabled:opacity-50">
+                  취소
+                </button>
+                <button onClick={applyExcelImport} disabled={excelApplying || excelPreview.updates.length === 0}
+                  className="flex-1 h-[34px] text-[11px] font-semibold bg-[#1a1a1a] text-white rounded-[5px] cursor-pointer disabled:opacity-30">
+                  {excelApplying ? '적용 중...' : '적용하기'}
+                </button>
+              </div>
             </div>
           </div>
         </>
