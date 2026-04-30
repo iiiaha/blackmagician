@@ -168,14 +168,12 @@ input[type="range"]::-webkit-slider-thumb {
   margin-left: 4px;
 }
 
-/* Select-all checkbox column: AG Grid's flex layout inside the header cell
-   has been resistant to centering attempts (auto margins, justify-content,
-   hidden label container). Use absolute positioning instead — the header
-   cell is already position: absolute via AG Grid layout, so the checkbox
-   pins to the cell's center regardless of sibling flex behavior. */
-.col-checkbox .ag-header-select-all,
-.col-checkbox .ag-checkbox,
-.col-checkbox .ag-checkbox-input-wrapper {
+/* Select-all checkbox column: pin only the outer wrapper to cell center.
+   Centering all three nested elements (select-all → checkbox →
+   checkbox-input-wrapper) compounded the 50% translates and offset the
+   click target from where the box visually sat. Single-level positioning
+   keeps the inner click handlers in the right place. */
+.col-checkbox .ag-header-select-all {
   position: absolute !important;
   left: 50% !important;
   top: 50% !important;
