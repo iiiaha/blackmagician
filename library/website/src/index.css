@@ -152,11 +152,60 @@ input[type="range"]::-webkit-slider-thumb {
 .ag-sort-indicator-container {
   margin-left: auto;
 }
+/* Center-align header text. AG Grid v35 wraps the label inside
+   .ag-cell-label-container, so target both flex levels. */
+.ag-header-center {
+  text-align: center;
+}
+.ag-header-center .ag-cell-label-container,
 .ag-header-center .ag-header-cell-label {
   justify-content: center;
 }
+.ag-header-center .ag-header-cell-text {
+  flex: 0 1 auto;
+}
 .ag-header-center .ag-sort-indicator-container {
   margin-left: 4px;
+}
+
+/* Always-visible checkbox outline (both AG Grid and native), so unchecked
+   state has a clear box rather than blending into the cell. */
+.ag-checkbox-input-wrapper:not(.ag-checked):not(.ag-indeterminate) {
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.28);
+  border-radius: 2px;
+}
+.dark .ag-checkbox-input-wrapper:not(.ag-checked):not(.ag-indeterminate) {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+}
+.ag-cell input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  border: 1px solid rgba(0, 0, 0, 0.28);
+  border-radius: 2px;
+  background: var(--color-surface);
+  cursor: pointer;
+  position: relative;
+  margin: 0;
+}
+.ag-cell input[type="checkbox"]:checked {
+  background: var(--color-foreground);
+  border-color: var(--color-foreground);
+}
+.ag-cell input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 0px;
+  width: 4px;
+  height: 8px;
+  border: solid var(--color-primary-foreground);
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+}
+.dark .ag-cell input[type="checkbox"] {
+  border-color: rgba(255, 255, 255, 0.3);
 }
 /* Cell separators: vertical between columns, horizontal between rows */
 .ag-cell, .ag-header-cell {
