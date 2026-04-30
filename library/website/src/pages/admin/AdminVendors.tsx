@@ -43,9 +43,16 @@ export default function AdminVendors() {
   const [saving, setSaving] = useState(false)
 
   const fetchVendors = async () => {
+    // Client-side sort by (category, sort_order, company_name) so the page works
+    // even before the sort_order migration runs — a server-side .order on a
+    // missing column would fail the whole query and look like "no vendors".
     const { data } = await supabase.from('vendors').select('*')
-      .order('category').order('sort_order').order('company_name')
-    setVendors((data as Vendor[]) || [])
+    const list = ((data as Vendor[]) || []).slice().sort((a, b) =>
+      (a.category || '').localeCompare(b.category || '')
+      || ((a.sort_order ?? 0) - (b.sort_order ?? 0))
+      || a.company_name.localeCompare(b.company_name)
+    )
+    setVendors(list)
     setLoading(false)
   }
 

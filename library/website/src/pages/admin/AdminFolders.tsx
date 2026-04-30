@@ -26,8 +26,13 @@ export default function AdminFolders() {
 
   useEffect(() => {
     supabase.from('vendors').select('*').eq('approved', true)
-      .order('sort_order').order('company_name')
-      .then(({ data }) => { setVendors((data as Vendor[]) || []); setLoading(false) })
+      .then(({ data }) => {
+        const list = ((data as Vendor[]) || []).slice().sort((a, b) =>
+          ((a.sort_order ?? 0) - (b.sort_order ?? 0)) || a.company_name.localeCompare(b.company_name)
+        )
+        setVendors(list)
+        setLoading(false)
+      })
   }, [])
 
   const fetchFolders = useCallback(async (vendorId: string) => {

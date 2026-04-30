@@ -12,8 +12,15 @@ export default function AdminProducts() {
 
   useEffect(() => {
     supabase.from('vendors').select('*')
-      .order('category').order('sort_order').order('company_name')
-      .then(({ data }) => { setVendors((data as Vendor[]) || []); setLoading(false) })
+      .then(({ data }) => {
+        const list = ((data as Vendor[]) || []).slice().sort((a, b) =>
+          (a.category || '').localeCompare(b.category || '')
+          || ((a.sort_order ?? 0) - (b.sort_order ?? 0))
+          || a.company_name.localeCompare(b.company_name)
+        )
+        setVendors(list)
+        setLoading(false)
+      })
   }, [])
 
   if (loading) return <div className="text-[11px] text-[#999] py-8 text-center">로딩 중...</div>
