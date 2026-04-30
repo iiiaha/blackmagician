@@ -367,8 +367,8 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
       headerName: '제품명', field: 'name', editable: true, flex: 1, minWidth: 120,
       cellStyle: { fontWeight: 600 },
     },
-    { headerName: '원장크기', field: 'size', editable: true, width: 140 },
-    { headerName: '소스크기', field: 'source_size', editable: true, width: 140 },
+    { headerName: '원장크기(W*H*D)', field: 'size', editable: true, width: 140 },
+    { headerName: '소스크기(W*H)', field: 'source_size', editable: true, width: 140 },
     {
       headerName: '썸네일확대', field: 'thumbnail_zoom', editable: false, width: 80,
       sortable: false, filter: false,
@@ -417,6 +417,7 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
     unSortIcon: true,
     filter: false,
     resizable: true,
+    headerClass: 'ag-header-center',
   }
 
   // Image handling

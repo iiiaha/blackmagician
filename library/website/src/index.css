@@ -152,6 +152,12 @@ input[type="range"]::-webkit-slider-thumb {
 .ag-sort-indicator-container {
   margin-left: auto;
 }
+.ag-header-center .ag-header-cell-label {
+  justify-content: center;
+}
+.ag-header-center .ag-sort-indicator-container {
+  margin-left: 4px;
+}
 
 /* Tile fade-in animation */
 @keyframes fadeInUp {
