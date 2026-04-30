@@ -25,7 +25,8 @@ export default function AdminFolders() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.from('vendors').select('*').eq('approved', true).order('company_name')
+    supabase.from('vendors').select('*').eq('approved', true)
+      .order('sort_order').order('company_name')
       .then(({ data }) => { setVendors((data as Vendor[]) || []); setLoading(false) })
   }, [])
 

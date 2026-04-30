@@ -79,7 +79,8 @@ export default function UserHome() {
   // Fetch vendors + roots
   useEffect(() => {
     const fetchAll = async () => {
-      const { data } = await supabase.from('vendors').select('*').eq('approved', true).order('company_name')
+      const { data } = await supabase.from('vendors').select('*').eq('approved', true)
+        .order('sort_order').order('company_name')
       setAllVendors((data as Vendor[]) || [])
     }
     fetchAll()

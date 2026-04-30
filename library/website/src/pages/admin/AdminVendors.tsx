@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { CATEGORIES } from '@/lib/categories'
-import { Plus, Trash2, KeyRound, ChevronDown, ChevronRight, Pencil, Save } from 'lucide-react'
+import { Plus, Trash2, KeyRound, ChevronDown, ChevronRight, Pencil, Save, ArrowUp, ArrowDown } from 'lucide-react'
 import type { Vendor } from '@/types/database'
 
 type EditableFields = {
@@ -43,9 +43,27 @@ export default function AdminVendors() {
   const [saving, setSaving] = useState(false)
 
   const fetchVendors = async () => {
-    const { data } = await supabase.from('vendors').select('*').order('category').order('company_name')
+    const { data } = await supabase.from('vendors').select('*')
+      .order('category').order('sort_order').order('company_name')
     setVendors((data as Vendor[]) || [])
     setLoading(false)
+  }
+
+  const handleMove = async (vendor: Vendor, direction: 'up' | 'down') => {
+    const siblings = vendors
+      .filter(v => v.category === vendor.category)
+      .sort((a, b) => a.sort_order - b.sort_order || a.company_name.localeCompare(b.company_name))
+    const idx = siblings.findIndex(s => s.id === vendor.id)
+    const swapIdx = direction === 'up' ? idx - 1 : idx + 1
+    if (swapIdx < 0 || swapIdx >= siblings.length) return
+
+    const current = siblings[idx]
+    const swap = siblings[swapIdx]
+    await Promise.all([
+      supabase.from('vendors').update({ sort_order: swap.sort_order }).eq('id', current.id),
+      supabase.from('vendors').update({ sort_order: current.sort_order }).eq('id', swap.id),
+    ])
+    fetchVendors()
   }
 
   useEffect(() => { fetchVendors() }, [])
@@ -197,10 +215,12 @@ export default function AdminVendors() {
           <div key={catId} className="mb-4">
             <p className="text-[9px] font-semibold text-[#999] uppercase tracking-[0.5px] mb-2">{catLabel}</p>
             <div className="bg-white border border-[rgba(0,0,0,0.06)] rounded-[6px] overflow-hidden">
-              {catVendors.map(vendor => {
+              {catVendors.map((vendor, idx) => {
                 const isExpanded = expandedId === vendor.id
                 const isEditing = editingId === vendor.id
                 const edit = editState[vendor.id]
+                const isFirst = idx === 0
+                const isLast = idx === catVendors.length - 1
                 return (
                   <div key={vendor.id} className="border-b border-[rgba(0,0,0,0.04)] last:border-0">
                     {/* Header row */}
@@ -237,6 +257,18 @@ export default function AdminVendors() {
                             </button>
                           </>
                         )}
+                        <button onClick={(e) => { e.stopPropagation(); handleMove(vendor, 'up') }}
+                          disabled={isFirst}
+                          className="text-[#bbb] hover:text-[#333] cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed"
+                          title="위로">
+                          <ArrowUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); handleMove(vendor, 'down') }}
+                          disabled={isLast}
+                          className="text-[#bbb] hover:text-[#333] cursor-pointer disabled:opacity-20 disabled:cursor-not-allowed"
+                          title="아래로">
+                          <ArrowDown className="w-3.5 h-3.5" />
+                        </button>
                         <button onClick={(e) => { e.stopPropagation(); setResetPwVendorId(vendor.id); setNewPassword('') }}
                           className="text-[#bbb] hover:text-[#333] cursor-pointer" title="비밀번호 변경">
                           <KeyRound className="w-3.5 h-3.5" />

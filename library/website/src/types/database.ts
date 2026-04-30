@@ -37,6 +37,7 @@ export interface Database {
           instagram: string | null
           logo_url: string | null
           slug: string | null
+          sort_order: number
           created_at: string
         }
         Insert: {
@@ -55,6 +56,7 @@ export interface Database {
           instagram?: string | null
           logo_url?: string | null
           slug?: string | null
+          sort_order?: number
           created_at?: string
         }
         Update: {
@@ -73,6 +75,7 @@ export interface Database {
           instagram?: string | null
           logo_url?: string | null
           slug?: string | null
+          sort_order?: number
           created_at?: string
         }
         Relationships: []

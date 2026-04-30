@@ -11,7 +11,8 @@ export default function AdminProducts() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.from('vendors').select('*').order('category').order('company_name')
+    supabase.from('vendors').select('*')
+      .order('category').order('sort_order').order('company_name')
       .then(({ data }) => { setVendors((data as Vendor[]) || []); setLoading(false) })
   }, [])
 
