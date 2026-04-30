@@ -22,6 +22,7 @@ import AdminDashboard from '@/pages/admin/AdminDashboard'
 import AdminVendors from '@/pages/admin/AdminVendors'
 import AdminUsers from '@/pages/admin/AdminUsers'
 import AdminFolders from '@/pages/admin/AdminFolders'
+import AdminProducts from '@/pages/admin/AdminProducts'
 
 export default function App() {
   return (
@@ -52,6 +53,7 @@ export default function App() {
             <Route path="vendors" element={<AdminVendors />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="folders" element={<AdminFolders />} />
+            <Route path="products" element={<AdminProducts />} />
           </Route>
         </Routes>
       </BrowserRouter>

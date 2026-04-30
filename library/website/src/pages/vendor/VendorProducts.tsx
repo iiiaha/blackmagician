@@ -20,8 +20,9 @@ function buildTree(nodes: FolderNode[], parentId: string | null): TreeNode[] {
     .map(n => ({ ...n, children: buildTree(nodes, n.id) }))
 }
 
-export default function VendorProducts() {
-  const { vendor } = useOutletContext<{ vendor: Vendor }>()
+export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor } = {}) {
+  const ctx = useOutletContext<{ vendor: Vendor } | undefined>()
+  const vendor = vendorProp ?? ctx?.vendor ?? null
   const gridRef = useRef<AgGridReact>(null)
   const [folders, setFolders] = useState<FolderNode[]>([])
   const [tree, setTree] = useState<TreeNode[]>([])
@@ -63,7 +64,7 @@ export default function VendorProducts() {
     }
   }, [vendor])
 
-  useEffect(() => { if (vendor?.approved) fetchFolders() }, [vendor, fetchFolders])
+  useEffect(() => { if (vendor) fetchFolders() }, [vendor, fetchFolders])
   useEffect(() => { setTree(buildTree(folders, null)) }, [folders])
 
   const fetchProducts = useCallback(async (folderId: string) => {
