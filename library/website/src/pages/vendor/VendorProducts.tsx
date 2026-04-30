@@ -363,6 +363,7 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
       sortable: false, filter: false, editable: false, resizable: false,
       headerName: '',
       cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
+      headerClass: 'col-checkbox',
     },
     {
       headerName: '제품명', field: 'name', editable: true, flex: 1, minWidth: 120,

@@ -168,10 +168,14 @@ input[type="range"]::-webkit-slider-thumb {
   margin-left: 4px;
 }
 
-/* Center the select-all checkbox in the first header cell — it's a sibling
-   of .ag-header-cell-label (not inside it), so flex centering on the label
-   doesn't reach it. Auto margins inside the parent flex do. */
-.ag-header-cell .ag-header-select-all {
+/* Select-all checkbox column: hide the empty label container that was
+   eating the available space, then auto-margin the checkbox to center it.
+   .ag-header-select-all sits as a sibling of the label container — without
+   removing the latter, there's no slack for auto margins to absorb. */
+.col-checkbox .ag-cell-label-container {
+  display: none;
+}
+.col-checkbox .ag-header-select-all {
   margin-left: auto;
   margin-right: auto;
 }
