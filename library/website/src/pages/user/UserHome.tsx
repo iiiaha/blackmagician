@@ -207,6 +207,10 @@ export default function UserHome() {
       setAllFoldersForBreadcrumb(vendorFolders[vendor.id] || [])
       setSearchResults(null)
       setShowFavorites(false)
+      // Size/color picks belong to the previous folder's product mix —
+      // carrying them over filters out almost everything in the new view.
+      setFilterSizes(new Set())
+      setFilterColor(null)
       fetchProducts(node.id)
     }
     toggleExpand(node.id)
