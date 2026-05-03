@@ -272,7 +272,7 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
             <td className="px-2 py-[3px]">{product?.stock ? `${product.stock}㎡` : '별도문의'}</td>
           </tr>
           <tr>
-            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted">상세페이지</td>
+            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted">URL</td>
             <td className="px-2 py-[3px]">
               {product?.url ? (
                 <a href={product.url} target="_blank" rel="noopener noreferrer"
