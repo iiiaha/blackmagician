@@ -30,30 +30,31 @@
   --radius: 4px;
 }
 
-/* Dark mode — lifted neutral grays. surface > background so cards/headers
-   elevate above the page rather than sinking into it. */
+/* Dark mode — lifted grays with a faint cool-blue tint (~6% sat at hue 220°)
+   so the palette echoes the #add7eb / #49637a brand colors instead of
+   reading as a pure neutral void. surface > background to elevate cards. */
 .dark {
-  --color-background: #383838;
-  --color-foreground: #f0f0f0;
-  --color-card: #4d4d4d;
-  --color-card-foreground: #f0f0f0;
-  --color-primary: #f0f0f0;
-  --color-primary-foreground: #383838;
+  --color-background: #34373d;
+  --color-foreground: #eff1f4;
+  --color-card: #494d57;
+  --color-card-foreground: #eff1f4;
+  --color-primary: #eff1f4;
+  --color-primary-foreground: #34373d;
   --color-secondary: rgba(255, 255, 255, 0.08);
-  --color-secondary-foreground: #f0f0f0;
+  --color-secondary-foreground: #eff1f4;
   --color-muted: rgba(255, 255, 255, 0.08);
-  --color-muted-foreground: #b8b8b8;
+  --color-muted-foreground: #b6b8bd;
   --color-accent: rgba(255, 255, 255, 0.12);
-  --color-accent-foreground: #f0f0f0;
+  --color-accent-foreground: #eff1f4;
   --color-border: rgba(255, 255, 255, 0.13);
   --color-input: rgba(255, 255, 255, 0.13);
   --color-ring: #add7eb;
   --color-brand: #add7eb;
   --color-brand-light: #49637a;
   --color-brand-accent: #ea0003;
-  --color-surface: #444444;
-  --color-text-secondary: #c8c8c8;
-  --color-text-tertiary: #969696;
+  --color-surface: #40434b;
+  --color-text-secondary: #c6c8cd;
+  --color-text-tertiary: #93969c;
 }
 
 @layer base {
