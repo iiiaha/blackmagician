@@ -2,9 +2,7 @@
 
 export interface EditState {
   rotation: number
-  hue: number
-  saturation: number
-  brightness: number
+  flipH: boolean
   groutEnabled: boolean
   groutColor: string
   groutThickness: number
@@ -15,9 +13,7 @@ export interface EditState {
 
 export const defaultEditState: EditState = {
   rotation: 0,
-  hue: 0,
-  saturation: 100,
-  brightness: 100,
+  flipH: false,
   groutEnabled: false,
   groutColor: '#808080',
   groutThickness: 2.0,
@@ -40,11 +36,6 @@ function calcPxPerMM(totalW: number, totalH: number) {
   if (maxDim * BASE_PX_PER_MM > MAX_CANVAS_PX) return MAX_CANVAS_PX / maxDim
   return BASE_PX_PER_MM
 }
-
-function buildFilter(edit: EditState) {
-  return `hue-rotate(${edit.hue}deg) saturate(${edit.saturation}%) brightness(${edit.brightness / 100})`
-}
-
 
 function getMixGrid(mixMode: string, sizeStr?: string) {
   if (mixMode === 'grid') return { cols: 3, rows: 3 }
@@ -196,7 +187,7 @@ function drawSingle(
     ctx.fillRect(-totalW / 2, -totalH / 2, totalW, totalH)
   }
 
-  ctx.filter = buildFilter(edit)
+  if (edit.flipH) ctx.scale(-1, 1)
   ctx.drawImage(img, -tileW_px / 2, -tileH_px / 2, tileW_px, tileH_px)
   ctx.restore()
 }
@@ -239,7 +230,7 @@ function drawMixGrid(
     ctx.fillRect(-totalW / 2, -totalH / 2, totalW, totalH)
   }
 
-  ctx.filter = buildFilter(edit)
+  if (edit.flipH) ctx.scale(-1, 1)
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const idx = r * cols + c
@@ -311,13 +302,13 @@ function drawMixStagger(
     ctx.fillRect(-totalW / 2, -totalH / 2, totalW, totalH)
   }
 
-  ctx.filter = buildFilter(edit)
   ctx.beginPath()
   ctx.rect(-totalW / 2, -totalH / 2, totalW, totalH)
   ctx.clip()
 
+  if (edit.flipH) ctx.scale(-1, 1)
+
   const step = edit.mixMode === 'half' ? 2 : 3
-  const filterStr = buildFilter(edit)
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
@@ -341,20 +332,16 @@ function drawMixStagger(
       if (vertical) {
         if (y + cellH_px > totalH / 2) {
           if (gPx > 0) {
-            ctx.filter = 'none'
             ctx.fillStyle = edit.groutColor
             ctx.fillRect(x - gPx / 2, y - totalH, cellW_px, cellH_px)
-            ctx.filter = filterStr
           }
           drawTileRotated(ctx, img, x, y - totalH, tileW_px, tileH_px, rot)
         }
       } else {
         if (x + cellW_px > totalW / 2) {
           if (gPx > 0) {
-            ctx.filter = 'none'
             ctx.fillStyle = edit.groutColor
             ctx.fillRect(x - totalW, y - gPx / 2, cellW_px, cellH_px)
-            ctx.filter = filterStr
           }
           drawTileRotated(ctx, img, x - totalW, y, tileW_px, tileH_px, rot)
         }
