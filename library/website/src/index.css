@@ -30,32 +30,32 @@
   --radius: 4px;
 }
 
-/* Dark mode — lifted grays with a faint mint tint (hue 158° ~ Apply-to-Bucket
-   green at ~7% saturation). Just enough green to break the "clinical
-   neutral" feel without tipping the UI into a sage/forest theme.
-   surface > background to elevate cards. */
+/* Dark mode — lifted grays with a barely-there mint tint (hue 158° ~
+   Apply-to-Bucket green at 4% saturation). Lightness lands between the
+   original too-dark stack and the previous too-bright pass: page ~19%,
+   surface ~23%, card ~26%. surface > background keeps cards elevated. */
 .dark {
-  --color-background: #353c38;
-  --color-foreground: #eff3f0;
-  --color-card: #495350;
-  --color-card-foreground: #eff3f0;
-  --color-primary: #eff3f0;
-  --color-primary-foreground: #353c38;
-  --color-secondary: rgba(255, 255, 255, 0.08);
-  --color-secondary-foreground: #eff3f0;
-  --color-muted: rgba(255, 255, 255, 0.08);
-  --color-muted-foreground: #b6bbb8;
-  --color-accent: rgba(255, 255, 255, 0.12);
-  --color-accent-foreground: #eff3f0;
-  --color-border: rgba(255, 255, 255, 0.13);
-  --color-input: rgba(255, 255, 255, 0.13);
+  --color-background: #2d3431;
+  --color-foreground: #f0f3f1;
+  --color-card: #404543;
+  --color-card-foreground: #f0f3f1;
+  --color-primary: #f0f3f1;
+  --color-primary-foreground: #2d3431;
+  --color-secondary: rgba(255, 255, 255, 0.07);
+  --color-secondary-foreground: #f0f3f1;
+  --color-muted: rgba(255, 255, 255, 0.07);
+  --color-muted-foreground: #b7bdbb;
+  --color-accent: rgba(255, 255, 255, 0.11);
+  --color-accent-foreground: #f0f3f1;
+  --color-border: rgba(255, 255, 255, 0.12);
+  --color-input: rgba(255, 255, 255, 0.12);
   --color-ring: #add7eb;
   --color-brand: #add7eb;
   --color-brand-light: #49637a;
   --color-brand-accent: #ea0003;
-  --color-surface: #404a44;
-  --color-text-secondary: #c6cbc8;
-  --color-text-tertiary: #939896;
+  --color-surface: #383d3b;
+  --color-text-secondary: #c5c9c8;
+  --color-text-tertiary: #959d9a;
 }
 
 @layer base {
