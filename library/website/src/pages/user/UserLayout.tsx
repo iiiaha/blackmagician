@@ -146,14 +146,17 @@ export default function UserLayout() {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Theme toggle */}
-          <button
-            onClick={() => setDark(!dark)}
-            className="w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
-            title={dark ? 'Light mode' : 'Dark mode'}
-          >
-            {dark ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
-          </button>
+          {/* Theme toggle — non-vendor mode keeps it at the front. Vendor
+              mode moves it to the end of the action row (after Contact). */}
+          {!vendorMode && (
+            <button
+              onClick={() => setDark(!dark)}
+              className="w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+              title={dark ? 'Light mode' : 'Dark mode'}
+            >
+              {dark ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
+            </button>
+          )}
 
           {vendorMode && vendorInfo ? (
             <div className="flex items-center gap-1">
@@ -172,6 +175,13 @@ export default function UserLayout() {
               {vendorInfo.contact_phone && (
                 <VendorContact vendor={vendorInfo} />
               )}
+              <button
+                onClick={() => setDark(!dark)}
+                className="w-6 h-6 flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer transition-colors ml-1"
+                title={dark ? 'Light mode' : 'Dark mode'}
+              >
+                {dark ? <Moon className="w-3.5 h-3.5" /> : <Sun className="w-3.5 h-3.5" />}
+              </button>
             </div>
           ) : !vendorMode && (user ? (
             <>
