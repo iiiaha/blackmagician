@@ -833,16 +833,21 @@ function ThicknessDropdown({ thicknesses, selected, onChange }: {
     onChange(next)
   }
 
+  // Show actual picks (sorted ascending) so the user reads "6mm, 9mm"
+  // rather than a count. Truncates if many selected.
+  const sortedSelected = [...selected].sort((a, b) => a - b)
+  const triggerText = sortedSelected.length === 0
+    ? '전체'
+    : sortedSelected.map(t => `${t}mm`).join(', ')
+
   return (
     <div className="relative flex items-center gap-1.5">
       <span className="text-[9px] text-text-tertiary whitespace-nowrap">두께</span>
       <button
         onClick={() => setOpen(prev => !prev)}
-        className="h-[22px] min-w-[80px] px-2 text-[10px] text-left bg-muted border border-border rounded-[3px] cursor-pointer flex items-center justify-between gap-1 hover:border-foreground"
+        className="h-[22px] min-w-[80px] max-w-[180px] px-2 text-[10px] text-left bg-muted border border-border rounded-[3px] cursor-pointer flex items-center justify-between gap-1 hover:border-foreground"
       >
-        <span className="truncate">
-          {selected.size === 0 ? '전체' : `${selected.size}개 선택`}
-        </span>
+        <span className="truncate">{triggerText}</span>
         <ChevronDown className="w-2.5 h-2.5 shrink-0 opacity-50" />
       </button>
 
