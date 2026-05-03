@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef, type ReactNode } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
@@ -877,14 +877,9 @@ function ColorPaletteRow({ options, selected, onChange }: {
 
   return (
     <div className="px-5 py-3 border-b bg-surface shrink-0 flex items-center justify-center gap-2 flex-wrap">
-      {options.flatMap((c, i) => {
-        const prev = options[i - 1]
-        const elements: ReactNode[] = []
-        if (prev && prev.group !== c.group) {
-          elements.push(<span key={`sep-${i}`} className="w-px h-4 bg-border/50 mx-1.5" />)
-        }
+      {options.map(c => {
         const active = selected === c.label
-        elements.push(
+        return (
           <button
             key={c.label}
             onClick={() => pick(c.label)}
@@ -899,7 +894,6 @@ function ColorPaletteRow({ options, selected, onChange }: {
             style={{ background: c.hex }}
           />
         )
-        return elements
       })}
     </div>
   )
