@@ -70,8 +70,8 @@ export default function UserHome() {
   // Filters
   const [filterMinPrice, setFilterMinPrice] = useState('')
   const [filterMaxPrice, setFilterMaxPrice] = useState('')
-  const [filterMinStock, setFilterMinStock] = useState('')
   const [filterOrigins, setFilterOrigins] = useState<Set<string>>(new Set())
+  const [filterThicknesses, setFilterThicknesses] = useState<Set<number>>(new Set())
   const [filterColor, setFilterColor] = useState<string | null>(null)
 
   // Login popup
@@ -327,6 +327,11 @@ export default function UserHome() {
   // Collect unique origins from current product set
   const baseProducts = showFavorites ? favoriteProducts : products
   const availableOrigins = [...new Set(baseProducts.map(p => p.origin).filter((o): o is string => !!o))].sort()
+  // Thickness = third dim of "원장크기" (e.g. "600x1200x9" → 9). Tolerates
+  // x / × / * separators consistent with parsing elsewhere.
+  const availableThicknesses = [...new Set(
+    baseProducts.map(p => extractThickness(p.size)).filter((n): n is number => n != null)
+  )].sort((a, b) => a - b)
   // Only show palette swatches for colors actually present in the current
   // view; preserves palette order so groups stay light→dark.
   const presentColors = new Set(baseProducts.map(p => p.color).filter((c): c is string => !!c))
@@ -342,22 +347,22 @@ export default function UserHome() {
       const max = Number(filterMaxPrice)
       if (!isNaN(max) && (p.unit_price == null || p.unit_price > max)) return false
     }
-    if (filterMinStock) {
-      const minS = Number(filterMinStock)
-      if (!isNaN(minS) && (p.stock == null || p.stock < minS)) return false
-    }
     if (filterOrigins.size > 0 && (!p.origin || !filterOrigins.has(p.origin))) return false
+    if (filterThicknesses.size > 0) {
+      const t = extractThickness(p.size)
+      if (t == null || !filterThicknesses.has(t)) return false
+    }
     if (filterColor && p.color !== filterColor) return false
     return true
   })
 
-  const hasActiveFilter = !!(filterMinPrice || filterMaxPrice || filterMinStock || filterOrigins.size > 0 || filterColor)
+  const hasActiveFilter = !!(filterMinPrice || filterMaxPrice || filterOrigins.size > 0 || filterThicknesses.size > 0 || filterColor)
 
   const clearFilters = () => {
     setFilterMinPrice('')
     setFilterMaxPrice('')
-    setFilterMinStock('')
     setFilterOrigins(new Set())
+    setFilterThicknesses(new Set())
     setFilterColor(null)
   }
 
@@ -549,14 +554,12 @@ export default function UserHome() {
 
             <div className="w-px h-3 bg-border" />
 
-            {/* 재고 */}
-            <span className="text-[9px] text-text-tertiary whitespace-nowrap">재고</span>
-            <input
-              placeholder="최소" value={filterMinStock}
-              onChange={e => { const v = e.target.value; if (v === '' || /^\d*$/.test(v)) setFilterMinStock(v) }}
-              className="w-[50px] h-[20px] text-[10px] px-1.5 bg-muted border border-border rounded-[3px] outline-none focus:border-brand text-foreground placeholder:text-text-tertiary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            {/* 두께 — derived from "원장크기" third dim, multi-select */}
+            <ThicknessDropdown
+              thicknesses={availableThicknesses}
+              selected={filterThicknesses}
+              onChange={setFilterThicknesses}
             />
-            <span className="text-[8px] text-text-tertiary">㎡ 이상</span>
 
             <div className="w-px h-3 bg-border" />
 
@@ -802,6 +805,66 @@ function VendorBanner({ vendor }: { vendor: Vendor }) {
               className="w-full h-[28px] mt-4 border border-[rgba(0,0,0,0.1)] rounded-[4px] text-[10px] font-semibold text-foreground cursor-pointer hover:bg-[rgba(0,0,0,0.03)]">
               닫기
             </button>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+// Pulls thickness (mm) from "원장크기" third dimension. Tolerates x / × / *
+// separators, returns null when only WxH or unparseable.
+function extractThickness(size: string | null): number | null {
+  if (!size) return null
+  const m = size.match(/(\d+)\s*[x×*]\s*(\d+)\s*[x×*]\s*(\d+)/i)
+  return m ? Number(m[3]) : null
+}
+
+function ThicknessDropdown({ thicknesses, selected, onChange }: {
+  thicknesses: number[]
+  selected: Set<number>
+  onChange: (s: Set<number>) => void
+}) {
+  const [open, setOpen] = useState(false)
+
+  const toggle = (t: number) => {
+    const next = new Set(selected)
+    if (next.has(t)) next.delete(t); else next.add(t)
+    onChange(next)
+  }
+
+  return (
+    <div className="relative flex items-center gap-1.5">
+      <span className="text-[9px] text-text-tertiary whitespace-nowrap">두께</span>
+      <button
+        onClick={() => setOpen(prev => !prev)}
+        className="h-[22px] min-w-[80px] px-2 text-[10px] text-left bg-muted border border-border rounded-[3px] cursor-pointer flex items-center justify-between gap-1 hover:border-foreground"
+      >
+        <span className="truncate">
+          {selected.size === 0 ? '전체' : `${selected.size}개 선택`}
+        </span>
+        <ChevronDown className="w-2.5 h-2.5 shrink-0 opacity-50" />
+      </button>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
+          <div className="absolute top-full left-0 mt-1 z-40 bg-surface border border-border rounded-[4px] shadow-[0_4px_12px_rgba(0,0,0,0.1)] max-h-[200px] overflow-y-auto min-w-[100px]"
+            style={{ animation: 'fadeIn 0.15s ease-out' }}>
+            {thicknesses.length === 0 ? (
+              <p className="text-[9px] text-text-tertiary px-3 py-2">데이터 없음</p>
+            ) : (
+              thicknesses.map(t => (
+                <label key={t} className="flex items-center gap-2 px-3 py-1.5 hover:bg-muted cursor-pointer text-[10px]">
+                  <input
+                    type="checkbox" checked={selected.has(t)}
+                    onChange={() => toggle(t)}
+                    className="w-3 h-3 accent-foreground cursor-pointer"
+                  />
+                  <span>{t}mm</span>
+                </label>
+              ))
+            )}
           </div>
         </>
       )}
