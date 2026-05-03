@@ -85,16 +85,26 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
     const f = (data as FolderNode[]) || []
     setFolders(f)
     setExpandedIds(new Set(f.map(n => n.id)))
-    // Fetch product counts per folder
-    const { data: countData } = await supabase.from('products').select('folder_id').eq('vendor_id', vendor.id)
-    if (countData) {
-      const counts: Record<string, number> = {}
-      for (const row of countData) {
+    // Fetch product counts per folder. Supabase caps each query at 1000 rows,
+    // so paginate via .range() to get every product's folder_id.
+    const counts: Record<string, number> = {}
+    let total = 0
+    const pageSize = 1000
+    for (let from = 0; ; from += pageSize) {
+      const { data: page } = await supabase
+        .from('products')
+        .select('folder_id')
+        .eq('vendor_id', vendor.id)
+        .range(from, from + pageSize - 1)
+      if (!page || page.length === 0) break
+      for (const row of page) {
         counts[row.folder_id] = (counts[row.folder_id] || 0) + 1
       }
-      setFolderCounts(counts)
-      setTotalProductCount(countData.length)
+      total += page.length
+      if (page.length < pageSize) break
     }
+    setFolderCounts(counts)
+    setTotalProductCount(total)
   }, [vendor])
 
   useEffect(() => { if (vendor) fetchFolders() }, [vendor, fetchFolders])
