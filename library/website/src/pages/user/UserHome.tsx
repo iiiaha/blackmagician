@@ -71,7 +71,7 @@ export default function UserHome() {
   const [filterMinPrice, setFilterMinPrice] = useState('')
   const [filterMaxPrice, setFilterMaxPrice] = useState('')
   const [filterOrigins, setFilterOrigins] = useState<Set<string>>(new Set())
-  const [filterThicknesses, setFilterThicknesses] = useState<Set<number>>(new Set())
+  const [filterSizes, setFilterSizes] = useState<Set<string>>(new Set())
   const [filterColor, setFilterColor] = useState<string | null>(null)
 
   // Login popup
@@ -363,11 +363,18 @@ export default function UserHome() {
   // Collect unique origins from current product set
   const baseProducts = showFavorites ? favoriteProducts : products
   const availableOrigins = [...new Set(baseProducts.map(p => p.origin).filter((o): o is string => !!o))].sort()
-  // Thickness = third dim of "원장크기" (e.g. "600x1200x9" → 9). Tolerates
-  // x / × / * separators consistent with parsing elsewhere.
-  const availableThicknesses = [...new Set(
-    baseProducts.map(p => extractThickness(p.size)).filter((n): n is number => n != null)
-  )].sort((a, b) => a - b)
+  // Full W×H×D sizes from "원장크기". Normalize to × separator so 600x1200x9
+  // and 600*1200*9 don't show up as duplicates. Sort by area then thickness.
+  const sizeMap = new Map<string, [number, number, number]>()
+  for (const p of baseProducts) {
+    const key = parseSizeKey(p.size)
+    if (!key) continue
+    const norm = sizeKeyToString(key)
+    if (!sizeMap.has(norm)) sizeMap.set(norm, key)
+  }
+  const availableSizes = [...sizeMap.entries()]
+    .sort(([, a], [, b]) => a[0] * a[1] - b[0] * b[1] || a[2] - b[2] || a[0] - b[0])
+    .map(([norm]) => norm)
   // Only show palette swatches for colors actually present in the current
   // view; preserves palette order so groups stay light→dark.
   const presentColors = new Set(baseProducts.map(p => p.color).filter((c): c is string => !!c))
@@ -384,21 +391,21 @@ export default function UserHome() {
       if (!isNaN(max) && (p.unit_price == null || p.unit_price > max)) return false
     }
     if (filterOrigins.size > 0 && (!p.origin || !filterOrigins.has(p.origin))) return false
-    if (filterThicknesses.size > 0) {
-      const t = extractThickness(p.size)
-      if (t == null || !filterThicknesses.has(t)) return false
+    if (filterSizes.size > 0) {
+      const key = parseSizeKey(p.size)
+      if (!key || !filterSizes.has(sizeKeyToString(key))) return false
     }
     if (filterColor && p.color !== filterColor) return false
     return true
   })
 
-  const hasActiveFilter = !!(filterMinPrice || filterMaxPrice || filterOrigins.size > 0 || filterThicknesses.size > 0 || filterColor)
+  const hasActiveFilter = !!(filterMinPrice || filterMaxPrice || filterOrigins.size > 0 || filterSizes.size > 0 || filterColor)
 
   const clearFilters = () => {
     setFilterMinPrice('')
     setFilterMaxPrice('')
     setFilterOrigins(new Set())
-    setFilterThicknesses(new Set())
+    setFilterSizes(new Set())
     setFilterColor(null)
   }
 
@@ -590,11 +597,11 @@ export default function UserHome() {
 
             <div className="w-px h-3 bg-border" />
 
-            {/* 두께 — derived from "원장크기" third dim, multi-select */}
-            <ThicknessDropdown
-              thicknesses={availableThicknesses}
-              selected={filterThicknesses}
-              onChange={setFilterThicknesses}
+            {/* 크기 — full W×H×D from 원장크기, multi-select */}
+            <SizeDropdown
+              sizes={availableSizes}
+              selected={filterSizes}
+              onChange={setFilterSizes}
             />
 
             <div className="w-px h-3 bg-border" />
@@ -848,40 +855,45 @@ function VendorBanner({ vendor }: { vendor: Vendor }) {
   )
 }
 
-// Pulls thickness (mm) from "원장크기" third dimension. Tolerates x / × / *
-// separators, returns null when only WxH or unparseable.
-function extractThickness(size: string | null): number | null {
+// Parses 원장크기 (e.g. "600x1200x9", "600*600", "1200×1200×10") into a
+// numeric tuple. Tolerates x / × / * separators. Returns null when fewer
+// than 2 numeric parts so unparseable strings don't pollute the filter.
+function parseSizeKey(size: string | null | undefined): [number, number, number] | null {
   if (!size) return null
-  const m = size.match(/(\d+)\s*[x×*]\s*(\d+)\s*[x×*]\s*(\d+)/i)
-  return m ? Number(m[3]) : null
+  const parts = size.split(/[x×*]/).map(p => Number(p.trim())).filter(n => !isNaN(n))
+  if (parts.length < 2) return null
+  return [parts[0], parts[1], parts[2] || 0]
 }
 
-function ThicknessDropdown({ thicknesses, selected, onChange }: {
-  thicknesses: number[]
-  selected: Set<number>
-  onChange: (s: Set<number>) => void
+function sizeKeyToString(key: [number, number, number]): string {
+  return key[2] > 0 ? `${key[0]}×${key[1]}×${key[2]}` : `${key[0]}×${key[1]}`
+}
+
+function SizeDropdown({ sizes, selected, onChange }: {
+  sizes: string[]
+  selected: Set<string>
+  onChange: (s: Set<string>) => void
 }) {
   const [open, setOpen] = useState(false)
 
-  const toggle = (t: number) => {
+  const toggle = (s: string) => {
     const next = new Set(selected)
-    if (next.has(t)) next.delete(t); else next.add(t)
+    if (next.has(s)) next.delete(s); else next.add(s)
     onChange(next)
   }
 
-  // Show actual picks (sorted ascending) so the user reads "6mm, 9mm"
-  // rather than a count. Truncates if many selected.
-  const sortedSelected = [...selected].sort((a, b) => a - b)
-  const triggerText = sortedSelected.length === 0
+  // Preserve the sorted order from props so the trigger reads in the same
+  // sequence as the dropdown list itself.
+  const triggerText = selected.size === 0
     ? '전체'
-    : sortedSelected.map(t => `${t}mm`).join(', ')
+    : sizes.filter(s => selected.has(s)).join(', ')
 
   return (
     <div className="relative flex items-center gap-1.5">
-      <span className="text-[9px] text-text-tertiary whitespace-nowrap">두께</span>
+      <span className="text-[9px] text-text-tertiary whitespace-nowrap">크기</span>
       <button
         onClick={() => setOpen(prev => !prev)}
-        className="h-[22px] min-w-[80px] max-w-[180px] px-2 text-[10px] text-left bg-muted border border-border rounded-[3px] cursor-pointer flex items-center justify-between gap-1 hover:border-foreground"
+        className="h-[22px] min-w-[100px] max-w-[240px] px-2 text-[10px] text-left bg-muted border border-border rounded-[3px] cursor-pointer flex items-center justify-between gap-1 hover:border-foreground"
       >
         <span className="truncate">{triggerText}</span>
         <ChevronDown className="w-2.5 h-2.5 shrink-0 opacity-50" />
@@ -890,19 +902,19 @@ function ThicknessDropdown({ thicknesses, selected, onChange }: {
       {open && (
         <>
           <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
-          <div className="absolute top-full left-0 mt-1 z-40 bg-surface border border-border rounded-[4px] shadow-[0_4px_12px_rgba(0,0,0,0.1)] max-h-[200px] overflow-y-auto min-w-[100px]"
+          <div className="absolute top-full left-0 mt-1 z-40 bg-surface border border-border rounded-[4px] shadow-[0_4px_12px_rgba(0,0,0,0.1)] max-h-[260px] overflow-y-auto min-w-[140px]"
             style={{ animation: 'fadeIn 0.15s ease-out' }}>
-            {thicknesses.length === 0 ? (
+            {sizes.length === 0 ? (
               <p className="text-[9px] text-text-tertiary px-3 py-2">데이터 없음</p>
             ) : (
-              thicknesses.map(t => (
-                <label key={t} className="flex items-center gap-2 px-3 py-1.5 hover:bg-muted cursor-pointer text-[10px]">
+              sizes.map(s => (
+                <label key={s} className="flex items-center gap-2 px-3 py-1.5 hover:bg-muted cursor-pointer text-[10px]">
                   <input
-                    type="checkbox" checked={selected.has(t)}
-                    onChange={() => toggle(t)}
+                    type="checkbox" checked={selected.has(s)}
+                    onChange={() => toggle(s)}
                     className="w-3 h-3 accent-foreground cursor-pointer"
                   />
-                  <span>{t}mm</span>
+                  <span className="tabular-nums">{s}</span>
                 </label>
               ))
             )}
