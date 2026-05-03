@@ -956,8 +956,8 @@ function ColorPaletteRow({ options, selected, onChange }: {
             aria-pressed={active}
             className={`relative w-[22px] h-[22px] rounded-full cursor-pointer transition-all duration-200 shrink-0 border-2 border-white ${
               active
-                ? 'scale-[1.18] shadow-[0_4px_10px_rgba(0,0,0,0.22),0_0_0_1px_rgba(0,0,0,0.12)]'
-                : 'shadow-[0_1px_3px_rgba(0,0,0,0.12),0_0_0_0.5px_rgba(0,0,0,0.08)] hover:scale-110 hover:shadow-[0_2px_6px_rgba(0,0,0,0.18),0_0_0_0.5px_rgba(0,0,0,0.12)]'
+                ? 'scale-[1.06] shadow-[0_3px_8px_rgba(0,0,0,0.2),0_0_0_1px_rgba(0,0,0,0.15)]'
+                : 'shadow-[0_1px_3px_rgba(0,0,0,0.12),0_0_0_0.5px_rgba(0,0,0,0.08)] hover:scale-[1.06] hover:shadow-[0_2px_6px_rgba(0,0,0,0.18),0_0_0_0.5px_rgba(0,0,0,0.12)]'
             }`}
             style={{ background: c.hex }}
           />
