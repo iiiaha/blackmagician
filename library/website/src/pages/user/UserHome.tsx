@@ -72,7 +72,7 @@ export default function UserHome() {
   const [filterMaxPrice, setFilterMaxPrice] = useState('')
   const [filterMinStock, setFilterMinStock] = useState('')
   const [filterOrigins, setFilterOrigins] = useState<Set<string>>(new Set())
-  const [filterColors, setFilterColors] = useState<Set<string>>(new Set())
+  const [filterColor, setFilterColor] = useState<string | null>(null)
 
   // Login popup
   const [showLoginPopup, setShowLoginPopup] = useState(false)
@@ -327,6 +327,10 @@ export default function UserHome() {
   // Collect unique origins from current product set
   const baseProducts = showFavorites ? favoriteProducts : products
   const availableOrigins = [...new Set(baseProducts.map(p => p.origin).filter((o): o is string => !!o))].sort()
+  // Only show palette swatches for colors actually present in the current
+  // view; preserves palette order so groups stay light→dark.
+  const presentColors = new Set(baseProducts.map(p => p.color).filter((c): c is string => !!c))
+  const availableColors = COLOR_PALETTE.filter(c => presentColors.has(c.label))
 
   // Apply filters
   const displayProducts = baseProducts.filter(p => {
@@ -343,19 +347,18 @@ export default function UserHome() {
       if (!isNaN(minS) && (p.stock == null || p.stock < minS)) return false
     }
     if (filterOrigins.size > 0 && (!p.origin || !filterOrigins.has(p.origin))) return false
-    // Multi-select is OR: pass if product's single color is among picks.
-    if (filterColors.size > 0 && (!p.color || !filterColors.has(p.color))) return false
+    if (filterColor && p.color !== filterColor) return false
     return true
   })
 
-  const hasActiveFilter = !!(filterMinPrice || filterMaxPrice || filterMinStock || filterOrigins.size > 0 || filterColors.size > 0)
+  const hasActiveFilter = !!(filterMinPrice || filterMaxPrice || filterMinStock || filterOrigins.size > 0 || filterColor)
 
   const clearFilters = () => {
     setFilterMinPrice('')
     setFilterMaxPrice('')
     setFilterMinStock('')
     setFilterOrigins(new Set())
-    setFilterColors(new Set())
+    setFilterColor(null)
   }
 
   return (
@@ -577,10 +580,11 @@ export default function UserHome() {
           </div>
         )}
 
-        {/* Color palette row — full 21-bucket palette as circular swatches,
-            grouped neutral / warm / green / cool with thin dividers between groups. */}
-        {selectedVendor && !searchResults && (
-          <ColorPaletteRow selected={filterColors} onChange={setFilterColors} />
+        {/* Color palette row — only colors present in the current view,
+            single-select. Hidden when nothing in the folder has a color
+            assigned, so the row doesn't dangle empty during data loads. */}
+        {selectedVendor && !searchResults && availableColors.length > 0 && (
+          <ColorPaletteRow options={availableColors} selected={filterColor} onChange={setFilterColor} />
         )}
 
         {(selectedFolder || searchResults !== null || showFavorites) && (
@@ -857,41 +861,40 @@ function OriginDropdown({ origins, selected, onChange }: {
   )
 }
 
-// Full 21-color palette as circular swatches in a dedicated row.
-// Always renders the entire palette (not just present colors) so the
-// row layout stays stable as the user navigates between folders.
-// Group transitions get a thin vertical divider; hover shows the
-// label via the native title tooltip — no inline label text.
-function ColorPaletteRow({ selected, onChange }: {
-  selected: Set<string>
-  onChange: (s: Set<string>) => void
+// Palette row of circular swatches — only colors present in the current
+// view. Single-select: clicking the active color clears the filter,
+// clicking another switches. Each swatch has a 2px white inner ring for
+// the "paint chip" feel, and active state is a soft elevation (scale +
+// shadow) rather than a heavy outline.
+function ColorPaletteRow({ options, selected, onChange }: {
+  options: { label: string; hex: string; group: string }[]
+  selected: string | null
+  onChange: (c: string | null) => void
 }) {
-  const toggle = (label: string) => {
-    const next = new Set(selected)
-    if (next.has(label)) next.delete(label); else next.add(label)
-    onChange(next)
+  const pick = (label: string) => {
+    onChange(selected === label ? null : label)
   }
 
   return (
-    <div className="px-5 py-2.5 border-b bg-surface shrink-0 flex items-center justify-center gap-1.5 flex-wrap">
-      {COLOR_PALETTE.flatMap((c, i) => {
-        const prev = COLOR_PALETTE[i - 1]
+    <div className="px-5 py-3 border-b bg-surface shrink-0 flex items-center justify-center gap-2 flex-wrap">
+      {options.flatMap((c, i) => {
+        const prev = options[i - 1]
         const elements: ReactNode[] = []
         if (prev && prev.group !== c.group) {
-          elements.push(<span key={`sep-${i}`} className="w-px h-4 bg-border/60 mx-1" />)
+          elements.push(<span key={`sep-${i}`} className="w-px h-4 bg-border/50 mx-1.5" />)
         }
-        const active = selected.has(c.label)
+        const active = selected === c.label
         elements.push(
           <button
             key={c.label}
-            onClick={() => toggle(c.label)}
+            onClick={() => pick(c.label)}
             title={c.label}
             aria-label={c.label}
             aria-pressed={active}
-            className={`w-[20px] h-[20px] rounded-full cursor-pointer transition-all duration-150 shrink-0 ${
+            className={`relative w-[22px] h-[22px] rounded-full cursor-pointer transition-all duration-200 shrink-0 border-2 border-white ${
               active
-                ? 'ring-2 ring-offset-2 ring-offset-surface ring-foreground scale-110'
-                : 'ring-1 ring-inset ring-black/10 hover:scale-110 hover:ring-foreground/40'
+                ? 'scale-[1.18] shadow-[0_4px_10px_rgba(0,0,0,0.22),0_0_0_1px_rgba(0,0,0,0.12)]'
+                : 'shadow-[0_1px_3px_rgba(0,0,0,0.12),0_0_0_0.5px_rgba(0,0,0,0.08)] hover:scale-110 hover:shadow-[0_2px_6px_rgba(0,0,0,0.18),0_0_0_0.5px_rgba(0,0,0,0.12)]'
             }`}
             style={{ background: c.hex }}
           />
