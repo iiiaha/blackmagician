@@ -68,8 +68,11 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
   const [inserting, setInserting] = useState(false)
   const [imgsLoading, setImgsLoading] = useState(false)
 
-  const hasMix = allImgs.length > 1
-  const willHaveMix = images.length > 1
+  // Mix is meaningful even with a single image — the variant pool
+  // (rotations + flip) supplies up to 8 distinct cells per source photo.
+  // Just guard against the brief load window when allImgs is still [].
+  const canMix = allImgs.length >= 1
+  const stillLoading = imgsLoading && images.length > 1
 
   // Sync size orientation with image orientation
   // If image is landscape but size says portrait (or vice versa), swap w/h
@@ -237,11 +240,11 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
           onClick={() => updateEdit({ groutEnabled: !edit.groutEnabled })} title="Grout" />
         <div className="w-px bg-border mx-[1px]" />
         <ToolBtn icon={<MixIcon className="w-3.5 h-3.5" />} active={edit.mixMode === 'grid'}
-          onClick={() => handleMix('grid')} title="Mix 3×3" disabled={!hasMix} loading={imgsLoading && willHaveMix} />
+          onClick={() => handleMix('grid')} title="Mix 3×3" disabled={!canMix} loading={stillLoading} />
         <ToolBtn icon={<HalfStaggerIcon className="w-3.5 h-3.5" />} active={edit.mixMode === 'half'}
-          onClick={() => handleMix('half')} title="1/2 Stagger" disabled={!hasMix} loading={imgsLoading && willHaveMix} />
+          onClick={() => handleMix('half')} title="1/2 Stagger" disabled={!canMix} loading={stillLoading} />
         <ToolBtn icon={<ThirdStaggerIcon className="w-3.5 h-3.5" />} active={edit.mixMode === 'third'}
-          onClick={() => handleMix('third')} title="1/3 Stagger" disabled={!hasMix} loading={imgsLoading && willHaveMix} />
+          onClick={() => handleMix('third')} title="1/3 Stagger" disabled={!canMix} loading={stillLoading} />
       </div>
 
       {/* Grout — always visible */}
