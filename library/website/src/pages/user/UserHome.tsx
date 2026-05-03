@@ -373,7 +373,7 @@ export default function UserHome() {
     if (!sizeMap.has(norm)) sizeMap.set(norm, key)
   }
   const availableSizes = [...sizeMap.entries()]
-    .sort(([, a], [, b]) => a[0] * a[1] - b[0] * b[1] || a[2] - b[2] || a[0] - b[0])
+    .sort(([, a], [, b]) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2])
     .map(([norm]) => norm)
   // Only show palette swatches for colors actually present in the current
   // view; preserves palette order so groups stay light→dark.
@@ -908,7 +908,7 @@ function SizeDropdown({ sizes, selected, onChange }: {
               <p className="text-[9px] text-text-tertiary px-3 py-2">데이터 없음</p>
             ) : (
               sizes.map(s => (
-                <label key={s} className="flex items-center gap-2 px-3 py-1.5 hover:bg-muted cursor-pointer text-[10px]">
+                <label key={s} className="flex items-center gap-1.5 px-2.5 py-[2px] leading-tight hover:bg-muted cursor-pointer text-[10px]">
                   <input
                     type="checkbox" checked={selected.has(s)}
                     onChange={() => toggle(s)}
