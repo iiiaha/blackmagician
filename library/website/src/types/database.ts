@@ -127,7 +127,7 @@ export interface Database {
           source_size: string | null
           thumbnail_zoom: boolean
           thumbnail_url: string | null
-          color_tags: string[]
+          color: string | null
           created_at: string
           updated_at: string
         }
@@ -144,7 +144,7 @@ export interface Database {
           source_size?: string | null
           thumbnail_zoom?: boolean
           thumbnail_url?: string | null
-          color_tags?: string[]
+          color?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -161,7 +161,7 @@ export interface Database {
           source_size?: string | null
           thumbnail_zoom?: boolean
           thumbnail_url?: string | null
-          color_tags?: string[]
+          color?: string | null
           created_at?: string
           updated_at?: string
         }

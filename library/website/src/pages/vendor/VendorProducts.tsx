@@ -8,7 +8,7 @@ import {
   Plus, Package, ImagePlus, X, FileSpreadsheet, Upload,
 } from 'lucide-react'
 import type { Vendor, FolderNode, Product, ProductImage } from '@/types/database'
-import { COLOR_PALETTE, COLOR_LABELS, colorHex } from '@/lib/colors'
+import { COLOR_PALETTE, COLOR_LABELS, COLOR_GROUP_LABELS, colorHex, type ColorGroup } from '@/lib/colors'
 
 ModuleRegistry.registerModules([AllCommunityModule])
 
@@ -35,13 +35,9 @@ function parseExcelRow(row: Record<string, unknown>) {
     return isNaN(n) ? null : n
   }
   const colorRaw = String(row['컬러'] ?? '').trim()
-  // Comma/slash-separated palette labels; drop unknowns and dedupe so a
-  // typo in the spreadsheet doesn't leak garbage into the array column.
-  const colorTags = colorRaw === ''
-    ? []
-    : Array.from(new Set(
-        colorRaw.split(/[,/]/).map(s => s.trim()).filter(s => COLOR_LABELS.has(s))
-      ))
+  // Single palette label; unknown values get nulled so a typo in the
+  // spreadsheet doesn't leak garbage into the column.
+  const color = COLOR_LABELS.has(colorRaw) ? colorRaw : null
   return {
     name: (str(row['제품명']) || '').trim() || '(이름없음)',
     size: str(row['원장크기']),
@@ -51,18 +47,8 @@ function parseExcelRow(row: Record<string, unknown>) {
     origin: str(row['원산지']),
     brand: str(row['브랜드']),
     thumbnail_zoom: String(row['썸네일확대(Y/공란)'] ?? '').trim().toUpperCase() === 'Y',
-    color_tags: colorTags,
+    color,
   }
-}
-
-// Stable string for diff comparison (palette order, deduped).
-function normalizeColors(tags: string[] | null | undefined): string {
-  if (!tags || tags.length === 0) return ''
-  const order = new Map(COLOR_PALETTE.map((c, i) => [c.label, i]))
-  return Array.from(new Set(tags))
-    .filter(t => order.has(t))
-    .sort((a, b) => (order.get(a) ?? 999) - (order.get(b) ?? 999))
-    .join(',')
 }
 
 export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor } = {}) {
@@ -289,7 +275,7 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
     { key: 'origin', header: '원산지' },
     { key: 'brand', header: '브랜드' },
     { key: 'thumbnail_zoom', header: '썸네일확대(Y/공란)' },
-    { key: 'color_tags', header: '컬러' },
+    { key: 'color', header: '컬러' },
   ]
 
   const handleExportExcel = async () => {
@@ -305,7 +291,7 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
       '원산지': p.origin || '',
       '브랜드': p.brand || '',
       '썸네일확대(Y/공란)': p.thumbnail_zoom ? 'Y' : '',
-      '컬러': (p.color_tags || []).join(','),
+      '컬러': p.color || '',
     }))
     const ws = XLSX.utils.json_to_sheet(rows, { header: excelColumns.map(c => c.header) })
     // Column widths for readability
@@ -350,7 +336,7 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
       if (next.origin !== (orig.origin || null)) changes.push('원산지')
       if (next.brand !== (orig.brand || null)) changes.push('브랜드')
       if (next.thumbnail_zoom !== orig.thumbnail_zoom) changes.push('썸네일확대')
-      if (normalizeColors(next.color_tags) !== normalizeColors(orig.color_tags)) changes.push('컬러')
+      if (next.color !== (orig.color || null)) changes.push('컬러')
 
       if (changes.length > 0) updates.push({ id, name: orig.name, changes })
     }
@@ -378,7 +364,7 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
       if (next.origin !== (orig.origin || null)) update.origin = next.origin
       if (next.brand !== (orig.brand || null)) update.brand = next.brand
       if (next.thumbnail_zoom !== orig.thumbnail_zoom) update.thumbnail_zoom = next.thumbnail_zoom
-      if (normalizeColors(next.color_tags) !== normalizeColors(orig.color_tags)) update.color_tags = next.color_tags
+      if (next.color !== (orig.color || null)) update.color = next.color
       if (Object.keys(update).length > 0) {
         await supabase.from('products').update(update).eq('id', u.id)
       }
@@ -442,23 +428,25 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
       cellStyle: { textAlign: 'right' },
     },
     {
-      headerName: '컬러', field: 'color_tags', editable: false, width: 120, sortable: false, filter: false,
+      headerName: '컬러', field: 'color', width: 110, sortable: true, filter: false, editable: false,
       cellRenderer: (p: { data: Product }) => {
-        const tags = (p.data.color_tags || []) as string[]
+        const c = p.data.color
         return (
-          <div className="flex items-center gap-[3px] h-full">
-            {tags.length === 0
-              ? <span className="text-[9px] text-[#bbb]">+ 추가</span>
-              : tags.map(t => (
-                <span key={t} title={t}
-                  className="w-[12px] h-[12px] rounded-full border border-[rgba(0,0,0,0.1)]"
-                  style={{ background: colorHex(t) }} />
-              ))}
+          <div className="flex items-center gap-1.5 h-full">
+            {c ? (
+              <>
+                <span className="w-[12px] h-[12px] rounded-full border border-[rgba(0,0,0,0.1)] shrink-0"
+                  style={{ background: colorHex(c) }} />
+                <span className="text-[10px] truncate">{c}</span>
+              </>
+            ) : (
+              <span className="text-[9px] text-[#bbb]">+ 지정</span>
+            )}
           </div>
         )
       },
       onCellClicked: (e) => setColorEditTarget(e.data),
-      cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' },
+      cellStyle: { display: 'flex', alignItems: 'center', cursor: 'pointer' },
     },
     {
       headerName: '이미지', editable: false, width: 100,
@@ -996,14 +984,14 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
         </>
       )}
 
-      {/* Color tag edit popup */}
+      {/* Color edit popup */}
       {colorEditTarget && (
         <ColorEditPopup
           product={colorEditTarget}
           onClose={() => setColorEditTarget(null)}
-          onSave={async (tags) => {
-            await supabase.from('products').update({ color_tags: tags }).eq('id', colorEditTarget.id)
-            setProducts(prev => prev.map(p => p.id === colorEditTarget.id ? { ...p, color_tags: tags } : p))
+          onSave={async (color) => {
+            await supabase.from('products').update({ color }).eq('id', colorEditTarget.id)
+            setProducts(prev => prev.map(p => p.id === colorEditTarget.id ? { ...p, color } : p))
             setColorEditTarget(null)
           }}
         />
@@ -1095,65 +1083,80 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
 function ColorEditPopup({ product, onClose, onSave }: {
   product: Product
   onClose: () => void
-  onSave: (tags: string[]) => void | Promise<void>
+  onSave: (color: string | null) => void | Promise<void>
 }) {
-  const [tags, setTags] = useState<Set<string>>(new Set(product.color_tags || []))
+  const [color, setColor] = useState<string | null>(product.color || null)
   const [saving, setSaving] = useState(false)
-
-  const toggle = (label: string) => {
-    setTags(prev => {
-      const next = new Set(prev)
-      if (next.has(label)) next.delete(label); else next.add(label)
-      return next
-    })
-  }
 
   const handleSave = async () => {
     setSaving(true)
-    // Persist in palette order so the array shape stays consistent across edits.
-    const ordered = COLOR_PALETTE.filter(c => tags.has(c.label)).map(c => c.label)
-    await onSave(ordered)
+    await onSave(color)
     setSaving(false)
   }
+
+  // Group palette by ColorGroup so the popup mirrors the user filter.
+  const groups: ColorGroup[] = ['neutral', 'warm', 'green', 'cool']
 
   return (
     <>
       <div className="fixed inset-0 bg-black/30 z-40" onClick={saving ? undefined : onClose} />
-      <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] bg-white border border-[rgba(0,0,0,0.08)] rounded-[8px] shadow-[0_8px_30px_rgba(0,0,0,0.12)] overflow-hidden">
+      <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] bg-white border border-[rgba(0,0,0,0.08)] rounded-[8px] shadow-[0_8px_30px_rgba(0,0,0,0.12)] overflow-hidden">
         <div className="px-5 py-4 border-b border-[rgba(0,0,0,0.06)]">
-          <h3 className="text-[12px] font-bold">컬러 태그</h3>
+          <h3 className="text-[12px] font-bold">컬러 지정</h3>
           <p className="text-[10px] text-[#888] mt-0.5 truncate">{product.name}</p>
         </div>
-        <div className="px-5 py-4">
-          <div className="grid grid-cols-2 gap-1.5 mb-4">
-            {COLOR_PALETTE.map(c => {
-              const active = tags.has(c.label)
-              return (
-                <button
-                  key={c.label}
-                  onClick={() => toggle(c.label)}
-                  className={`flex items-center gap-2 h-[28px] px-2 rounded-[4px] cursor-pointer text-[10px] border transition-all ${
-                    active
-                      ? 'border-[#1a1a1a] bg-[rgba(0,0,0,0.03)] font-semibold'
-                      : 'border-[rgba(0,0,0,0.08)] hover:bg-[rgba(0,0,0,0.02)]'
-                  }`}>
-                  <span className="w-3.5 h-3.5 rounded-full border border-[rgba(0,0,0,0.1)] shrink-0"
-                    style={{ background: c.hex }} />
-                  <span>{c.label}</span>
-                </button>
-              )
-            })}
-          </div>
-          <div className="flex gap-2">
-            <button onClick={onClose} disabled={saving}
-              className="flex-1 h-[32px] text-[11px] font-semibold border border-[rgba(0,0,0,0.08)] rounded-[5px] cursor-pointer hover:bg-[#f5f5f5] disabled:opacity-50">
-              취소
-            </button>
-            <button onClick={handleSave} disabled={saving}
-              className="flex-1 h-[32px] text-[11px] font-semibold bg-[#1a1a1a] text-white rounded-[5px] cursor-pointer disabled:opacity-30">
-              {saving ? '저장 중...' : '저장'}
-            </button>
-          </div>
+        <div className="px-5 py-4 max-h-[60vh] overflow-y-auto">
+          {/* "지정 안 함" — lets the vendor clear a misclassified product. */}
+          <button
+            onClick={() => setColor(null)}
+            className={`flex items-center gap-2 w-full h-[26px] px-2 mb-3 rounded-[4px] cursor-pointer text-[10px] border transition-all ${
+              color === null
+                ? 'border-[#1a1a1a] bg-[rgba(0,0,0,0.03)] font-semibold'
+                : 'border-[rgba(0,0,0,0.08)] hover:bg-[rgba(0,0,0,0.02)]'
+            }`}>
+            <span className="w-3.5 h-3.5 rounded-full border border-[rgba(0,0,0,0.15)] shrink-0 bg-[repeating-linear-gradient(45deg,#fff,#fff_2px,#eee_2px,#eee_4px)]" />
+            <span className="text-[#666]">지정 안 함</span>
+          </button>
+          {groups.map(g => {
+            const items = COLOR_PALETTE.filter(c => c.group === g)
+            if (items.length === 0) return null
+            return (
+              <div key={g} className="mb-3 last:mb-0">
+                <div className="text-[8px] font-bold tracking-[0.5px] uppercase text-[#999] mb-1.5">
+                  {COLOR_GROUP_LABELS[g]}
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {items.map(c => {
+                    const active = color === c.label
+                    return (
+                      <button
+                        key={c.label}
+                        onClick={() => setColor(c.label)}
+                        className={`flex items-center gap-2 h-[26px] px-2 rounded-[4px] cursor-pointer text-[10px] border transition-all ${
+                          active
+                            ? 'border-[#1a1a1a] bg-[rgba(0,0,0,0.03)] font-semibold'
+                            : 'border-[rgba(0,0,0,0.08)] hover:bg-[rgba(0,0,0,0.02)]'
+                        }`}>
+                        <span className="w-3.5 h-3.5 rounded-full border border-[rgba(0,0,0,0.1)] shrink-0"
+                          style={{ background: c.hex }} />
+                        <span>{c.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+        <div className="flex gap-2 px-5 py-3 border-t border-[rgba(0,0,0,0.06)]">
+          <button onClick={onClose} disabled={saving}
+            className="flex-1 h-[32px] text-[11px] font-semibold border border-[rgba(0,0,0,0.08)] rounded-[5px] cursor-pointer hover:bg-[#f5f5f5] disabled:opacity-50">
+            취소
+          </button>
+          <button onClick={handleSave} disabled={saving}
+            className="flex-1 h-[32px] text-[11px] font-semibold bg-[#1a1a1a] text-white rounded-[5px] cursor-pointer disabled:opacity-30">
+            {saving ? '저장 중...' : '저장'}
+          </button>
         </div>
       </div>
     </>

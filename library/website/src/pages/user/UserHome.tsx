@@ -3,7 +3,7 @@ import { useOutletContext } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import type { CategoryId } from '@/lib/categories'
-import { COLOR_PALETTE } from '@/lib/colors'
+import { COLOR_PALETTE, COLOR_GROUP_LABELS, type ColorGroup } from '@/lib/colors'
 import PreviewPanel from '@/components/PreviewPanel'
 import {
   Search, ChevronRight, ChevronDown, ImageIcon, Heart, Folder, FolderOpen,
@@ -328,8 +328,8 @@ export default function UserHome() {
   const baseProducts = showFavorites ? favoriteProducts : products
   const availableOrigins = [...new Set(baseProducts.map(p => p.origin).filter((o): o is string => !!o))].sort()
   // Show only palette colors that some product in this folder actually has,
-  // preserving palette order so chips stay in light→dark sequence.
-  const presentColors = new Set(baseProducts.flatMap(p => p.color_tags || []))
+  // preserving palette order so the dropdown stays consistent.
+  const presentColors = new Set(baseProducts.map(p => p.color).filter((c): c is string => !!c))
   const availableColors = COLOR_PALETTE.filter(c => presentColors.has(c.label))
 
   // Apply filters
@@ -347,11 +347,8 @@ export default function UserHome() {
       if (!isNaN(minS) && (p.stock == null || p.stock < minS)) return false
     }
     if (filterOrigins.size > 0 && (!p.origin || !filterOrigins.has(p.origin))) return false
-    if (filterColors.size > 0) {
-      const tags = p.color_tags || []
-      // Multi-select is OR: product passes if it carries any of the picked colors.
-      if (!tags.some(t => filterColors.has(t))) return false
-    }
+    // Multi-select is OR: pass if product's single color is among picks.
+    if (filterColors.size > 0 && (!p.color || !filterColors.has(p.color))) return false
     return true
   })
 
@@ -573,9 +570,9 @@ export default function UserHome() {
 
             {availableColors.length > 0 && <div className="w-px h-3 bg-border" />}
 
-            {/* 컬러 — chip swatches inline; palette-ordered, only colors present */}
+            {/* 컬러 — grouped dropdown; 21 buckets won't fit inline */}
             {availableColors.length > 0 && (
-              <ColorChipsFilter
+              <ColorDropdown
                 options={availableColors}
                 selected={filterColors}
                 onChange={setFilterColors}
@@ -869,38 +866,77 @@ function OriginDropdown({ origins, selected, onChange }: {
   )
 }
 
-function ColorChipsFilter({ options, selected, onChange }: {
-  options: { label: string; hex: string }[]
+function ColorDropdown({ options, selected, onChange }: {
+  options: { label: string; hex: string; group: ColorGroup }[]
   selected: Set<string>
   onChange: (s: Set<string>) => void
 }) {
+  const [open, setOpen] = useState(false)
+
   const toggle = (label: string) => {
     const next = new Set(selected)
     if (next.has(label)) next.delete(label); else next.add(label)
     onChange(next)
   }
 
+  // Group options preserving palette order within each group.
+  const grouped = (['neutral', 'warm', 'green', 'cool'] as ColorGroup[])
+    .map(g => ({ group: g, items: options.filter(o => o.group === g) }))
+    .filter(g => g.items.length > 0)
+
+  // Selected swatches preview (max 4) — gives a hint of what's picked
+  // without expanding the dropdown.
+  const previewSwatches = options.filter(o => selected.has(o.label)).slice(0, 4)
+
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="relative flex items-center gap-1.5">
       <span className="text-[9px] text-text-tertiary whitespace-nowrap">컬러</span>
-      <div className="flex items-center gap-[5px]">
-        {options.map(o => {
-          const active = selected.has(o.label)
-          return (
-            <button
-              key={o.label}
-              onClick={() => toggle(o.label)}
-              title={o.label}
-              className={`w-[14px] h-[14px] rounded-full border cursor-pointer transition-all ${
-                active
-                  ? 'ring-2 ring-offset-1 ring-foreground/70 scale-110 border-transparent'
-                  : 'border-border hover:scale-110'
-              }`}
-              style={{ background: o.hex }}
-            />
-          )
-        })}
-      </div>
+      <button
+        onClick={() => setOpen(prev => !prev)}
+        className="h-[22px] min-w-[80px] px-2 text-[10px] text-left bg-muted border border-border rounded-[3px] cursor-pointer flex items-center justify-between gap-1.5 hover:border-foreground"
+      >
+        {selected.size === 0 ? (
+          <span className="truncate">전체</span>
+        ) : (
+          <span className="flex items-center gap-1 truncate">
+            <span className="flex items-center gap-[2px]">
+              {previewSwatches.map(s => (
+                <span key={s.label} className="w-[10px] h-[10px] rounded-full border border-[rgba(0,0,0,0.1)]"
+                  style={{ background: s.hex }} />
+              ))}
+            </span>
+            <span>{selected.size}개</span>
+          </span>
+        )}
+        <ChevronDown className="w-2.5 h-2.5 shrink-0 opacity-50" />
+      </button>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
+          <div className="absolute top-full left-0 mt-1 z-40 bg-surface border border-border rounded-[4px] shadow-[0_4px_12px_rgba(0,0,0,0.1)] max-h-[320px] overflow-y-auto min-w-[160px]"
+            style={{ animation: 'fadeIn 0.15s ease-out' }}>
+            {grouped.map(({ group, items }) => (
+              <div key={group}>
+                <div className="px-3 pt-2 pb-1 text-[8px] font-bold tracking-[0.5px] uppercase text-text-tertiary">
+                  {COLOR_GROUP_LABELS[group]}
+                </div>
+                {items.map(o => (
+                  <label key={o.label} className="flex items-center gap-2 px-3 py-1 hover:bg-muted cursor-pointer text-[10px]">
+                    <input
+                      type="checkbox" checked={selected.has(o.label)}
+                      onChange={() => toggle(o.label)}
+                      className="w-3 h-3 accent-foreground cursor-pointer"
+                    />
+                    <span className="w-3 h-3 rounded-full border border-border shrink-0" style={{ background: o.hex }} />
+                    <span>{o.label}</span>
+                  </label>
+                ))}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }
