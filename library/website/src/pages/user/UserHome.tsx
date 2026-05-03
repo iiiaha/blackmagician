@@ -113,8 +113,21 @@ export default function UserHome() {
     autoSelect()
   }, [vendorMode])
 
+  // Vendor mode (e.g. younhyun) has no userProfile, so favorites live in
+  // localStorage scoped by vendor slug. Logged-in users keep using the
+  // Supabase favorites table as before.
+  const vendorFavKey = vendorMode ? `bm-fav:${vendorMode}` : null
+
   // Fetch favorites
   useEffect(() => {
+    if (vendorFavKey) {
+      try {
+        const raw = localStorage.getItem(vendorFavKey)
+        const ids = raw ? (JSON.parse(raw) as string[]) : []
+        setFavoriteIds(new Set(ids))
+      } catch { setFavoriteIds(new Set()) }
+      return
+    }
     if (!userProfile) return
     const fetchFavs = async () => {
       const { data } = await supabase.from('favorites')
@@ -124,7 +137,7 @@ export default function UserHome() {
       if (data) setFavoriteIds(new Set(data.map((f: { product_id: string }) => f.product_id)))
     }
     fetchFavs()
-  }, [userProfile, activeCategory])
+  }, [userProfile, activeCategory, vendorFavKey])
 
   // Filter vendors by category (direct match on vendor.category) — skip in vendor mode
   useEffect(() => {
@@ -251,6 +264,13 @@ export default function UserHome() {
 
   // Favorites
   const toggleFavorite = async (productId: string) => {
+    if (vendorFavKey) {
+      const next = new Set(favoriteIds)
+      if (next.has(productId)) next.delete(productId); else next.add(productId)
+      setFavoriteIds(next)
+      try { localStorage.setItem(vendorFavKey, JSON.stringify([...next])) } catch { /* quota or disabled — silent */ }
+      return
+    }
     if (!userProfile) return
     if (favoriteIds.has(productId)) {
       await supabase.from('favorites').delete()
@@ -267,10 +287,26 @@ export default function UserHome() {
   }
 
   const handleShowFavorites = async () => {
-    if (!userProfile) return
     setShowFavorites(true)
     setSelectedFolder(null)
     setSearchResults(null)
+    if (vendorFavKey) {
+      const ids = [...favoriteIds]
+      if (ids.length === 0) { setFavoriteProducts([]); setProducts([]); return }
+      const { data: prods } = await supabase.from('products').select('*').in('id', ids)
+      setFavoriteProducts(((prods as Product[]) || []))
+      const { data: imgData } = await supabase.from('product_images').select('*')
+        .in('product_id', ids).order('sort_order')
+      const grouped: Record<string, ProductImage[]> = {}
+      for (const img of (imgData as ProductImage[]) || []) {
+        if (!grouped[img.product_id]) grouped[img.product_id] = []
+        grouped[img.product_id].push(img)
+      }
+      setProductImages(prev => ({ ...prev, ...grouped }))
+      setProducts([])
+      return
+    }
+    if (!userProfile) return
     const { data: favs } = await supabase.from('favorites')
       .select('product_id').eq('user_id', userProfile.id).eq('category', activeCategory)
     if (favs && favs.length > 0) {
@@ -381,8 +417,8 @@ export default function UserHome() {
         </div>
 
         <div className="flex-1 overflow-hidden px-1 pb-1 flex flex-col">
-          {/* Favorites — always visible */}
-          {user && (
+          {/* Favorites — always visible (vendor mode falls back to localStorage) */}
+          {(user || vendorMode) && (
             <button onClick={handleShowFavorites}
               className={`flex items-center gap-1.5 w-full text-left px-2.5 py-[5px] text-[10px] cursor-pointer rounded-sm mb-1 ${
                 showFavorites ? 'font-semibold text-foreground bg-muted' : 'text-text-secondary hover:text-foreground'
