@@ -674,7 +674,7 @@ export default function UserHome() {
                     isFavorite={favoriteIds.has(p.id)}
                     onToggleFavorite={() => toggleFavorite(p.id)}
                     loggedIn={!!user || !!vendorMode}
-                    vendorPrefix={showFavorites ? (selectedVendor?.company_name || '') : undefined}
+                    vendorPrefix={showFavorites && !vendorMode ? (selectedVendor?.company_name || '') : undefined}
                     animationDelay={0} />
                 ))}
               </div>
