@@ -267,9 +267,20 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
             <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted">브랜드</td>
             <td className="px-2 py-[3px]">{product?.brand || '-'}</td>
           </tr>
-          <tr>
+          <tr className="border-b border-border">
             <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted">재고</td>
             <td className="px-2 py-[3px]">{product?.stock ? `${product.stock}㎡` : '별도문의'}</td>
+          </tr>
+          <tr>
+            <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted">상세페이지</td>
+            <td className="px-2 py-[3px]">
+              {product?.url ? (
+                <a href={product.url} target="_blank" rel="noopener noreferrer"
+                  className="text-brand hover:underline inline-flex items-center gap-0.5">
+                  바로가기 <span className="text-[8px]">↗</span>
+                </a>
+              ) : '-'}
+            </td>
           </tr>
         </tbody>
       </table>

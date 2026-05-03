@@ -48,6 +48,7 @@ function parseExcelRow(row: Record<string, unknown>) {
     brand: str(row['브랜드']),
     thumbnail_zoom: String(row['썸네일확대(Y/공란)'] ?? '').trim().toUpperCase() === 'Y',
     color,
+    url: str(row['URL']),
   }
 }
 
@@ -179,7 +180,7 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
   }, [])
 
   // Editable fields in column order (for paste mapping)
-  const editableFields = ['name', 'unit_price', 'stock', 'origin', 'brand', 'size', 'source_size'] as const
+  const editableFields = ['name', 'unit_price', 'stock', 'origin', 'brand', 'size', 'source_size', 'url'] as const
 
   // Custom clipboard: Ctrl+C copies focused cell value, Ctrl+V pastes into cells
   useEffect(() => {
@@ -276,6 +277,7 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
     { key: 'brand', header: '브랜드' },
     { key: 'thumbnail_zoom', header: '썸네일확대(Y/공란)' },
     { key: 'color', header: '컬러' },
+    { key: 'url', header: 'URL' },
   ]
 
   const handleExportExcel = async () => {
@@ -292,12 +294,13 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
       '브랜드': p.brand || '',
       '썸네일확대(Y/공란)': p.thumbnail_zoom ? 'Y' : '',
       '컬러': p.color || '',
+      'URL': p.url || '',
     }))
     const ws = XLSX.utils.json_to_sheet(rows, { header: excelColumns.map(c => c.header) })
     // Column widths for readability
     ws['!cols'] = [
       { wch: 36 }, { wch: 24 }, { wch: 16 }, { wch: 16 },
-      { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 16 }, { wch: 24 },
+      { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 16 }, { wch: 24 }, { wch: 40 },
     ]
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, 'products')
@@ -337,6 +340,7 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
       if (next.brand !== (orig.brand || null)) changes.push('브랜드')
       if (next.thumbnail_zoom !== orig.thumbnail_zoom) changes.push('썸네일확대')
       if (next.color !== (orig.color || null)) changes.push('컬러')
+      if (next.url !== (orig.url || null)) changes.push('URL')
 
       if (changes.length > 0) updates.push({ id, name: orig.name, changes })
     }
@@ -365,6 +369,7 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
       if (next.brand !== (orig.brand || null)) update.brand = next.brand
       if (next.thumbnail_zoom !== orig.thumbnail_zoom) update.thumbnail_zoom = next.thumbnail_zoom
       if (next.color !== (orig.color || null)) update.color = next.color
+      if (next.url !== (orig.url || null)) update.url = next.url
       if (Object.keys(update).length > 0) {
         await supabase.from('products').update(update).eq('id', u.id)
       }
@@ -447,6 +452,15 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
       },
       onCellClicked: (e) => setColorEditTarget(e.data),
       cellStyle: { display: 'flex', alignItems: 'center', cursor: 'pointer' },
+    },
+    {
+      headerName: 'URL', field: 'url', editable: true, width: 200,
+      cellStyle: { textAlign: 'left' },
+      cellRenderer: (p: { value: string | null }) => p.value
+        ? <a href={p.value} target="_blank" rel="noopener noreferrer"
+            onClick={e => e.stopPropagation()}
+            className="text-[#2563eb] hover:underline truncate block">{p.value}</a>
+        : <span className="text-[#bbb] text-[10px]">URL 입력</span>,
     },
     {
       headerName: '이미지', editable: false, width: 100,

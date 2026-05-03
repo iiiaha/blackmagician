@@ -128,6 +128,7 @@ export interface Database {
           thumbnail_zoom: boolean
           thumbnail_url: string | null
           color: string | null
+          url: string | null
           created_at: string
           updated_at: string
         }
@@ -145,6 +146,7 @@ export interface Database {
           thumbnail_zoom?: boolean
           thumbnail_url?: string | null
           color?: string | null
+          url?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -162,6 +164,7 @@ export interface Database {
           thumbnail_zoom?: boolean
           thumbnail_url?: string | null
           color?: string | null
+          url?: string | null
           created_at?: string
           updated_at?: string
         }
