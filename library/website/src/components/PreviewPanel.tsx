@@ -121,13 +121,29 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
   }
 
   const handleMix = (mode: 'grid' | 'half' | 'third') => {
-    if (edit.mixMode === mode) { updateEdit({ mixMode: 'none', mixSelections: [], mixRotations: [] }); return }
-    const currentImgs = allImgsRef.current
-    if (currentImgs.length === 0) return
+    if (edit.mixMode === mode) {
+      updateEdit({ mixMode: 'none', mixSelections: [], mixRotations: [], mixFlips: [] })
+      return
+    }
+    const pool = allImgsRef.current
+    if (pool.length === 0) return
     const count = getMixTileCount(mode, effectiveSizeStr)
 
-    // Pick images: unique when pool >= count, otherwise repeat shuffled pool
-    // to distribute duplicates as evenly as possible.
+    const base = parseSizeMM(effectiveSizeStr)
+    const isSquare = base ? base.w === base.h : false
+
+    // Variant priority — exhaust each layer before moving to the next so
+    // a folder with few photos still produces a varied mix:
+    //   1) every distinct image, no transform
+    //   2) same images at 180°
+    //   3) (squares only) 90° then 270°
+    //   4) horizontally flipped versions of all the above
+    // Within each layer the image order is shuffled per click so the
+    // mix isn't deterministic.
+    const rotChoices: number[] = isSquare ? [0, 180, 90, 270] : [0, 180]
+    const flipChoices: boolean[] = [false, true]
+
+    type Variant = { img: HTMLImageElement; rot: number; flip: boolean }
     const shuffle = <T,>(arr: T[]): T[] => {
       const a = arr.slice()
       for (let i = a.length - 1; i > 0; i--) {
@@ -136,25 +152,36 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
       }
       return a
     }
-    const picks: HTMLImageElement[] = []
-    while (picks.length < count) {
-      const chunk = shuffle(currentImgs)
-      for (const img of chunk) {
-        if (picks.length >= count) break
-        picks.push(img)
+
+    const layers: Variant[][] = []
+    for (const flip of flipChoices) {
+      for (const rot of rotChoices) {
+        layers.push(shuffle(pool.map(img => ({ img, rot, flip }))))
       }
     }
 
-    // Per-tile rotation: squares get 0/90/180/270, rectangles get 0/180.
-    const base = parseSizeMM(effectiveSizeStr)
-    const isSquare = base ? base.w === base.h : false
-    const rotChoices = isSquare ? [0, 90, 180, 270] : [0, 180]
-    const rotations: number[] = []
-    for (let i = 0; i < count; i++) {
-      rotations.push(rotChoices[Math.floor(Math.random() * rotChoices.length)])
+    const picks: Variant[] = []
+    let layerIdx = 0
+    while (picks.length < count) {
+      // Exhausted every variant — only happens when count > pool * variants.
+      // Re-shuffle and start over so duplicates land in different cells.
+      if (layerIdx >= layers.length) {
+        layerIdx = 0
+        for (let i = 0; i < layers.length; i++) layers[i] = shuffle(layers[i])
+      }
+      for (const v of layers[layerIdx]) {
+        if (picks.length >= count) break
+        picks.push(v)
+      }
+      layerIdx++
     }
 
-    updateEdit({ mixMode: mode, mixSelections: picks, mixRotations: rotations })
+    updateEdit({
+      mixMode: mode,
+      mixSelections: picks.map(v => v.img),
+      mixRotations: picks.map(v => v.rot),
+      mixFlips: picks.map(v => v.flip),
+    })
   }
 
   const handleInsert = async () => {

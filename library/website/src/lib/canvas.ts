@@ -9,6 +9,7 @@ export interface EditState {
   mixMode: 'none' | 'grid' | 'half' | 'third'
   mixSelections: HTMLImageElement[]
   mixRotations: number[]
+  mixFlips: boolean[]
 }
 
 export const defaultEditState: EditState = {
@@ -20,6 +21,7 @@ export const defaultEditState: EditState = {
   mixMode: 'none',
   mixSelections: [],
   mixRotations: [],
+  mixFlips: [],
 }
 
 const BASE_PX_PER_MM = 4
@@ -237,7 +239,7 @@ function drawMixGrid(
       const img = imgs[idx]
       const x = -totalW / 2 + c * cellW_px + gPx / 2
       const y = -totalH / 2 + r * cellH_px + gPx / 2
-      drawTileRotated(ctx, img, x, y, tileW_px, tileH_px, edit.mixRotations[idx] ?? 0)
+      drawTileRotated(ctx, img, x, y, tileW_px, tileH_px, edit.mixRotations[idx] ?? 0, edit.mixFlips[idx] ?? false)
     }
   }
   ctx.restore()
@@ -249,14 +251,16 @@ function drawTileRotated(
   x: number, y: number,
   w: number, h: number,
   rotation: number,
+  flip = false,
 ) {
-  if (!rotation) {
+  if (!rotation && !flip) {
     ctx.drawImage(img, x, y, w, h)
     return
   }
   ctx.save()
   ctx.translate(x + w / 2, y + h / 2)
-  ctx.rotate(rotation * Math.PI / 180)
+  if (rotation) ctx.rotate(rotation * Math.PI / 180)
+  if (flip) ctx.scale(-1, 1)
   ctx.drawImage(img, -w / 2, -h / 2, w, h)
   ctx.restore()
 }
@@ -315,6 +319,7 @@ function drawMixStagger(
       const idx = r * cols + c
       const img = imgs[idx]
       const rot = edit.mixRotations[idx] ?? 0
+      const flip = edit.mixFlips[idx] ?? false
       let x: number, y: number
 
       if (vertical) {
@@ -327,7 +332,7 @@ function drawMixStagger(
         y = -totalH / 2 + r * cellH_px + gPx / 2
       }
 
-      drawTileRotated(ctx, img, x, y, tileW_px, tileH_px, rot)
+      drawTileRotated(ctx, img, x, y, tileW_px, tileH_px, rot, flip)
 
       if (vertical) {
         if (y + cellH_px > totalH / 2) {
@@ -335,7 +340,7 @@ function drawMixStagger(
             ctx.fillStyle = edit.groutColor
             ctx.fillRect(x - gPx / 2, y - totalH, cellW_px, cellH_px)
           }
-          drawTileRotated(ctx, img, x, y - totalH, tileW_px, tileH_px, rot)
+          drawTileRotated(ctx, img, x, y - totalH, tileW_px, tileH_px, rot, flip)
         }
       } else {
         if (x + cellW_px > totalW / 2) {
@@ -343,7 +348,7 @@ function drawMixStagger(
             ctx.fillStyle = edit.groutColor
             ctx.fillRect(x - totalW, y - gPx / 2, cellW_px, cellH_px)
           }
-          drawTileRotated(ctx, img, x - totalW, y, tileW_px, tileH_px, rot)
+          drawTileRotated(ctx, img, x - totalW, y, tileW_px, tileH_px, rot, flip)
         }
       }
     }
