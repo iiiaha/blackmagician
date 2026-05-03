@@ -30,29 +30,30 @@
   --radius: 4px;
 }
 
-/* Dark mode — Figma-inspired warm dark gray */
+/* Dark mode — lifted neutral grays. surface > background so cards/headers
+   elevate above the page rather than sinking into it. */
 .dark {
-  --color-background: #2c2c2c;
-  --color-foreground: #ebebeb;
-  --color-card: #333333;
-  --color-card-foreground: #ebebeb;
-  --color-primary: #ebebeb;
-  --color-primary-foreground: #2c2c2c;
-  --color-secondary: rgba(255, 255, 255, 0.06);
-  --color-secondary-foreground: #ebebeb;
-  --color-muted: rgba(255, 255, 255, 0.06);
-  --color-muted-foreground: #999999;
-  --color-accent: rgba(255, 255, 255, 0.08);
-  --color-accent-foreground: #ebebeb;
-  --color-border: rgba(255, 255, 255, 0.1);
-  --color-input: rgba(255, 255, 255, 0.1);
+  --color-background: #383838;
+  --color-foreground: #f0f0f0;
+  --color-card: #4d4d4d;
+  --color-card-foreground: #f0f0f0;
+  --color-primary: #f0f0f0;
+  --color-primary-foreground: #383838;
+  --color-secondary: rgba(255, 255, 255, 0.08);
+  --color-secondary-foreground: #f0f0f0;
+  --color-muted: rgba(255, 255, 255, 0.08);
+  --color-muted-foreground: #b8b8b8;
+  --color-accent: rgba(255, 255, 255, 0.12);
+  --color-accent-foreground: #f0f0f0;
+  --color-border: rgba(255, 255, 255, 0.13);
+  --color-input: rgba(255, 255, 255, 0.13);
   --color-ring: #add7eb;
   --color-brand: #add7eb;
   --color-brand-light: #49637a;
   --color-brand-accent: #ea0003;
-  --color-surface: #242424;
-  --color-text-secondary: #aaaaaa;
-  --color-text-tertiary: #707070;
+  --color-surface: #444444;
+  --color-text-secondary: #c8c8c8;
+  --color-text-tertiary: #969696;
 }
 
 @layer base {
