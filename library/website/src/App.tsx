@@ -54,6 +54,7 @@ export default function App() {
             <Route path="users" element={<AdminUsers />} />
             <Route path="folders" element={<AdminFolders />} />
             <Route path="products" element={<AdminProducts />} />
+            <Route path="products/:vendorId" element={<AdminProducts />} />
           </Route>
         </Routes>
       </BrowserRouter>
