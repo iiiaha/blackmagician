@@ -866,9 +866,8 @@ function MaterialItem({ product, onClick, selected, isFavorite, onToggleFavorite
         {product.thumbnail_url ? (
           product.thumbnail_zoom
             ? <ZoomedThumb url={product.thumbnail_url} alt={product.name} />
-            : <img src={product.thumbnail_url} alt={product.name}
-                className="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]"
-                loading="lazy" />
+            : <RetryImg url={product.thumbnail_url} alt={product.name}
+                className="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]" />
         ) : (
           <div className="w-full h-full bg-muted flex items-center justify-center">
             <ImageIcon className="w-5 h-5 text-text-tertiary opacity-30" />
@@ -904,18 +903,29 @@ function MaterialItem({ product, onClick, selected, isFavorite, onToggleFavorite
   )
 }
 
+// Lazy <img> with auto-retry on failure. Browsers leave the broken icon
+// stuck once a request fails — adding a cache-busting param forces a
+// fresh fetch instead of replaying the cached failure.
+function RetryImg({ url, alt, className }: { url: string; alt: string; className?: string }) {
+  const [retry, setRetry] = useState(0)
+  const src = retry > 0 ? `${url}${url.includes('?') ? '&' : '?'}_r=${retry}` : url
+  return (
+    <img src={src} alt={alt} loading="lazy" className={className}
+      onError={() => { if (retry < 3) setTimeout(() => setRetry(r => r + 1), 500 * (retry + 1)) }} />
+  )
+}
+
 // Crops the center 100×100 natural pixels of the source image and scales to fill container.
 // Used when product.thumbnail_zoom is true — small mapping textures shown at usable size.
+// Reads natural dims from the rendered <img> itself so loading="lazy" can throttle
+// off-screen requests; pre-loading via `new Image()` would bypass that and flood
+// the browser with parallel fetches when a folder has hundreds of products.
 function ZoomedThumb({ url, alt }: { url: string; alt: string }) {
   const ref = useRef<HTMLDivElement>(null)
+  const imgRef = useRef<HTMLImageElement>(null)
   const [scale, setScale] = useState(1)
   const [natural, setNatural] = useState<{ w: number; h: number } | null>(null)
-
-  useEffect(() => {
-    const img = new window.Image()
-    img.onload = () => setNatural({ w: img.naturalWidth, h: img.naturalHeight })
-    img.src = url
-  }, [url])
+  const [retry, setRetry] = useState(0)
 
   useEffect(() => {
     if (!ref.current) return
@@ -930,22 +940,27 @@ function ZoomedThumb({ url, alt }: { url: string; alt: string }) {
     return () => ro.disconnect()
   }, [])
 
+  const src = retry > 0 ? `${url}${url.includes('?') ? '&' : '?'}_r=${retry}` : url
+
   return (
     <div ref={ref} className="w-full h-full overflow-hidden relative bg-muted">
-      {natural && (
-        <img src={url} alt={alt} loading="lazy"
-          style={{
-            position: 'absolute',
-            top: '50%', left: '50%',
-            width: natural.w, height: natural.h,
-            maxWidth: 'none', maxHeight: 'none',
-            transform: `translate(-50%, -50%) scale(${scale})`,
-            transformOrigin: 'center',
-            imageRendering: 'auto',
-          }}
-          className="transition-transform duration-300 ease-out"
-        />
-      )}
+      <img ref={imgRef} src={src} alt={alt} loading="lazy"
+        onLoad={() => {
+          const img = imgRef.current
+          if (img) setNatural({ w: img.naturalWidth, h: img.naturalHeight })
+        }}
+        onError={() => { if (retry < 3) setTimeout(() => setRetry(r => r + 1), 500 * (retry + 1)) }}
+        style={natural ? {
+          position: 'absolute',
+          top: '50%', left: '50%',
+          width: natural.w, height: natural.h,
+          maxWidth: 'none', maxHeight: 'none',
+          transform: `translate(-50%, -50%) scale(${scale})`,
+          transformOrigin: 'center',
+          imageRendering: 'auto',
+        } : { width: '100%', height: '100%', objectFit: 'cover', opacity: 0 }}
+        className="transition-transform duration-300 ease-out"
+      />
     </div>
   )
 }
