@@ -8,6 +8,7 @@ import {
   Plus, Package, ImagePlus, X, FileSpreadsheet, Upload,
 } from 'lucide-react'
 import type { Vendor, FolderNode, Product, ProductImage } from '@/types/database'
+import { COLOR_PALETTE, COLOR_LABELS, colorHex } from '@/lib/colors'
 
 ModuleRegistry.registerModules([AllCommunityModule])
 
@@ -33,6 +34,14 @@ function parseExcelRow(row: Record<string, unknown>) {
     const n = Number(s.replace(/[^0-9.-]/g, ''))
     return isNaN(n) ? null : n
   }
+  const colorRaw = String(row['컬러'] ?? '').trim()
+  // Comma/slash-separated palette labels; drop unknowns and dedupe so a
+  // typo in the spreadsheet doesn't leak garbage into the array column.
+  const colorTags = colorRaw === ''
+    ? []
+    : Array.from(new Set(
+        colorRaw.split(/[,/]/).map(s => s.trim()).filter(s => COLOR_LABELS.has(s))
+      ))
   return {
     name: (str(row['제품명']) || '').trim() || '(이름없음)',
     size: str(row['원장크기']),
@@ -42,7 +51,18 @@ function parseExcelRow(row: Record<string, unknown>) {
     origin: str(row['원산지']),
     brand: str(row['브랜드']),
     thumbnail_zoom: String(row['썸네일확대(Y/공란)'] ?? '').trim().toUpperCase() === 'Y',
+    color_tags: colorTags,
   }
+}
+
+// Stable string for diff comparison (palette order, deduped).
+function normalizeColors(tags: string[] | null | undefined): string {
+  if (!tags || tags.length === 0) return ''
+  const order = new Map(COLOR_PALETTE.map((c, i) => [c.label, i]))
+  return Array.from(new Set(tags))
+    .filter(t => order.has(t))
+    .sort((a, b) => (order.get(a) ?? 999) - (order.get(b) ?? 999))
+    .join(',')
 }
 
 export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor } = {}) {
@@ -60,6 +80,7 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
   const [uploadingProductId, setUploadingProductId] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null)
   const [bulkDeleteTarget, setBulkDeleteTarget] = useState<Product[]>([])
+  const [colorEditTarget, setColorEditTarget] = useState<Product | null>(null)
   const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set())
   // Bulk import states
   const [showImportPopup, setShowImportPopup] = useState(false)
@@ -268,6 +289,7 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
     { key: 'origin', header: '원산지' },
     { key: 'brand', header: '브랜드' },
     { key: 'thumbnail_zoom', header: '썸네일확대(Y/공란)' },
+    { key: 'color_tags', header: '컬러' },
   ]
 
   const handleExportExcel = async () => {
@@ -283,12 +305,13 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
       '원산지': p.origin || '',
       '브랜드': p.brand || '',
       '썸네일확대(Y/공란)': p.thumbnail_zoom ? 'Y' : '',
+      '컬러': (p.color_tags || []).join(','),
     }))
     const ws = XLSX.utils.json_to_sheet(rows, { header: excelColumns.map(c => c.header) })
     // Column widths for readability
     ws['!cols'] = [
       { wch: 36 }, { wch: 24 }, { wch: 16 }, { wch: 16 },
-      { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 16 },
+      { wch: 12 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 16 }, { wch: 24 },
     ]
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, 'products')
@@ -327,6 +350,7 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
       if (next.origin !== (orig.origin || null)) changes.push('원산지')
       if (next.brand !== (orig.brand || null)) changes.push('브랜드')
       if (next.thumbnail_zoom !== orig.thumbnail_zoom) changes.push('썸네일확대')
+      if (normalizeColors(next.color_tags) !== normalizeColors(orig.color_tags)) changes.push('컬러')
 
       if (changes.length > 0) updates.push({ id, name: orig.name, changes })
     }
@@ -354,6 +378,7 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
       if (next.origin !== (orig.origin || null)) update.origin = next.origin
       if (next.brand !== (orig.brand || null)) update.brand = next.brand
       if (next.thumbnail_zoom !== orig.thumbnail_zoom) update.thumbnail_zoom = next.thumbnail_zoom
+      if (normalizeColors(next.color_tags) !== normalizeColors(orig.color_tags)) update.color_tags = next.color_tags
       if (Object.keys(update).length > 0) {
         await supabase.from('products').update(update).eq('id', u.id)
       }
@@ -415,6 +440,25 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
       headerName: '재고', field: 'stock', editable: true, width: 100,
       valueParser: (p) => { const n = Number(p.newValue); return isNaN(n) ? null : n },
       cellStyle: { textAlign: 'right' },
+    },
+    {
+      headerName: '컬러', field: 'color_tags', editable: false, width: 120, sortable: false, filter: false,
+      cellRenderer: (p: { data: Product }) => {
+        const tags = (p.data.color_tags || []) as string[]
+        return (
+          <div className="flex items-center gap-[3px] h-full">
+            {tags.length === 0
+              ? <span className="text-[9px] text-[#bbb]">+ 추가</span>
+              : tags.map(t => (
+                <span key={t} title={t}
+                  className="w-[12px] h-[12px] rounded-full border border-[rgba(0,0,0,0.1)]"
+                  style={{ background: colorHex(t) }} />
+              ))}
+          </div>
+        )
+      },
+      onCellClicked: (e) => setColorEditTarget(e.data),
+      cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' },
     },
     {
       headerName: '이미지', editable: false, width: 100,
@@ -952,6 +996,19 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
         </>
       )}
 
+      {/* Color tag edit popup */}
+      {colorEditTarget && (
+        <ColorEditPopup
+          product={colorEditTarget}
+          onClose={() => setColorEditTarget(null)}
+          onSave={async (tags) => {
+            await supabase.from('products').update({ color_tags: tags }).eq('id', colorEditTarget.id)
+            setProducts(prev => prev.map(p => p.id === colorEditTarget.id ? { ...p, color_tags: tags } : p))
+            setColorEditTarget(null)
+          }}
+        />
+      )}
+
       {/* Bulk delete confirmation popup */}
       {bulkDeleteTarget.length > 0 && (
         <>
@@ -1032,5 +1089,73 @@ export default function VendorProducts({ vendor: vendorProp }: { vendor?: Vendor
         </>
       )}
     </div>
+  )
+}
+
+function ColorEditPopup({ product, onClose, onSave }: {
+  product: Product
+  onClose: () => void
+  onSave: (tags: string[]) => void | Promise<void>
+}) {
+  const [tags, setTags] = useState<Set<string>>(new Set(product.color_tags || []))
+  const [saving, setSaving] = useState(false)
+
+  const toggle = (label: string) => {
+    setTags(prev => {
+      const next = new Set(prev)
+      if (next.has(label)) next.delete(label); else next.add(label)
+      return next
+    })
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    // Persist in palette order so the array shape stays consistent across edits.
+    const ordered = COLOR_PALETTE.filter(c => tags.has(c.label)).map(c => c.label)
+    await onSave(ordered)
+    setSaving(false)
+  }
+
+  return (
+    <>
+      <div className="fixed inset-0 bg-black/30 z-40" onClick={saving ? undefined : onClose} />
+      <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] bg-white border border-[rgba(0,0,0,0.08)] rounded-[8px] shadow-[0_8px_30px_rgba(0,0,0,0.12)] overflow-hidden">
+        <div className="px-5 py-4 border-b border-[rgba(0,0,0,0.06)]">
+          <h3 className="text-[12px] font-bold">컬러 태그</h3>
+          <p className="text-[10px] text-[#888] mt-0.5 truncate">{product.name}</p>
+        </div>
+        <div className="px-5 py-4">
+          <div className="grid grid-cols-2 gap-1.5 mb-4">
+            {COLOR_PALETTE.map(c => {
+              const active = tags.has(c.label)
+              return (
+                <button
+                  key={c.label}
+                  onClick={() => toggle(c.label)}
+                  className={`flex items-center gap-2 h-[28px] px-2 rounded-[4px] cursor-pointer text-[10px] border transition-all ${
+                    active
+                      ? 'border-[#1a1a1a] bg-[rgba(0,0,0,0.03)] font-semibold'
+                      : 'border-[rgba(0,0,0,0.08)] hover:bg-[rgba(0,0,0,0.02)]'
+                  }`}>
+                  <span className="w-3.5 h-3.5 rounded-full border border-[rgba(0,0,0,0.1)] shrink-0"
+                    style={{ background: c.hex }} />
+                  <span>{c.label}</span>
+                </button>
+              )
+            })}
+          </div>
+          <div className="flex gap-2">
+            <button onClick={onClose} disabled={saving}
+              className="flex-1 h-[32px] text-[11px] font-semibold border border-[rgba(0,0,0,0.08)] rounded-[5px] cursor-pointer hover:bg-[#f5f5f5] disabled:opacity-50">
+              취소
+            </button>
+            <button onClick={handleSave} disabled={saving}
+              className="flex-1 h-[32px] text-[11px] font-semibold bg-[#1a1a1a] text-white rounded-[5px] cursor-pointer disabled:opacity-30">
+              {saving ? '저장 중...' : '저장'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
   )
 }

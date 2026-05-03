@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import type { CategoryId } from '@/lib/categories'
+import { COLOR_PALETTE } from '@/lib/colors'
 import PreviewPanel from '@/components/PreviewPanel'
 import {
   Search, ChevronRight, ChevronDown, ImageIcon, Heart, Folder, FolderOpen,
@@ -71,6 +72,7 @@ export default function UserHome() {
   const [filterMaxPrice, setFilterMaxPrice] = useState('')
   const [filterMinStock, setFilterMinStock] = useState('')
   const [filterOrigins, setFilterOrigins] = useState<Set<string>>(new Set())
+  const [filterColors, setFilterColors] = useState<Set<string>>(new Set())
 
   // Login popup
   const [showLoginPopup, setShowLoginPopup] = useState(false)
@@ -325,6 +327,10 @@ export default function UserHome() {
   // Collect unique origins from current product set
   const baseProducts = showFavorites ? favoriteProducts : products
   const availableOrigins = [...new Set(baseProducts.map(p => p.origin).filter((o): o is string => !!o))].sort()
+  // Show only palette colors that some product in this folder actually has,
+  // preserving palette order so chips stay in light→dark sequence.
+  const presentColors = new Set(baseProducts.flatMap(p => p.color_tags || []))
+  const availableColors = COLOR_PALETTE.filter(c => presentColors.has(c.label))
 
   // Apply filters
   const displayProducts = baseProducts.filter(p => {
@@ -341,16 +347,22 @@ export default function UserHome() {
       if (!isNaN(minS) && (p.stock == null || p.stock < minS)) return false
     }
     if (filterOrigins.size > 0 && (!p.origin || !filterOrigins.has(p.origin))) return false
+    if (filterColors.size > 0) {
+      const tags = p.color_tags || []
+      // Multi-select is OR: product passes if it carries any of the picked colors.
+      if (!tags.some(t => filterColors.has(t))) return false
+    }
     return true
   })
 
-  const hasActiveFilter = !!(filterMinPrice || filterMaxPrice || filterMinStock || filterOrigins.size > 0)
+  const hasActiveFilter = !!(filterMinPrice || filterMaxPrice || filterMinStock || filterOrigins.size > 0 || filterColors.size > 0)
 
   const clearFilters = () => {
     setFilterMinPrice('')
     setFilterMaxPrice('')
     setFilterMinStock('')
     setFilterOrigins(new Set())
+    setFilterColors(new Set())
   }
 
   return (
@@ -558,6 +570,17 @@ export default function UserHome() {
               selected={filterOrigins}
               onChange={setFilterOrigins}
             />
+
+            {availableColors.length > 0 && <div className="w-px h-3 bg-border" />}
+
+            {/* 컬러 — chip swatches inline; palette-ordered, only colors present */}
+            {availableColors.length > 0 && (
+              <ColorChipsFilter
+                options={availableColors}
+                selected={filterColors}
+                onChange={setFilterColors}
+              />
+            )}
 
             {/* 초기화 + 결과 수 */}
             {hasActiveFilter && (
@@ -842,6 +865,42 @@ function OriginDropdown({ origins, selected, onChange }: {
           </div>
         </>
       )}
+    </div>
+  )
+}
+
+function ColorChipsFilter({ options, selected, onChange }: {
+  options: { label: string; hex: string }[]
+  selected: Set<string>
+  onChange: (s: Set<string>) => void
+}) {
+  const toggle = (label: string) => {
+    const next = new Set(selected)
+    if (next.has(label)) next.delete(label); else next.add(label)
+    onChange(next)
+  }
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="text-[9px] text-text-tertiary whitespace-nowrap">컬러</span>
+      <div className="flex items-center gap-[5px]">
+        {options.map(o => {
+          const active = selected.has(o.label)
+          return (
+            <button
+              key={o.label}
+              onClick={() => toggle(o.label)}
+              title={o.label}
+              className={`w-[14px] h-[14px] rounded-full border cursor-pointer transition-all ${
+                active
+                  ? 'ring-2 ring-offset-1 ring-foreground/70 scale-110 border-transparent'
+                  : 'border-border hover:scale-110'
+              }`}
+              style={{ background: o.hex }}
+            />
+          )
+        })}
+      </div>
     </div>
   )
 }
