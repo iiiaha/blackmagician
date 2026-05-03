@@ -579,7 +579,7 @@ export default function UserHome() {
             }`}>
               <span className={`inline-block w-[6px] h-[6px] rounded-full transition-all duration-300 ${
                 hasActiveFilter
-                  ? 'bg-brand-accent shadow-[0_0_5px_rgba(234,0,3,0.35)]'
+                  ? 'bg-[#34d399] shadow-[0_0_5px_rgba(52,211,153,0.45)]'
                   : 'bg-text-tertiary/30 dark:bg-text-tertiary/50'
               }`} />
               FILTER
