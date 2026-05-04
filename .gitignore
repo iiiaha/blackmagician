@@ -5,4 +5,7 @@ dist/
 *.log
 .DS_Store
 Thumbs.db
-extensions/black_magician/black_magician/deck/
+extensions/blackmagician/blackmagician/deck/
+
+# Signature-suffixed RBZs returned by SketchUp Extension Warehouse
+*_c.rbz
