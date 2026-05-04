@@ -267,7 +267,7 @@ export default function PreviewPanel({ images, sizeStr, vendorName, tileName, pr
         <tbody>
           <tr className="border-b border-border">
             <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted w-[48px]">원장크기</td>
-            <td className="px-2 py-[3px]">{product?.size ? `${product.size} mm` : '-'}</td>
+            <td className="px-2 py-[3px]">{product?.size || '-'}</td>
           </tr>
           <tr className="border-b border-border">
             <td className="px-2 py-[3px] text-text-secondary font-semibold bg-muted">단가</td>
