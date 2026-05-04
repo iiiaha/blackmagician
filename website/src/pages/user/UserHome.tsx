@@ -20,6 +20,21 @@ function buildTree(nodes: FolderNode[], parentId: string | null): TreeNode[] {
     .map(n => ({ ...n, children: buildTree(nodes, n.id) }))
 }
 
+// First leaf in tree order — used to auto-jump straight to the topmost
+// product folder so the grid shows up the moment a vendor is opened
+// (Black Magician click-to-expand and younhyun extension launch).
+function findFirstLeaf(nodes: FolderNode[]): FolderNode | null {
+  const walk = (children: TreeNode[]): FolderNode | null => {
+    for (const n of children) {
+      if (n.children.length === 0) return n
+      const deeper = walk(n.children)
+      if (deeper) return deeper
+    }
+    return null
+  }
+  return walk(buildTree(nodes, null))
+}
+
 function getBreadcrumb(nodes: FolderNode[], folderId: string): FolderNode[] {
   const path: FolderNode[] = []
   let current = nodes.find(n => n.id === folderId)
@@ -109,9 +124,17 @@ export default function UserHome() {
       setVendorFolders(prev => ({ ...prev, [vendor.id]: f }))
       setVendorTrees(prev => ({ ...prev, [vendor.id]: buildTree(f, null) }))
       setExpandedIds(new Set(f.map(n => n.id)))
+
+      // Open the extension straight into the topmost product folder.
+      const leaf = findFirstLeaf(f)
+      if (leaf) {
+        setSelectedFolder(leaf)
+        setAllFoldersForBreadcrumb(f)
+        fetchProducts(leaf.id)
+      }
     }
     autoSelect()
-  }, [vendorMode])
+  }, [vendorMode, fetchProducts])
 
   // Vendor mode (e.g. younhyun) has no userProfile, so favorites live in
   // localStorage scoped by vendor slug. Logged-in users keep using the
@@ -171,15 +194,26 @@ export default function UserHome() {
     setSelectedVendor(vendor)
     setSidebarView('folders')
 
-    if (!vendorFolders[vendor.id]) {
+    let folders = vendorFolders[vendor.id]
+    if (!folders) {
       const { data } = await supabase.from('folder_nodes').select('*').eq('vendor_id', vendor.id).order('sort_order')
-      const f = (data as FolderNode[]) || []
-      setVendorFolders(prev => ({ ...prev, [vendor.id]: f }))
-      setVendorTrees(prev => ({
-        ...prev,
-        [vendor.id]: buildTree(f, null)
-      }))
-      setExpandedIds(new Set(f.map(n => n.id)))
+      folders = (data as FolderNode[]) || []
+      setVendorFolders(prev => ({ ...prev, [vendor.id]: folders! }))
+      setVendorTrees(prev => ({ ...prev, [vendor.id]: buildTree(folders!, null) }))
+      setExpandedIds(new Set(folders.map(n => n.id)))
+    }
+
+    // Drop straight into the topmost leaf so the user sees product
+    // thumbnails immediately instead of an empty "select a folder" pane.
+    const leaf = findFirstLeaf(folders)
+    if (leaf) {
+      setSelectedFolder(leaf)
+      setAllFoldersForBreadcrumb(folders)
+      setSearchResults(null)
+      setShowFavorites(false)
+      setFilterSizes(new Set())
+      setFilterColor(null)
+      fetchProducts(leaf.id)
     }
   }
 
