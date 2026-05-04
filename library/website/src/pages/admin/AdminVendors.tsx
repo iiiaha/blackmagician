@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { CATEGORIES } from '@/lib/categories'
-import { Plus, Trash2, KeyRound, ChevronDown, ChevronRight, Pencil, Save, ArrowUp, ArrowDown } from 'lucide-react'
+import { Plus, Trash2, KeyRound, ChevronDown, ChevronRight, Pencil, Save, ArrowUp, ArrowDown, Upload, X } from 'lucide-react'
 import type { Vendor } from '@/types/database'
 
 type EditableFields = {
@@ -36,6 +36,8 @@ export default function AdminVendors() {
   const [resetPwVendorId, setResetPwVendorId] = useState<string | null>(null)
   const [newPassword, setNewPassword] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<Vendor | null>(null)
+  const [bannerDeleteTarget, setBannerDeleteTarget] = useState<Vendor | null>(null)
+  const [bannerUploadingId, setBannerUploadingId] = useState<string | null>(null)
 
   // Edit mode & state per vendor
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -142,6 +144,28 @@ export default function AdminVendors() {
     await // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase.rpc as any)('admin_delete_vendor', { p_vendor_id: deleteTarget.id })
     setDeleteTarget(null)
+    fetchVendors()
+  }
+
+  const handleBannerUpload = async (vendor: Vendor, file: File) => {
+    setBannerUploadingId(vendor.id)
+    try {
+      const storagePath = `banners/${vendor.id}/banner.${file.type === 'image/png' ? 'png' : 'jpg'}`
+      const { error: uploadErr } = await supabase.storage.from('product-images')
+        .upload(storagePath, file, { contentType: file.type, upsert: true })
+      if (uploadErr) { alert('이미지 업로드 실패: ' + uploadErr.message); return }
+      const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(storagePath)
+      const { error: updateErr } = await supabase.from('vendors').update({ logo_url: urlData.publicUrl }).eq('id', vendor.id)
+      if (updateErr) { alert('프로필 업데이트 실패: ' + updateErr.message); return }
+      await fetchVendors()
+    } finally {
+      setBannerUploadingId(null)
+    }
+  }
+
+  const handleBannerDelete = async (vendor: Vendor) => {
+    await supabase.from('vendors').update({ logo_url: null }).eq('id', vendor.id)
+    setBannerDeleteTarget(null)
     fetchVendors()
   }
 
@@ -299,6 +323,39 @@ export default function AdminVendors() {
                           <Field label="독자 슬러그" value={isEditing ? edit.slug : (vendor.slug || '')} editing={isEditing} onChange={v => updateField(vendor.id, 'slug', v)} placeholder="예: younhyun" />
                         </div>
                         <div className="mt-3">
+                          <label className="text-[9px] text-[#999] font-semibold mb-1 block">배너 이미지</label>
+                          {vendor.logo_url ? (
+                            <div className="relative rounded-[4px] overflow-hidden h-[64px] bg-[#f5f5f5]">
+                              <img src={vendor.logo_url} alt="배너" className="w-full h-full object-cover" />
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setBannerDeleteTarget(vendor) }}
+                                className="absolute top-1.5 right-1.5 w-5 h-5 bg-black/50 rounded-full flex items-center justify-center cursor-pointer hover:bg-black/70"
+                              >
+                                <X className="w-3 h-3 text-white" />
+                              </button>
+                            </div>
+                          ) : (
+                            <label className="flex flex-col items-center justify-center h-[64px] border-2 border-dashed border-[rgba(0,0,0,0.1)] rounded-[4px] cursor-pointer hover:bg-[rgba(0,0,0,0.01)]">
+                              {bannerUploadingId === vendor.id ? (
+                                <span className="text-[10px] text-[#aaa]">업로드 중...</span>
+                              ) : (
+                                <>
+                                  <Upload className="w-3.5 h-3.5 text-[#ccc] mb-0.5" />
+                                  <span className="text-[9px] text-[#aaa]">배너 이미지 업로드 (권장: 1200×300)</span>
+                                </>
+                              )}
+                              <input type="file" accept="image/jpeg,image/png" className="hidden"
+                                disabled={bannerUploadingId === vendor.id}
+                                onClick={(e) => e.stopPropagation()}
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0]
+                                  if (file) handleBannerUpload(vendor, file)
+                                  e.target.value = ''
+                                }} />
+                            </label>
+                          )}
+                        </div>
+                        <div className="mt-3">
                           <Field label="소개글" value={isEditing ? edit.description : (vendor.description || '')} editing={isEditing} onChange={v => updateField(vendor.id, 'description', v)} multiline />
                         </div>
                         <p className="text-[9px] text-[#aaa] mt-3">등록일: {new Date(vendor.created_at).toLocaleDateString('ko-KR')}</p>
@@ -330,6 +387,27 @@ export default function AdminVendors() {
                 className="flex-1 h-[32px] text-[11px] font-semibold border border-[rgba(0,0,0,0.08)] rounded-[4px] cursor-pointer hover:bg-[#f5f5f5]">취소</button>
               <button onClick={handleResetPw} disabled={newPassword.length < 6}
                 className="flex-1 h-[32px] text-[11px] font-semibold bg-[#1a1a1a] text-white rounded-[4px] cursor-pointer disabled:opacity-30">변경</button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Banner delete popup */}
+      {bannerDeleteTarget && (
+        <>
+          <div className="fixed inset-0 bg-black/30 z-40" onClick={() => setBannerDeleteTarget(null)} />
+          <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] bg-white border border-[rgba(0,0,0,0.08)] rounded-[8px] p-5 text-center shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
+            <h3 className="text-[13px] font-bold mb-2">배너 이미지 삭제</h3>
+            <p className="text-[10px] text-[#aaa] mb-5">{bannerDeleteTarget.company_name}의 배너 이미지를 삭제하시겠습니까?</p>
+            <div className="flex gap-2">
+              <button onClick={() => setBannerDeleteTarget(null)}
+                className="flex-1 h-[34px] text-[11px] font-semibold border border-[rgba(0,0,0,0.08)] rounded-[5px] cursor-pointer hover:bg-[#f5f5f5]">
+                취소
+              </button>
+              <button onClick={() => handleBannerDelete(bannerDeleteTarget)}
+                className="flex-1 h-[34px] text-[11px] font-semibold border border-[rgba(0,0,0,0.08)] rounded-[5px] cursor-pointer hover:bg-[#f5f5f5]">
+                삭제하기
+              </button>
             </div>
           </div>
         </>
