@@ -23,13 +23,10 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 # ── Style defaults — edit here for a different baseline ─────────────────
-DEFAULT_BG = "#cfe1ee"        # faded pale blue, low-key
+DEFAULT_BG = "#edf4fa"        # near-white sky blue, very low saturation
 DEFAULT_FG = "#1a2536"        # deep slate, near-black with a blue undertone
-DEFAULT_ACCENT = "#ea0003"    # brand red — the dot in the corner echoes the BM wand glow
 RADIUS_RATIO = 0.22           # corner radius as fraction of size
 TEXT_SCALE = 0.45             # font size as fraction of icon size — keep some breathing room around letters
-DOT_SIZE_RATIO = 0.10         # accent dot diameter as fraction of size
-DOT_OFFSET_RATIO = 0.20       # dot center offset from top-left (fraction of size)
 SIZES = (24, 32)              # SketchUp toolbar small / large modes
 LISTING_SIZE = 512            # high-res render for homepage / EW listing thumbnails
 
@@ -60,7 +57,7 @@ def find_font(size: int) -> ImageFont.ImageFont:
     return ImageFont.load_default()
 
 
-def render_icon(letters: str, size: int, bg: str, fg: str, accent: str = DEFAULT_ACCENT) -> Image.Image:
+def render_icon(letters: str, size: int, bg: str, fg: str) -> Image.Image:
     # Render at 4× then downscale to get crisper antialiased edges,
     # especially for the 24px size which suffers without supersampling.
     scale = 4
@@ -80,15 +77,6 @@ def render_icon(letters: str, size: int, bg: str, fg: str, accent: str = DEFAULT
     y = (canvas - text_h) // 2 - bbox[1]
     draw.text((x, y), letters, font=font, fill=fg)
 
-    # Brand accent dot in the top-left corner — solid, no glow.
-    cx = int(canvas * DOT_OFFSET_RATIO)
-    cy = int(canvas * DOT_OFFSET_RATIO)
-    dot_d = int(canvas * DOT_SIZE_RATIO)
-    draw.ellipse(
-        (cx - dot_d // 2, cy - dot_d // 2, cx + dot_d // 2, cy + dot_d // 2),
-        fill=accent,
-    )
-
     return img.resize((size, size), Image.LANCZOS)
 
 
@@ -105,11 +93,6 @@ def main():
         "--fg",
         default=DEFAULT_FG,
         help=f"foreground color (default {DEFAULT_FG})",
-    )
-    parser.add_argument(
-        "--accent",
-        default=DEFAULT_ACCENT,
-        help=f"top-left accent dot color (default {DEFAULT_ACCENT}, brand red)",
     )
     parser.add_argument(
         "--prefix",
@@ -132,7 +115,7 @@ def main():
     icons_dir.mkdir(parents=True, exist_ok=True)
 
     for size in SIZES:
-        img = render_icon(letters, size, args.color, args.fg, args.accent)
+        img = render_icon(letters, size, args.color, args.fg)
         out = icons_dir / f"{args.prefix}_{size}.png"
         img.save(out)
         print(f"wrote {out}")
@@ -140,7 +123,7 @@ def main():
     # High-res listing render for homepage / EW thumbnails — sibling to the
     # body folder so it doesn't get bundled into the RBZ.
     if not args.no_listing:
-        img = render_icon(letters, LISTING_SIZE, args.color, args.fg, args.accent)
+        img = render_icon(letters, LISTING_SIZE, args.color, args.fg)
         out = ext_dir / "listing.png"
         img.save(out)
         print(f"wrote {out}")
