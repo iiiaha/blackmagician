@@ -93,6 +93,28 @@ export default function UserHome() {
   const [showLoginPopup, setShowLoginPopup] = useState(false)
 
 
+  // Hoisted above useEffects that depend on it (vendor-mode auto-jump),
+  // otherwise tsc flags a temporal-dead-zone reference even though the
+  // callback only fires after render.
+  const fetchProducts = useCallback(async (folderId: string) => {
+    const { data } = await supabase.from('products').select('*').eq('folder_id', folderId)
+    const prods = ((data as Product[]) || []).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
+    setProducts(prods)
+    if (prods.length > 0) {
+      const { data: imgData } = await supabase.from('product_images').select('*')
+        .in('product_id', prods.map(p => p.id)).order('sort_order')
+      const images = (imgData as ProductImage[]) || []
+      const grouped: Record<string, ProductImage[]> = {}
+      for (const img of images) {
+        if (!grouped[img.product_id]) grouped[img.product_id] = []
+        grouped[img.product_id].push(img)
+      }
+      setProductImages(grouped)
+    } else {
+      setProductImages({})
+    }
+  }, [])
+
   // Fetch vendors + roots
   useEffect(() => {
     const fetchAll = async () => {
@@ -216,25 +238,6 @@ export default function UserHome() {
       fetchProducts(leaf.id)
     }
   }
-
-  const fetchProducts = useCallback(async (folderId: string) => {
-    const { data } = await supabase.from('products').select('*').eq('folder_id', folderId)
-    const prods = ((data as Product[]) || []).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
-    setProducts(prods)
-    if (prods.length > 0) {
-      const { data: imgData } = await supabase.from('product_images').select('*')
-        .in('product_id', prods.map(p => p.id)).order('sort_order')
-      const images = (imgData as ProductImage[]) || []
-      const grouped: Record<string, ProductImage[]> = {}
-      for (const img of images) {
-        if (!grouped[img.product_id]) grouped[img.product_id] = []
-        grouped[img.product_id].push(img)
-      }
-      setProductImages(grouped)
-    } else {
-      setProductImages({})
-    }
-  }, [])
 
   const handleSelectFolder = (node: FolderNode, vendor: Vendor) => {
     const allFolders = vendorFolders[vendor.id] || []
