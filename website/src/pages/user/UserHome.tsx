@@ -7,7 +7,7 @@ import { COLOR_PALETTE } from '@/lib/colors'
 import PreviewPanel from '@/components/PreviewPanel'
 import {
   Search, ChevronRight, ChevronDown, ImageIcon, Heart, Folder, FolderOpen,
-  X,
+  RotateCcw,
 } from 'lucide-react'
 import type { Vendor, FolderNode, Product, ProductImage } from '@/types/database'
 
@@ -661,15 +661,12 @@ export default function UserHome() {
               onChange={setFilterOrigins}
             />
 
-            {/* 초기화 + 결과 수 */}
+            {/* Reset — single icon, ml-auto so it pins to the right edge */}
             {hasActiveFilter && (
-              <div className="ml-auto flex items-center gap-2">
-                <span className="text-[9px] text-text-tertiary">{displayProducts.length}개</span>
-                <button onClick={clearFilters}
-                  className="text-[9px] text-text-tertiary hover:text-foreground cursor-pointer flex items-center gap-0.5 px-1.5 py-0.5 rounded-[3px] border border-border hover:bg-muted">
-                  <X className="w-2.5 h-2.5" /> 초기화
-                </button>
-              </div>
+              <button onClick={clearFilters} title="필터 초기화"
+                className="ml-auto text-text-tertiary hover:text-foreground cursor-pointer p-1 rounded-[3px] hover:bg-muted">
+                <RotateCcw className="w-3 h-3" />
+              </button>
             )}
           </div>
         )}
