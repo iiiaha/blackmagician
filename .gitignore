@@ -5,4 +5,4 @@ dist/
 *.log
 .DS_Store
 Thumbs.db
-black_magician/deck/
+extensions/black_magician/black_magician/deck/

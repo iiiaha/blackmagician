@@ -1,0 +1,59 @@
+# extensions/
+
+All SketchUp extensions built by this repo. The main Black Magician
+platform extension and every standalone vendor extension share the
+same folder shape so a single build script handles all of them.
+
+```
+extensions/
+  build.py                  # generic RBZ builder (any slug)
+  README.md                 # this file
+  black_magician/           # main platform extension
+    black_magician.rb
+    black_magician/
+      core/
+      icons/
+    dist/                   # build output, gitignored
+  {slug}/                   # standalone vendor extensions
+    {slug}.rb
+    {slug}/
+      core/
+      icons/
+    data/                   # vendor materials (xlsx, contracts, etc.) — excluded from RBZ
+    dist/                   # build output, gitignored
+```
+
+The double-naming (`{slug}/{slug}.rb` next to `{slug}/{slug}/`) is
+intentional. SketchUp's `SketchupExtension` ctor expects the loader and
+the body folder to sit side-by-side under the same name, and the same
+shape is required at the root of the final RBZ. Keeping that shape in
+source means the build is just a zip of the two paths.
+
+## Building
+
+```
+python extensions/build.py black_magician
+python extensions/build.py younhyun
+```
+
+Outputs land in `extensions/{slug}/dist/{slug}.rbz`. The script writes
+explicit zip directory entries — required for code-signed RBZs.
+PowerShell `Compress-Archive` strips them out and signing fails.
+
+## Adding a new standalone vendor
+
+1. Add the row in admin UI with `slug` set.
+2. `cp -r extensions/younhyun extensions/{slug}` and rename the loader
+   `younhyun.rb` → `{slug}.rb` and the body folder `younhyun/` → `{slug}/`.
+3. Update `LIBRARY_URL` inside the loader's dialog code to
+   `https://blackmagician.pages.dev?vendor={slug}`.
+4. `python extensions/build.py {slug}` and ship the RBZ.
+
+## Notes
+
+- `data/` (vendor side only) is the working area for raw materials. Stays
+  in source control but is never bundled into the RBZ.
+- `dist/` matches the top-level `dist/` gitignore pattern, so build
+  outputs are not committed.
+- Don't change a slug after the extension has shipped — installed users
+  would get a parallel install rather than an upgrade.
