@@ -13,14 +13,14 @@ extensions/
     black_magician/
       core/
       icons/
-    dist/                   # build output, gitignored
+    black_magician.rbz      # latest build, overwritten by build.py
   {slug}/                   # standalone vendor extensions
     {slug}.rb
     {slug}/
       core/
       icons/
     data/                   # vendor materials (xlsx, contracts, etc.) — excluded from RBZ
-    dist/                   # build output, gitignored
+    {slug}.rbz              # latest build, overwritten by build.py
 ```
 
 The double-naming (`{slug}/{slug}.rb` next to `{slug}/{slug}/`) is
@@ -36,9 +36,10 @@ python extensions/build.py black_magician
 python extensions/build.py younhyun
 ```
 
-Outputs land in `extensions/{slug}/dist/{slug}.rbz`. The script writes
-explicit zip directory entries — required for code-signed RBZs.
-PowerShell `Compress-Archive` strips them out and signing fails.
+Output lands directly in `extensions/{slug}/{slug}.rbz`, replacing the
+previous build. The script writes explicit zip directory entries —
+required for code-signed RBZs. PowerShell `Compress-Archive` strips them
+out and signing fails.
 
 ## Adding a new standalone vendor
 
@@ -53,7 +54,7 @@ PowerShell `Compress-Archive` strips them out and signing fails.
 
 - `data/` (vendor side only) is the working area for raw materials. Stays
   in source control but is never bundled into the RBZ.
-- `dist/` matches the top-level `dist/` gitignore pattern, so build
-  outputs are not committed.
+- `_c.rbz` is the signature-suffixed build returned by SketchUp Extension
+  Warehouse. Untracked, lives next to `{slug}.rbz`.
 - Don't change a slug after the extension has shipped — installed users
   would get a parallel install rather than an upgrade.
