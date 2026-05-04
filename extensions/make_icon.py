@@ -23,17 +23,19 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 # ── Style defaults — edit here for a different baseline ─────────────────
-DEFAULT_BG = "#49637a"        # slate blue, matches the brand
-DEFAULT_FG = "#ffffff"
+DEFAULT_BG = "#cfe1ee"        # faded pale blue, low-key
+DEFAULT_FG = "#1a2536"        # deep slate, near-black with a blue undertone
 RADIUS_RATIO = 0.22           # corner radius as fraction of size
-TEXT_SCALE = 0.55             # font size as fraction of icon size
+TEXT_SCALE = 0.6              # font size as fraction of icon size
 SIZES = (24, 32)              # SketchUp toolbar small / large modes
 
-# Pretendard preferred. Falls through Arial Bold / Calibri Bold / system.
+# Pretendard preferred. ExtraBold first so the letters sit darker against
+# the pale background. Falls through Bold / Variable / Arial Bold.
 FONT_CANDIDATES = [
-    "C:/Windows/Fonts/Pretendard-Bold.ttf",
     "C:/Windows/Fonts/Pretendard-ExtraBold.ttf",
+    "C:/Windows/Fonts/Pretendard-Bold.ttf",
     "C:/Windows/Fonts/PretendardVariable.ttf",
+    str(Path.home() / "AppData/Local/Microsoft/Windows/Fonts/Pretendard-ExtraBold.ttf"),
     str(Path.home() / "AppData/Local/Microsoft/Windows/Fonts/Pretendard-Bold.ttf"),
     str(Path.home() / "AppData/Local/Microsoft/Windows/Fonts/PretendardVariable.ttf"),
     "C:/Windows/Fonts/arialbd.ttf",
