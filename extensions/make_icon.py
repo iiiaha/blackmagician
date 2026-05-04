@@ -26,8 +26,9 @@ from PIL import Image, ImageDraw, ImageFont
 DEFAULT_BG = "#ffffff"        # pure white
 DEFAULT_FG = "#1a2536"        # deep slate, near-black with a blue undertone
 DEFAULT_BORDER = "#0f92d1"    # mid blue stroke around the rounded rect
-RADIUS_RATIO = 0.22           # corner radius as fraction of size
-TEXT_SCALE = 0.45             # font size as fraction of icon size — keep some breathing room around letters
+ICON_SCALE = 0.85             # rounded rect fills this fraction of the PNG; rest is transparent margin
+RADIUS_RATIO = 0.22           # corner radius as fraction of icon (not canvas)
+TEXT_SCALE = 0.45             # font size as fraction of icon (not canvas)
 BORDER_WIDTH_RATIO = 0.012    # stroke thickness as fraction of output size; floor at 1px
 SIZES = (24, 32)              # SketchUp toolbar small / large modes
 LISTING_SIZE = 512            # high-res render for homepage / EW listing thumbnails
@@ -67,26 +68,30 @@ def render_icon(letters: str, size: int, bg: str, fg: str, border: str = DEFAULT
     img = Image.new("RGBA", (canvas, canvas), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
 
-    # Stroke width is based on output size (with a 1px floor) and then
-    # scaled up to the supersampled canvas, so both 24px and 512px land
-    # on a visually thin outline rather than scaling proportionally.
+    # The rounded rect doesn't fill the whole PNG — leave a transparent
+    # margin so the icon doesn't crowd the toolbar slot.
+    icon_size = canvas * ICON_SCALE
+    margin = (canvas - icon_size) / 2
+
+    # Stroke width based on output size (1px floor) and supersampled.
     stroke = max(1, round(size * BORDER_WIDTH_RATIO)) * scale
-    radius = int(canvas * RADIUS_RATIO)
-    # Inset by half-stroke so the outline isn't clipped by the canvas edge.
+    radius = int(icon_size * RADIUS_RATIO)
     inset = stroke // 2
     draw.rounded_rectangle(
-        (inset, inset, canvas - 1 - inset, canvas - 1 - inset),
-        radius=radius - inset,
+        (margin + inset, margin + inset,
+         canvas - margin - 1 - inset, canvas - margin - 1 - inset),
+        radius=max(1, radius - inset),
         fill=bg,
         outline=border,
         width=stroke,
     )
 
-    font = find_font(int(canvas * TEXT_SCALE))
+    # Text sized relative to the rounded rect (not the canvas), centered
+    # on the canvas which is also the rect's center.
+    font = find_font(int(icon_size * TEXT_SCALE))
     bbox = draw.textbbox((0, 0), letters, font=font)
     text_w = bbox[2] - bbox[0]
     text_h = bbox[3] - bbox[1]
-    # textbbox is ascent-aligned; subtract bbox offsets to truly center.
     x = (canvas - text_w) // 2 - bbox[0]
     y = (canvas - text_h) // 2 - bbox[1]
     draw.text((x, y), letters, font=font, fill=fg)
