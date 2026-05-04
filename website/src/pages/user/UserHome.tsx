@@ -152,6 +152,10 @@ export default function UserHome() {
     setProductImages({})
     setSearchResults(null)
     setShowFavorites(false)
+    // Favorites are scoped per category — drop the previous category's
+    // products so a later Favorites click doesn't render the wrong list
+    // for the brief moment before its fetch resolves.
+    setFavoriteProducts([])
     setSidebarView('vendors')
     setTimeout(() => { setCatSliding(false); setPrevVendors([]) }, 200)
   }, [activeCategory, allVendors])
@@ -294,6 +298,9 @@ export default function UserHome() {
     setShowFavorites(true)
     setSelectedFolder(null)
     setSearchResults(null)
+    // Clear last shown list before fetching so we never paint stale
+    // results from another category in the gap before the fetch returns.
+    setFavoriteProducts([])
     if (vendorFavKey) {
       const ids = [...favoriteIds]
       if (ids.length === 0) { setFavoriteProducts([]); setProducts([]); return }
