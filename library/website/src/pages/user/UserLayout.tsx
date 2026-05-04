@@ -29,6 +29,31 @@ export default function UserLayout() {
       .then(({ data }) => { if (data) setVendorInfo(data as Vendor) })
   }, [vendorMode])
 
+  // Hide category tabs that have no vendors yet (e.g. WOOD / WALLPAPER /
+  // WALLPANEL while we're still onboarding). Vendor mode skips the nav
+  // entirely so we can shortcut the fetch.
+  const [availableCategoryIds, setAvailableCategoryIds] = useState<Set<string>>(new Set())
+  useEffect(() => {
+    if (vendorMode) return
+    supabase.from('vendors').select('category').eq('approved', true).is('slug', null)
+      .then(({ data }) => {
+        const ids = new Set(((data as { category: string | null }[]) || [])
+          .map(v => v.category)
+          .filter((c): c is string => !!c))
+        setAvailableCategoryIds(ids)
+      })
+  }, [vendorMode])
+  const visibleCategories = CATEGORIES.filter(c => availableCategoryIds.has(c.id))
+
+  // Snap to a visible category if the current one disappeared.
+  useEffect(() => {
+    if (availableCategoryIds.size === 0) return
+    if (!availableCategoryIds.has(activeCategory)) {
+      const first = CATEGORIES.find(c => availableCategoryIds.has(c.id))
+      if (first) setActiveCategory(first.id)
+    }
+  }, [availableCategoryIds, activeCategory])
+
   // Update sliding indicator position
   useEffect(() => {
     if (!navRef.current) return
@@ -120,9 +145,9 @@ export default function UserLayout() {
             </Link>
           )}
 
-          {!vendorMode && (
+          {!vendorMode && visibleCategories.length > 0 && (
             <nav ref={navRef} className="relative flex items-center gap-1 bg-muted rounded-full p-[3px] ml-[30px]">
-              {CATEGORIES.map(cat => (
+              {visibleCategories.map(cat => (
                 <button
                   key={cat.id}
                   data-active={activeCategory === cat.id}
