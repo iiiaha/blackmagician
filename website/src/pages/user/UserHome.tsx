@@ -612,9 +612,10 @@ export default function UserHome() {
           <VendorBanner vendor={selectedVendor} />
         )}
 
-        {/* Filter bar — single row */}
+        {/* Filter bar — wraps to a new line when the size dropdown's
+            picked-values trigger pushes the reset button off-screen. */}
         {selectedVendor && !searchResults && (
-          <div className="px-5 py-1.5 border-b bg-surface shrink-0 flex items-center gap-3">
+          <div className="px-5 py-1.5 border-b bg-surface shrink-0 flex items-center gap-x-3 gap-y-1.5 flex-wrap">
             {/* Filter indicator — always visible, lights up when active */}
             <span className={`inline-flex items-center gap-1.5 text-[8px] font-bold px-2 py-[3px] rounded-full whitespace-nowrap transition-all duration-300 ${
               hasActiveFilter
@@ -938,7 +939,7 @@ function SizeDropdown({ sizes, selected, onChange }: {
       <span className="text-[9px] text-text-tertiary whitespace-nowrap">크기</span>
       <button
         onClick={() => setOpen(prev => !prev)}
-        className="h-[22px] min-w-[100px] max-w-[240px] px-2 text-[10px] text-left bg-muted border border-border rounded-[3px] cursor-pointer flex items-center justify-between gap-1 hover:border-foreground"
+        className="h-[22px] min-w-[100px] max-w-[180px] px-2 text-[10px] text-left bg-muted border border-border rounded-[3px] cursor-pointer flex items-center justify-between gap-1 hover:border-foreground"
       >
         <span className="truncate">{triggerText}</span>
         <ChevronDown className="w-2.5 h-2.5 shrink-0 opacity-50" />
