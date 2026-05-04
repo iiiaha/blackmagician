@@ -612,9 +612,10 @@ export default function UserHome() {
           <VendorBanner vendor={selectedVendor} />
         )}
 
-        {/* Filter bar — single row */}
+        {/* Filter bar — fits a single line at typical widths, wraps when
+            the dialog is shrunk narrower than the row's natural width. */}
         {selectedVendor && !searchResults && (
-          <div className="px-5 py-1.5 border-b bg-surface shrink-0 flex items-center gap-3">
+          <div className="px-5 py-1.5 border-b bg-surface shrink-0 flex items-center gap-x-3 gap-y-1.5 flex-wrap">
             {/* Filter indicator — always visible, lights up when active */}
             <span className={`inline-flex items-center gap-1.5 text-[8px] font-bold px-2 py-[3px] rounded-full whitespace-nowrap transition-all duration-300 ${
               hasActiveFilter
