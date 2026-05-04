@@ -9,10 +9,11 @@ module Younhyun
       return
     end
 
+    # No preferences_key — we want every open to start at the default
+    # 800×900 size, not whatever the user resized to last session.
     @dialog = UI::HtmlDialog.new(
       dialog_title:    'Younhyun',
-      preferences_key: 'YounhyunMaterial',
-      width:           900,
+      width:           800,
       height:          900,
       resizable:       true,
       style:           UI::HtmlDialog::STYLE_DIALOG
