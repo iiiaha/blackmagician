@@ -7,21 +7,35 @@ same folder shape so a single build script handles all of them.
 ```
 extensions/
   build.py                  # generic RBZ builder (any slug)
+  make_icon.py              # two-letter toolbar icon generator
   README.md                 # this file
-  black_magician/           # main platform extension
-    black_magician.rb
-    black_magician/
+  blackmagician/            # main platform extension
+    blackmagician.rb
+    blackmagician/
       core/
       icons/
-    black_magician.rbz      # latest build, overwritten by build.py
+        icon_24.png         # toolbar small
+        icon_32.png         # toolbar large
+      logo.png              # high-res brand mark (EM listing / EW upload)
+    blackmagician.rbz       # latest build, overwritten by build.py
   {slug}/                   # standalone vendor extensions
     {slug}.rb
     {slug}/
       core/
       icons/
+        icon_24.png
+        icon_32.png
+      logo.png              # vendor-supplied brand or generated 128px
     data/                   # vendor materials (xlsx, contracts, etc.) — excluded from RBZ
     {slug}.rbz              # latest build, overwritten by build.py
 ```
+
+Icon vs logo split:
+- **`icons/icon_24.png` + `icon_32.png`** — referenced by `dialog.rb` and
+  shown on the SketchUp toolbar. Small simplified mark.
+- **`logo.png`** — high-res brand image, used for the Extension Manager
+  preview / SketchUp Extension Warehouse listing. Lives at the body
+  root, not inside `icons/`.
 
 The double-naming (`{slug}/{slug}.rb` next to `{slug}/{slug}/`) is
 intentional. SketchUp's `SketchupExtension` ctor expects the loader and
@@ -48,7 +62,13 @@ out and signing fails.
    `younhyun.rb` → `{slug}.rb` and the body folder `younhyun/` → `{slug}/`.
 3. Update `LIBRARY_URL` inside the loader's dialog code to
    `https://blackmagician.pages.dev?vendor={slug}`.
-4. `python extensions/build.py {slug}` and ship the RBZ.
+4. Generate fresh toolbar icons:
+   ```
+   python extensions/make_icon.py {slug} XX               # icons/icon_24/32.png
+   python extensions/make_icon.py {slug} XX --logo        # also writes logo.png
+   ```
+   Skip `--logo` if the vendor supplied their own `logo.png`.
+5. `python extensions/build.py {slug}` and ship the RBZ.
 
 ## Notes
 
