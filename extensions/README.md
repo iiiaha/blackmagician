@@ -14,9 +14,8 @@ extensions/
     blackmagician/
       core/
       icons/
-        icon_24.png         # toolbar small
-        icon_32.png         # toolbar large
-      logo.png              # high-res brand mark (EM listing / EW upload)
+        icon_24.png         # toolbar small (cmd.small_icon)
+        icon_32.png         # toolbar large (cmd.large_icon)
     blackmagician.rbz       # latest build, overwritten by build.py
   {slug}/                   # standalone vendor extensions
     {slug}.rb
@@ -25,17 +24,13 @@ extensions/
       icons/
         icon_24.png
         icon_32.png
-      logo.png              # vendor-supplied brand or generated 128px
     data/                   # vendor materials (xlsx, contracts, etc.) — excluded from RBZ
     {slug}.rbz              # latest build, overwritten by build.py
 ```
 
-Icon vs logo split:
-- **`icons/icon_24.png` + `icon_32.png`** — referenced by `dialog.rb` and
-  shown on the SketchUp toolbar. Small simplified mark.
-- **`logo.png`** — high-res brand image, used for the Extension Manager
-  preview / SketchUp Extension Warehouse listing. Lives at the body
-  root, not inside `icons/`.
+The two toolbar sizes map to SketchUp's small/large icon toolbar modes
+(toggled in user preferences). The in-dialog brand logo is served from
+`website/public/{slug}_logo.png`, not bundled in the RBZ.
 
 The double-naming (`{slug}/{slug}.rb` next to `{slug}/{slug}/`) is
 intentional. SketchUp's `SketchupExtension` ctor expects the loader and
@@ -64,10 +59,9 @@ out and signing fails.
    `https://blackmagician.pages.dev?vendor={slug}`.
 4. Generate fresh toolbar icons:
    ```
-   python extensions/make_icon.py {slug} XX               # icons/icon_24/32.png
-   python extensions/make_icon.py {slug} XX --logo        # also writes logo.png
+   python extensions/make_icon.py {slug} XX
    ```
-   Skip `--logo` if the vendor supplied their own `logo.png`.
+   Writes the two PNGs into `extensions/{slug}/{slug}/icons/`.
 5. `python extensions/build.py {slug}` and ship the RBZ.
 
 ## Notes

@@ -27,8 +27,7 @@ DEFAULT_BG = "#49637a"        # slate blue, matches the brand
 DEFAULT_FG = "#ffffff"
 RADIUS_RATIO = 0.22           # corner radius as fraction of size
 TEXT_SCALE = 0.55             # font size as fraction of icon size
-TOOLBAR_SIZES = (24, 32)      # rendered into icons/
-LOGO_SIZE = 128               # rendered to body-root logo.png when --logo passed
+SIZES = (24, 32)              # SketchUp toolbar small / large modes
 
 # Pretendard preferred. Falls through Arial Bold / Calibri Bold / system.
 FONT_CANDIDATES = [
@@ -97,34 +96,20 @@ def main():
         default="icon",
         help='toolbar icon filename prefix (default "icon" — matches dialog.rb expectations)',
     )
-    parser.add_argument(
-        "--logo",
-        action="store_true",
-        help="also render a 128px logo.png at the extension body root. "
-             "Skip this if the vendor supplied their own logo.png — running "
-             "without --logo leaves it untouched.",
-    )
     args = parser.parse_args()
 
     letters = args.letters.strip().upper()
     if len(letters) != 2:
         raise SystemExit(f"letters must be exactly 2 chars, got {len(letters)}")
 
-    body_dir = Path(__file__).parent / args.slug / args.slug
-    icons_dir = body_dir / "icons"
+    icons_dir = Path(__file__).parent / args.slug / args.slug / "icons"
     icons_dir.mkdir(parents=True, exist_ok=True)
 
-    for size in TOOLBAR_SIZES:
+    for size in SIZES:
         img = render_icon(letters, size, args.color, args.fg)
         out = icons_dir / f"{args.prefix}_{size}.png"
         img.save(out)
         print(f"wrote {out}")
-
-    if args.logo:
-        img = render_icon(letters, LOGO_SIZE, args.color, args.fg)
-        logo = body_dir / "logo.png"
-        img.save(logo)
-        print(f"wrote {logo}")
 
 
 if __name__ == "__main__":
