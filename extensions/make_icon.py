@@ -23,10 +23,12 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 # ── Style defaults — edit here for a different baseline ─────────────────
-DEFAULT_BG = "#edf4fa"        # near-white sky blue, very low saturation
+DEFAULT_BG = "#ffffff"        # pure white
 DEFAULT_FG = "#1a2536"        # deep slate, near-black with a blue undertone
+DEFAULT_BORDER = "#0f92d1"    # mid blue stroke around the rounded rect
 RADIUS_RATIO = 0.22           # corner radius as fraction of size
 TEXT_SCALE = 0.45             # font size as fraction of icon size — keep some breathing room around letters
+BORDER_WIDTH_RATIO = 0.012    # stroke thickness as fraction of output size; floor at 1px
 SIZES = (24, 32)              # SketchUp toolbar small / large modes
 LISTING_SIZE = 512            # high-res render for homepage / EW listing thumbnails
 
@@ -57,7 +59,7 @@ def find_font(size: int) -> ImageFont.ImageFont:
     return ImageFont.load_default()
 
 
-def render_icon(letters: str, size: int, bg: str, fg: str) -> Image.Image:
+def render_icon(letters: str, size: int, bg: str, fg: str, border: str = DEFAULT_BORDER) -> Image.Image:
     # Render at 4× then downscale to get crisper antialiased edges,
     # especially for the 24px size which suffers without supersampling.
     scale = 4
@@ -65,8 +67,20 @@ def render_icon(letters: str, size: int, bg: str, fg: str) -> Image.Image:
     img = Image.new("RGBA", (canvas, canvas), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
 
+    # Stroke width is based on output size (with a 1px floor) and then
+    # scaled up to the supersampled canvas, so both 24px and 512px land
+    # on a visually thin outline rather than scaling proportionally.
+    stroke = max(1, round(size * BORDER_WIDTH_RATIO)) * scale
     radius = int(canvas * RADIUS_RATIO)
-    draw.rounded_rectangle((0, 0, canvas - 1, canvas - 1), radius=radius, fill=bg)
+    # Inset by half-stroke so the outline isn't clipped by the canvas edge.
+    inset = stroke // 2
+    draw.rounded_rectangle(
+        (inset, inset, canvas - 1 - inset, canvas - 1 - inset),
+        radius=radius - inset,
+        fill=bg,
+        outline=border,
+        width=stroke,
+    )
 
     font = find_font(int(canvas * TEXT_SCALE))
     bbox = draw.textbbox((0, 0), letters, font=font)
