@@ -10,7 +10,7 @@ module BlackMagician
       'blackmagician/core/dialog'
     )
     ext.description = 'Browse finishing materials from vendors, preview with grout/stagger/mix options, and apply directly as SketchUp materials.'
-    ext.version     = '1.0.0'
+    ext.version     = '1.0.1'
     ext.creator     = 'iiiaha.lab'
     ext.copyright   = '© 2026 iiiaha.lab. All rights reserved.'
     Sketchup.register_extension(ext, true)
