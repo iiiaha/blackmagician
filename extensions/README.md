@@ -17,6 +17,7 @@ extensions/
         icon_24.png         # toolbar small (cmd.small_icon)
         icon_32.png         # toolbar large (cmd.large_icon)
     blackmagician.rbz       # latest build, overwritten by build.py
+    listing.png             # 512px hero, for homepage / EW listing — NOT in RBZ
   {slug}/                   # standalone vendor extensions
     {slug}.rb
     {slug}/
@@ -26,11 +27,14 @@ extensions/
         icon_32.png
     data/                   # vendor materials (xlsx, contracts, etc.) — excluded from RBZ
     {slug}.rbz              # latest build, overwritten by build.py
+    listing.png             # 512px hero, for homepage / EW listing — NOT in RBZ
 ```
 
 The two toolbar sizes map to SketchUp's small/large icon toolbar modes
-(toggled in user preferences). The in-dialog brand logo is served from
-`website/public/{slug}_logo.png`, not bundled in the RBZ.
+(toggled in user preferences). `listing.png` lives at the extension
+folder root (sibling to the body folder), so build.py never bundles it
+into the RBZ. The in-dialog brand logo is served from
+`website/public/{slug}_logo.png`, not bundled in the RBZ either.
 
 The double-naming (`{slug}/{slug}.rb` next to `{slug}/{slug}/`) is
 intentional. SketchUp's `SketchupExtension` ctor expects the loader and

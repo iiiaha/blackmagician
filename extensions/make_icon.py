@@ -19,15 +19,20 @@ import argparse
 import sys
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 
 # ── Style defaults — edit here for a different baseline ─────────────────
 DEFAULT_BG = "#cfe1ee"        # faded pale blue, low-key
 DEFAULT_FG = "#1a2536"        # deep slate, near-black with a blue undertone
+DEFAULT_ACCENT = "#ea0003"    # brand red — the dot in the corner echoes the BM wand glow
 RADIUS_RATIO = 0.22           # corner radius as fraction of size
-TEXT_SCALE = 0.6              # font size as fraction of icon size
+TEXT_SCALE = 0.45             # font size as fraction of icon size — keep some breathing room around letters
+DOT_SIZE_RATIO = 0.10         # accent dot diameter as fraction of size
+DOT_OFFSET_RATIO = 0.20       # dot center offset from top-left (fraction of size)
+DOT_GLOW_RATIO = 2.4          # glow diameter relative to dot diameter
 SIZES = (24, 32)              # SketchUp toolbar small / large modes
+LISTING_SIZE = 512            # high-res render for homepage / EW listing thumbnails
 
 # Pretendard preferred. ExtraBold first so the letters sit darker against
 # the pale background. Falls through Bold / Variable / Arial Bold.
@@ -56,7 +61,7 @@ def find_font(size: int) -> ImageFont.ImageFont:
     return ImageFont.load_default()
 
 
-def render_icon(letters: str, size: int, bg: str, fg: str) -> Image.Image:
+def render_icon(letters: str, size: int, bg: str, fg: str, accent: str = DEFAULT_ACCENT) -> Image.Image:
     # Render at 4× then downscale to get crisper antialiased edges,
     # especially for the 24px size which suffers without supersampling.
     scale = 4
@@ -76,6 +81,25 @@ def render_icon(letters: str, size: int, bg: str, fg: str) -> Image.Image:
     y = (canvas - text_h) // 2 - bbox[1]
     draw.text((x, y), letters, font=font, fill=fg)
 
+    # Brand accent dot in the top-left corner — soft glow halo + bright core,
+    # echoing the lit wand-tip on the Black Magician icon.
+    cx = int(canvas * DOT_OFFSET_RATIO)
+    cy = int(canvas * DOT_OFFSET_RATIO)
+    dot_d = int(canvas * DOT_SIZE_RATIO)
+    glow_d = int(dot_d * DOT_GLOW_RATIO)
+
+    glow = Image.new("RGBA", (canvas, canvas), (0, 0, 0, 0))
+    ImageDraw.Draw(glow).ellipse(
+        (cx - glow_d // 2, cy - glow_d // 2, cx + glow_d // 2, cy + glow_d // 2),
+        fill=accent + "30",
+    )
+    glow = glow.filter(ImageFilter.GaussianBlur(radius=int(canvas * 0.035)))
+    img = Image.alpha_composite(img, glow)
+    ImageDraw.Draw(img).ellipse(
+        (cx - dot_d // 2, cy - dot_d // 2, cx + dot_d // 2, cy + dot_d // 2),
+        fill=accent,
+    )
+
     return img.resize((size, size), Image.LANCZOS)
 
 
@@ -94,9 +118,19 @@ def main():
         help=f"foreground color (default {DEFAULT_FG})",
     )
     parser.add_argument(
+        "--accent",
+        default=DEFAULT_ACCENT,
+        help=f"top-left accent dot color (default {DEFAULT_ACCENT}, brand red)",
+    )
+    parser.add_argument(
         "--prefix",
         default="icon",
         help='toolbar icon filename prefix (default "icon" — matches dialog.rb expectations)',
+    )
+    parser.add_argument(
+        "--no-listing",
+        action="store_true",
+        help=f"skip the {LISTING_SIZE}px listing.png render (default: also write extensions/{{slug}}/listing.png)",
     )
     args = parser.parse_args()
 
@@ -104,12 +138,21 @@ def main():
     if len(letters) != 2:
         raise SystemExit(f"letters must be exactly 2 chars, got {len(letters)}")
 
-    icons_dir = Path(__file__).parent / args.slug / args.slug / "icons"
+    ext_dir = Path(__file__).parent / args.slug
+    icons_dir = ext_dir / args.slug / "icons"
     icons_dir.mkdir(parents=True, exist_ok=True)
 
     for size in SIZES:
-        img = render_icon(letters, size, args.color, args.fg)
+        img = render_icon(letters, size, args.color, args.fg, args.accent)
         out = icons_dir / f"{args.prefix}_{size}.png"
+        img.save(out)
+        print(f"wrote {out}")
+
+    # High-res listing render for homepage / EW thumbnails — sibling to the
+    # body folder so it doesn't get bundled into the RBZ.
+    if not args.no_listing:
+        img = render_icon(letters, LISTING_SIZE, args.color, args.fg, args.accent)
+        out = ext_dir / "listing.png"
         img.save(out)
         print(f"wrote {out}")
 
