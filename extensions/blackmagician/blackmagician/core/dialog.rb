@@ -84,7 +84,7 @@ module BlackMagician
 
     # Toolbar
     icon_dir = File.join(PLUGIN_DIR, 'blackmagician', 'icons')
-    toolbar = UI::Toolbar.new('Black Magician')
+    toolbar = UI::Toolbar.new('iiiaha_Black Magician')
     cmd = UI::Command.new('Black Magician') { show_dialog }
     cmd.small_icon = File.join(icon_dir, 'logopic_24.png')
     cmd.large_icon = File.join(icon_dir, 'logopic_32.png')

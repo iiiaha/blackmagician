@@ -9,10 +9,10 @@ module Younhyun
       'Younhyun',
       'younhyun/core/dialog'
     )
-    ext.description = 'Browse and apply Younhyun finishing materials directly in SketchUp.'
+    ext.description = 'Browse Younhyun finishing materials, preview with grout/stagger/mix, and apply as SketchUp materials.'
     ext.version     = '1.0.0'
-    ext.creator     = 'iiiaha.lab (iiiahalab.com)'
-    ext.copyright   = '© 2026 윤현상재. All rights reserved.'
+    ext.creator     = 'iiiahalab.com'
+    ext.copyright   = '© 2026 iiiaha.lab. All rights reserved.'
     Sketchup.register_extension(ext, true)
     file_loaded(__FILE__)
   end

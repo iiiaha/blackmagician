@@ -82,7 +82,7 @@ module Younhyun
     menu.add_item('Younhyun') { show_dialog }
 
     icon_dir = File.join(PLUGIN_DIR, 'younhyun', 'icons')
-    toolbar = UI::Toolbar.new('Younhyun')
+    toolbar = UI::Toolbar.new('iiiaha_Younhyun')
     cmd = UI::Command.new('Younhyun') { show_dialog }
     cmd.small_icon = File.join(icon_dir, 'icon_24.png')
     cmd.large_icon = File.join(icon_dir, 'icon_32.png')
