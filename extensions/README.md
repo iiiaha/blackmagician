@@ -13,28 +13,24 @@ extensions/
     blackmagician.rb
     blackmagician/
       core/
-      icons/
-        icon_24.png         # toolbar small (cmd.small_icon)
-        icon_32.png         # toolbar large (cmd.large_icon)
+      icon.png              # single 512px asset; SketchUp downscales for toolbar
     blackmagician.rbz       # latest build, overwritten by build.py
-    listing.png             # 512px hero, for homepage / EW listing — NOT in RBZ
   {slug}/                   # standalone vendor extensions
     {slug}.rb
     {slug}/
       core/
-      icons/
-        icon_24.png
-        icon_32.png
+      icon.png              # single 512px asset
     data/                   # vendor materials (xlsx, contracts, etc.) — excluded from RBZ
     {slug}.rbz              # latest build, overwritten by build.py
-    listing.png             # 512px hero, for homepage / EW listing — NOT in RBZ
 ```
 
-The two toolbar sizes map to SketchUp's small/large icon toolbar modes
-(toggled in user preferences). `listing.png` lives at the extension
-folder root (sibling to the body folder), so build.py never bundles it
-into the RBZ. The in-dialog brand logo is served from
-`website/public/{slug}_logo.png`, not bundled in the RBZ either.
+Single-PNG icon convention matches the iiiaha utility extensions
+(cliptomat, alignplus, etc.): `dialog.rb` points both `cmd.small_icon`
+and `cmd.large_icon` at the same `icon.png`, and SketchUp scales it for
+each toolbar mode. The same file doubles as the homepage / Extension
+Warehouse listing thumbnail. The in-dialog brand logo (the one that
+appears in the dialog's top-left) is served from
+`website/public/{slug}_logo.png` and is not bundled in the RBZ.
 
 The double-naming (`{slug}/{slug}.rb` next to `{slug}/{slug}/`) is
 intentional. SketchUp's `SketchupExtension` ctor expects the loader and

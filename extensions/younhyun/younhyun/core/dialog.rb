@@ -87,11 +87,11 @@ module Younhyun
     end
     Iiiaha::MATERIALS_MENU.add_item('Younhyun') { show_dialog }
 
-    icon_dir = File.join(PLUGIN_DIR, 'younhyun', 'icons')
+    icon_path = File.join(PLUGIN_DIR, 'younhyun', 'icon.png')
     toolbar = UI::Toolbar.new('iiiaha_younhyun')
     cmd = UI::Command.new('Younhyun') { show_dialog }
-    cmd.small_icon = File.join(icon_dir, 'icon_24.png')
-    cmd.large_icon = File.join(icon_dir, 'icon_32.png')
+    cmd.small_icon = icon_path
+    cmd.large_icon = icon_path
     cmd.tooltip = 'Younhyun'
     cmd.status_bar_text = 'Open Younhyun'
     toolbar.add_item(cmd)
