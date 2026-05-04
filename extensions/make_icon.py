@@ -19,7 +19,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
+from PIL import Image, ImageDraw, ImageFont
 
 
 # ── Style defaults — edit here for a different baseline ─────────────────
@@ -30,7 +30,6 @@ RADIUS_RATIO = 0.22           # corner radius as fraction of size
 TEXT_SCALE = 0.45             # font size as fraction of icon size — keep some breathing room around letters
 DOT_SIZE_RATIO = 0.10         # accent dot diameter as fraction of size
 DOT_OFFSET_RATIO = 0.20       # dot center offset from top-left (fraction of size)
-DOT_GLOW_RATIO = 2.4          # glow diameter relative to dot diameter
 SIZES = (24, 32)              # SketchUp toolbar small / large modes
 LISTING_SIZE = 512            # high-res render for homepage / EW listing thumbnails
 
@@ -81,21 +80,11 @@ def render_icon(letters: str, size: int, bg: str, fg: str, accent: str = DEFAULT
     y = (canvas - text_h) // 2 - bbox[1]
     draw.text((x, y), letters, font=font, fill=fg)
 
-    # Brand accent dot in the top-left corner — soft glow halo + bright core,
-    # echoing the lit wand-tip on the Black Magician icon.
+    # Brand accent dot in the top-left corner — solid, no glow.
     cx = int(canvas * DOT_OFFSET_RATIO)
     cy = int(canvas * DOT_OFFSET_RATIO)
     dot_d = int(canvas * DOT_SIZE_RATIO)
-    glow_d = int(dot_d * DOT_GLOW_RATIO)
-
-    glow = Image.new("RGBA", (canvas, canvas), (0, 0, 0, 0))
-    ImageDraw.Draw(glow).ellipse(
-        (cx - glow_d // 2, cy - glow_d // 2, cx + glow_d // 2, cy + glow_d // 2),
-        fill=accent + "30",
-    )
-    glow = glow.filter(ImageFilter.GaussianBlur(radius=int(canvas * 0.035)))
-    img = Image.alpha_composite(img, glow)
-    ImageDraw.Draw(img).ellipse(
+    draw.ellipse(
         (cx - dot_d // 2, cy - dot_d // 2, cx + dot_d // 2, cy + dot_d // 2),
         fill=accent,
     )
