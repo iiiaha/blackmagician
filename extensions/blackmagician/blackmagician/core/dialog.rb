@@ -78,13 +78,19 @@ module BlackMagician
   end
 
   unless file_loaded?(File.basename(__FILE__))
-    # Menu
-    menu = UI.menu('Plugins')
-    menu.add_item('Black Magician') { show_dialog }
+    # Menu — shared "iiiaha Materials" submenu under Extensions, populated
+    # by every iiiaha vendor / library extension that loads (blackmagician,
+    # younhyun, future vendors). The defined? guards make this safe whether
+    # we're the first to load or a later one.
+    module ::Iiiaha; end unless defined?(::Iiiaha)
+    unless defined?(Iiiaha::MATERIALS_MENU)
+      Iiiaha.const_set(:MATERIALS_MENU, UI.menu('Extensions').add_submenu('iiiaha Materials'))
+    end
+    Iiiaha::MATERIALS_MENU.add_item('Black Magician') { show_dialog }
 
     # Toolbar
     icon_dir = File.join(PLUGIN_DIR, 'blackmagician', 'icons')
-    toolbar = UI::Toolbar.new('iiiaha_Black Magician')
+    toolbar = UI::Toolbar.new('iiiaha_blackmagician')
     cmd = UI::Command.new('Black Magician') { show_dialog }
     cmd.small_icon = File.join(icon_dir, 'logopic_24.png')
     cmd.large_icon = File.join(icon_dir, 'logopic_32.png')

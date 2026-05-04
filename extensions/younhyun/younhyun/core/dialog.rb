@@ -78,11 +78,16 @@ module Younhyun
   unless @toolbar_loaded
     @toolbar_loaded = true
 
-    menu = UI.menu('Plugins')
-    menu.add_item('Younhyun') { show_dialog }
+    # Menu — shared "iiiaha Materials" submenu under Extensions, populated
+    # by every iiiaha vendor / library extension that loads.
+    module ::Iiiaha; end unless defined?(::Iiiaha)
+    unless defined?(Iiiaha::MATERIALS_MENU)
+      Iiiaha.const_set(:MATERIALS_MENU, UI.menu('Extensions').add_submenu('iiiaha Materials'))
+    end
+    Iiiaha::MATERIALS_MENU.add_item('Younhyun') { show_dialog }
 
     icon_dir = File.join(PLUGIN_DIR, 'younhyun', 'icons')
-    toolbar = UI::Toolbar.new('iiiaha_Younhyun')
+    toolbar = UI::Toolbar.new('iiiaha_younhyun')
     cmd = UI::Command.new('Younhyun') { show_dialog }
     cmd.small_icon = File.join(icon_dir, 'icon_24.png')
     cmd.large_icon = File.join(icon_dir, 'icon_32.png')
