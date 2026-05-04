@@ -6,7 +6,7 @@ module Younhyun
 
   unless file_loaded?(__FILE__)
     ext = SketchupExtension.new(
-      'Younhyun',
+      'iiiaha_younhyun',
       'younhyun/core/dialog'
     )
     ext.description = 'Browse Younhyun finishing materials, preview with grout/stagger/mix, and apply as SketchUp materials.'

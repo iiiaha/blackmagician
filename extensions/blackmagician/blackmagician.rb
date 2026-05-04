@@ -6,7 +6,7 @@ module BlackMagician
 
   unless file_loaded?(__FILE__)
     ext = SketchupExtension.new(
-      'Black Magician',
+      'iiiaha_blackmagician',
       'blackmagician/core/dialog'
     )
     ext.description = 'Browse finishing materials from multiple vendors, preview with grout/stagger/mix, and apply as SketchUp materials.'
